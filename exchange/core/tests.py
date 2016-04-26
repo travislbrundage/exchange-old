@@ -2,16 +2,20 @@ from django.test import TestCase
 from django.db import IntegrityError
 from django.db import transaction
 from django.core.files.uploadedfile import SimpleUploadedFile
-from exchange.models import SiteName, TagLine, BannerImage, IconImage, LogoImage, NavbarColor
+from models import SiteName, TagLine, BannerImage, IconImage, LogoImage, NavbarColor
+
+global_fixtures = ['./fixtures/boundless.json',]
 
 class SiteNameTestCase(TestCase):
-    """Sit name should be a singleton"""
+    fixtures = global_fixtures
+    """Site name should be a singleton"""
     def test_creating_second_title_should_produce_integrity_error(self):
         SiteName.objects.create(site_name="Test Name 0")
         with self.assertRaises(IntegrityError):
             SiteName.objects.create(site_name="Test Name 1")
 
 class TagLineTestCase(TestCase):
+    fixtures = global_fixtures
     """Tag line should be a singleton"""
     def test_creating_second_tagline_should_produce_integrity_error(self):
         TagLine.objects.create(tag_line="Test Tag Line 0")
@@ -19,6 +23,7 @@ class TagLineTestCase(TestCase):
             TagLine.objects.create(tag_line="Test Tag Line 1")
 
 class BannerImageCase(TestCase):
+    fixtures = global_fixtures
     """Banner image should upload successfully"""
     def test_add_photo(self):
         banner = BannerImage()
@@ -32,11 +37,3 @@ class BannerImageCase(TestCase):
 ##        banner2 = BannerImage()
 ##        with self.assertRaises(IntegrityError):
 ##            banner.image = SimpleUploadedFile(name='test_image2.jpg', content=open(self.TEST_ROOT + 'test_image2.jpg', 'rb').read(), content_type='image/jpeg')
-
-class BannerImageCase(TestCase):
-    """Banner image should upload successfully"""
-    def test_add_photo(self):
-        banner = BannerImage()
-        banner.image = SimpleUploadedFile(name='test_image.jpg', content="test image content", content_type='image/jpeg')
-        banner.save()
-        self.assertEqual(Photo.objects.count(), 1)
