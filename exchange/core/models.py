@@ -165,6 +165,7 @@ class NavbarColor(SingletonModel):
     class Meta:
         verbose_name = "Navigation Bar Color"
 
+
 class HyperLinkColor(SingletonModel):
     color = ColorField(default='#FF6600')
 

@@ -8,6 +8,13 @@
     },
     {
         "pk": 1,
+        "model": "core.tagline",
+        "fields": {
+            "site_name": "A Platform for Sharing Geospatial Data"
+        }
+    },
+    {
+        "pk": 1,
         "model": "core.navbarcolor",
         "fields": {
             "color": "#0F1A2C"
