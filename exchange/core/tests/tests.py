@@ -109,14 +109,14 @@ class IconImageTestCase(TestCase):
 class LogoImageTestCase(TestCase):
     fixtures = global_fixtures
 
-    """Icon image should upload successfully"""
+    """Logo image should upload successfully"""
 
     def test_should_upload_successfully(self):
         assetTester = ImageAssetTestHelper(LogoImage, 'logo_image')
         assetTester.uploadAsset()
         self.assertEqual(LogoImage.objects.count(), 1)
 
-    """Uploading a second icon image should replace the first icon image"""
+    """Uploading a second logo image should replace the first logo image"""
 
     def test_uploading_second_image_should_replace_first(self):
         assetTester = ImageAssetTestHelper(LogoImage, 'logo_image')
