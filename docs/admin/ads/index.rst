@@ -1,0 +1,4 @@
+Admin Defined Skin
+=================
+
+TODO
