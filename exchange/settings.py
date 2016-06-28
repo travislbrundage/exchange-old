@@ -171,6 +171,19 @@ DOWNLOAD_FORMATS_RASTER = [
     'GZIP'
 ]
 
+PG_GEOGIG_STORE = True
+
+# Settings for Postgres database for Geogig
+#PG_GEOGIG_DB = {
+#    'HOST': '',
+#    'PORT': '',
+#    'NAME': '',
+#    'SCHEMA': '',
+#    'USER': '',
+#    'PASSWORD': ''
+#}
+
+
 try:
     from local_settings import *  # noqa
 except ImportError:
