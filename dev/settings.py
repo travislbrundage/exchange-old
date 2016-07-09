@@ -49,8 +49,19 @@ DATABASES = {
         'PASSWORD': DATABASE_PASSWORD,
         'HOST': DATABASE_HOST,
         'PORT': DATABASE_PORT,
+    },
+    'pg_geogig': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'HOST': 'localhost',
+        'PORT': '5432',
+        'NAME': 'geogig', # postgres
+        'SCHEMA': 'public',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres'
     }
 }
+
+PG_GEOGIG_DB = None # DATABASES['pg_geogig']
 
 GEOSERVER_URL = 'http://192.168.99.110:8888/proxy/http://192.168.99.110:8080/geoserver/'
 DEFAULT_MAP_CRS = "EPSG:4326"
@@ -100,7 +111,7 @@ MAP_BASELAYERS = [
 ]
 
 UPLOADER = {
-    'BACKEND': 'geonode.rest',
+    'BACKEND': 'geonode.importer',
     'OPTIONS': {
         'TIME_ENABLED': True,
         'GEOGIG_ENABLED': True,

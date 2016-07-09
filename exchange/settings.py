@@ -104,7 +104,7 @@ GSSCHEMA_CONFIG = {
 }
 
 UPLOADER = {
-    'BACKEND': 'geonode.rest',
+    'BACKEND': 'geonode.importer',
     'OPTIONS': {
         'TIME_ENABLED': False,
         'GEOGIT_ENABLED': True,
@@ -170,18 +170,6 @@ DOWNLOAD_FORMATS_RASTER = [
     'GML',
     'GZIP'
 ]
-
-PG_GEOGIG_STORE = True
-
-# Settings for Postgres database for Geogig
-#PG_GEOGIG_DB = {
-#    'HOST': '',
-#    'PORT': '',
-#    'NAME': '',
-#    'SCHEMA': '',
-#    'USER': '',
-#    'PASSWORD': ''
-#}
 
 
 try:
