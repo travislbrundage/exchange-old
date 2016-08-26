@@ -379,3 +379,7 @@ AVATAR_GRAVATAR_SSL = True
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+
+# Enable a git-like workflow with geogig
+GEOGIG_WORKFLOW = True
+GEOGIG_MANAGER = 'managers'
