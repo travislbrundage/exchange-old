@@ -9,6 +9,13 @@ from django.core.urlresolvers import reverse
 from exchange.core.models import ThumbnailImage, ThumbnailImageForm
 from geonode.maps.views import _resolve_map
 import requests
+from django.http import Http404
+
+
+# This is purely for a quick fix to disable the services endpoint
+# The added registry layers cause errors in MapLoom
+def services_404(request):
+    raise Http404
 
 
 def home_screen(request):
