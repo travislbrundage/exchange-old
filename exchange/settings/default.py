@@ -126,7 +126,7 @@ INSTALLED_APPS = (
     'maploom',
     'solo',
     'haystack',
-    'corsheaders',
+    #'corsheaders',
     'exchange-docs'
 ) + INSTALLED_APPS
 

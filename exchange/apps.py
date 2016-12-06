@@ -18,11 +18,10 @@
 #
 #########################################################################
 
-__version__ = (1, 1, 0, 'rc', 1)
+from django.apps import AppConfig
 
 
-def get_version():
-    import exchange.version
-    return exchange.version.get_version(__version__)
-
-default_app_config = 'exchange.apps.MyCORS'
+class MyCORS(AppConfig):
+    name = 'corsheaders'
+    verbose_name = 'my corsheaders'
+    label = 'my_corsheaders'

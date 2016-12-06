@@ -19,3 +19,5 @@
 #########################################################################
 
 from .default import *  # noqa
+
+default_app_config = 'exchange.apps.MyCORS'
