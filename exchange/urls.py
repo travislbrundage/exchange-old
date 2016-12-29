@@ -54,6 +54,11 @@ if settings.REGISTRY is False:
         url(r'^services(.*)$', page_not_found)
     ]
 
+if settings.LOGOUT_ENABLED is False:
+    urlpatterns += [
+        url(r'^account/logout/$', page_not_found)
+    ]
+
 # If django-osgeo-importer is enabled...
 if 'osgeo_importer' in settings.INSTALLED_APPS:
     # Replace the default Exchange 'layers/upload'

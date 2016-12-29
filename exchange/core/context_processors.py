@@ -30,6 +30,7 @@ def resource_variables(request):
         REGISTRY=getattr(settings, 'REGISTRY', False),
         MAP_CRS=settings.DEFAULT_MAP_CRS,
         INSTALLED_APPS=set(settings.INSTALLED_APPS),
+        LOGOUT=getattr(settings, 'LOGOUT_ENABLED', True),
     )
 
     return defaults
