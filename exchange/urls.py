@@ -46,6 +46,7 @@ urlpatterns = patterns(
     url(r'^csw/new/$', views.insert_csw, name='insert_csw'),
     url(r'^csw/status/$', views.csw_status, name='csw_status'),
     url(r'^csw/status_table/$', views.csw_status_table, name='csw_status_table'),
+    url(r"^people/profile/(?P<username>[^/]*)/$", views.profile_detail, name="profile_detail"),
 )
 
 if settings.REGISTRY is False:

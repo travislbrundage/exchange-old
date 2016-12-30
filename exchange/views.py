@@ -1,6 +1,6 @@
 import os
 
-from django.shortcuts import render, render_to_response
+from django.shortcuts import render, render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.conf import settings
 from geonode.layers.views import _resolve_layer, _PERMISSION_MSG_METADATA
@@ -12,6 +12,7 @@ from exchange.tasks import create_new_csw
 from geonode.maps.views import _resolve_map
 import requests
 import logging
+from geonode.people.models import Profile
 
 logger = logging.getLogger(__name__)
 
@@ -165,3 +166,14 @@ def csw_status_table(request):
                                   "records": records,
                                },
                               context_instance=RequestContext(request))
+
+
+def profile_detail(request, username):
+    profile = get_object_or_404(Profile, username=username)
+    # combined queryset from each model content type
+
+    return render(request, "people/profile_detail.html", {
+        "profile": profile,
+        "PASSWORD_MODIFIABLE": False,
+        #getattr(settings, 'PASSWORD_MODIFIABLE', False),
+    })
