@@ -3,6 +3,8 @@
 git+git://github.com/boundlessgeo/django-exchange-maploom.git@v1.5.12#django-exchange-maploom
 git+git://github.com/boundlessgeo/dj-database-url@8a24aab17db8ee52400f2fc0fe23c44fef1439e6#egg=dj-database-url
 git+git://github.com/GeoNode/geonode@1898779e8cdf104ac454bc497c6243d19f7caf90#egg=geonode
+# Perhaps make a fork in boundlessgeo and push this branch there, point to it instead
+git+git://github.com/travislbrundage/geonode-user-accounts@force-lower#egg=geonode-user-accounts
 celery==3.1.18
 django-storages==1.1.8
 boto==2.38.0
