@@ -9,4 +9,6 @@ class GeoAxisMiddleware(RemoteUserMiddleware):
     by setting a django setting of GEOAXIS_HEADER.
     """
     header = getattr(settings, 'GEOAXIS_HEADER', 'OAM_REMOTE_USER')
+    print 'sanity check'
+    print header
     force_logout_if_no_header = False

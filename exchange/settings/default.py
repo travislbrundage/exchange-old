@@ -308,12 +308,66 @@ if all([AUTH_LDAP_SERVER_URI, LDAP_SEARCH_DN]):
                                        ldap.SCOPE_SUBTREE, AUTH_LDAP_USER)
 
 # geoaxis
+GEOAXIS_ENABLED = True # str2bool(os.getenv('GEOAXIS_ENABLED', 'False'))
+if GEOAXIS_ENABLED:
+    AUTHENTICATION_BACKENDS = (
+        'django.contrib.auth.backends.RemoteUserBackend',
+        'oauth2_provider.backends.OAuth2Backend',
+        'guardian.backends.ObjectPermissionBackend',
+    ) # + AUTHENTICATION_BACKENDS
+    for i, middleware in enumerate(MIDDLEWARE_CLASSES):
+        # We're trying to put this after AuthenticationMiddleware
+        if middleware == 'django.contrib.auth.middleware.AuthenticationMiddleware':
+            MIDDLEWARE_CLASSES = list(MIDDLEWARE_CLASSES)
+            MIDDLEWARE_CLASSES.insert(i+1, 'exchange.auth.middleware.GeoAxisMiddleware')
+
+
+MIDDLEWARE_CLASSES = (
+    #'django.middleware.common.CommonMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    #'django.contrib.messages.middleware.MessageMiddleware',
+    #'django.middleware.locale.LocaleMiddleware',
+    #'pagination.middleware.PaginationMiddleware',
+    #'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'exchange.auth.middleware.GeoAxisMiddleware',
+    #'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    #'geonode.security.middleware.LoginRequiredMiddleware',
+    #'whitenoise.middleware.WhiteNoiseMiddleware',
+)
+
+'''
+'django.contrib.auth.backends.RemoteUserBackend',
+'oauth2_provider.backends.OAuth2Backend',
+'django.contrib.auth.backends.ModelBackend',
+'guardian.backends.ObjectPermissionBackend'
 GEOAXIS_ENABLED = str2bool(os.getenv('GEOAXIS_ENABLED', 'False'))
 if GEOAXIS_ENABLED:
     AUTHENTICATION_BACKENDS = (
         'exchange.auth.middleware.GeoAxisMiddleware',
     ) + AUTHENTICATION_BACKENDS
 
+
+MIDDLEWARE_CLASSES = (
+    #'django.middleware.common.CommonMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    #'django.contrib.messages.middleware.MessageMiddleware',
+    #'django.middleware.locale.LocaleMiddleware',
+    #'pagination.middleware.PaginationMiddleware',
+    #'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'exchange.auth.middleware.GeoAxisMiddleware',
+    #'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    #'geonode.security.middleware.LoginRequiredMiddleware',
+    #'whitenoise.middleware.WhiteNoiseMiddleware',
+)
+'''
+
+'''
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.RemoteUserBackend',
+)
+'''
 
 # NEED TO UPDATE DJANGO_MAPLOOM FOR ONLY THIS ONE VALUE
 REGISTRY = os.environ.get('ENABLE_REGISTRY', False)
