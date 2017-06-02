@@ -29,6 +29,10 @@ def documentation_page(request):
     return HttpResponseRedirect('/static/docs/index.html')
 
 
+def about_page(request, template='about.html'):
+    return render_to_response(template, RequestContext(request, {}))
+
+
 def layer_metadata_detail(request, layername,
                           template='layers/metadata_detail.html'):
 
