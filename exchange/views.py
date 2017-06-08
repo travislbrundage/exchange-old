@@ -16,6 +16,9 @@ from exchange.tasks import create_new_csw, load_service_layers
 from geonode.maps.views import _resolve_map
 import requests
 import logging
+#import mock
+#import pygithub3
+#from pygithub3.services.repo import Repo
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +33,39 @@ def documentation_page(request):
 
 
 def about_page(request, template='about.html'):
-    return render_to_response(template, RequestContext(request, {}))
+    #repo = Repo()
+    #print repo
+    # Better way to define projects?
+    projects = [{
+        'name': 'Name',
+        'description': 'lorem ipsum',
+        'website': 'http://www.google.com',
+        'repo': 'http://www.github.com',
+        'contributors': ['a', 'b', 'c']
+    }, {
+        'name': 'GeoNode',
+        'website': 'http://geonode.org/',
+        'repo': 'https://github.com/GeoNode/geonode',
+    }, {
+        'name': 'MapLoom',
+        'website': 'http://prominentedge.com/projects/maploom.html',
+        'repo': 'https://github.com/ROGUE-JCTD/MapLoom'
+    }, {
+        'name': 'OSGeo Importer',
+        'repo': 'https://github.com/GeoNode/django-osgeo-importer'
+    }, {
+        'name': 'React Viewer',
+        'website': 'http://client.geonode.org',
+        'repo': 'https://github.com/GeoNode/geonode-client'
+    }]
+    # Name: Define manually
+    # Description: Pull from somewhere?
+    # Web site: Define manually
+    # Repo: Define manually
+    # Contributors: Pull from somewhere?
+    return render_to_response(template, RequestContext(request, {
+        "projects": projects
+    }))
 
 
 def layer_metadata_detail(request, layername,

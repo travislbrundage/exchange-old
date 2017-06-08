@@ -22,6 +22,7 @@
   <p>The following projects are important pieces of Boundless Exchange. Boundless is happy to work with the Open Source geospatial community and is a proud contributor to these projects.</p>
 
   {% for project in projects %}
+  <br>
   <div>
     {% if project.name %}
     <h4>{{ project.name }}</h4>
@@ -36,18 +37,18 @@
     <p><b>GitHub repo</b>: {{ project.repo }}</p>
     {% endif %}
     {% if project.contributors %}
+    <p><b>Contributors</b>:</p>
     <ul>
       {% for contributor in project.contributors %}
         <li>{{ contributor }}</li>
       {% endfor %}
     </ul>
-    {% end if}
+    {% endif %}
   </div>
   {% endfor %}
-  
+  <!--
   <div>
     <h4>GeoNode</h4>
-    <!-- TODO: Make this dynamic -->
     <p>GeoNode is a web-based application and platform for developing geospatial information systems (GIS) and for deploying spatial data infrastructures (SDI).
 
     It is designed to be extended and modified, and can be integrated into existing platforms.</p>
@@ -62,13 +63,22 @@
   </div>
   <div>
     <h4>React Viewer</h4>
-  </div>
+  </div>-->
 </div>
 <div class="container">
   <h2>Version Details</h2>
 </div>
 <div class="container">
   <h2>License</h2>
+  <!-- Example, GeoNode:
+GeoNode is Copyright 2016 Open Source Geospatial Foundation (OSGeo).
+
+GeoNode is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+GeoNode is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with GeoNode. If not, see <http://www.gnu.org/licenses/>.-->
+  <p>Boundless Exchange is open source and under a [LICENSE] license.</p>
 </div>
 {% endblock %}
 {% endblock %}
