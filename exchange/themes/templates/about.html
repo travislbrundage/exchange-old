@@ -6,14 +6,13 @@
 {% block middle %}
 {% block mainbody %}
 <div class="container" style="text-align: center">
-  <!-- TODO: Center this -->
   <h1>Boundless Exchange</h1>
   v{{ VERSION }}
 </div>
 <div class="container">
   <h2>What's New</h2>
   <!-- Truncate version to x.x.xAx. A custom filter will need to be created to future proof, but truncatechars works as a quick fix -->
-  <h4>Boundless Exchange -- {{ VERSION|truncatechars:10 }}</h4>
+  <h4>Boundless Exchange -- {{ VERSION|truncatechars:10|slice:":-3" }}</h4>
   <!-- Currently no release notes exist for Boundless Exchange - the following is just the product description -->
   <p>Boundless Exchange is a web-based platform for your content, built for your enterprise. It facilitates the creation, sharing, and collaborative use of geospatial data. For power users, advanced editing capabilities for versioned workflows via the web browser are included. Boundless Exchange is powered by GeoNode, GeoGig, OpenLayers, PostGIS and GeoServer. Boundless Exchange is designed as a platform for collaboration.</p>
 </div>
@@ -46,39 +45,20 @@
     {% endif %}
   </div>
   {% endfor %}
-  <!--
-  <div>
-    <h4>GeoNode</h4>
-    <p>GeoNode is a web-based application and platform for developing geospatial information systems (GIS) and for deploying spatial data infrastructures (SDI).
-
-    It is designed to be extended and modified, and can be integrated into existing platforms.</p>
-
-    <p><b>GitHub Repo</b>: https://github.com/boundlessgeo/geonode</p>
-  </div>
-  <div>
-    <h4>MapLoom</h4>
-  </div>
-  <div>
-    <h4>OSgeo Importer</h4>
-  </div>
-  <div>
-    <h4>React Viewer</h4>
-  </div>-->
 </div>
 <div class="container">
   <h2>Version Details</h2>
+  <ul>
+    {% for project in projects %}
+    <div style="float: left; width: 50%"><li><h4>{{ project.name }} version: v{{ project.version }}</h4></li></div>
+    <div style="float: left; width: 50%"><li><h4>{{ project.name }} code revision: <a href="{{ project.repo }}/commit/{{ project.commit }}">{{ project.commit }}</a></h4></li></div>
+    {% endfor %}
+  </ul>
 </div>
 <div class="container">
   <h2>License</h2>
-  <!-- Example, GeoNode:
-GeoNode is Copyright 2016 Open Source Geospatial Foundation (OSGeo).
-
-GeoNode is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-
-GeoNode is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along with GeoNode. If not, see <http://www.gnu.org/licenses/>.-->
-  <p>Boundless Exchange is open source and under a [LICENSE] license.</p>
+  <!-- Should the full text be included? -->
+  <p>Boundless Exchange is free software licensed under GNU General Public License (version 3). Refer to the included license.txt file for the full license.</p>
 </div>
 {% endblock %}
 {% endblock %}

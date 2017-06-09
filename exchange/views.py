@@ -16,9 +16,7 @@ from exchange.tasks import create_new_csw, load_service_layers
 from geonode.maps.views import _resolve_map
 import requests
 import logging
-#import mock
-#import pygithub3
-#from pygithub3.services.repo import Repo
+from sets import Set
 
 logger = logging.getLogger(__name__)
 
@@ -33,36 +31,99 @@ def documentation_page(request):
 
 
 def about_page(request, template='about.html'):
-    #repo = Repo()
-    #print repo
+    # Do we have a better way to get list of all
+    # boundless employees/contributors/etc?
+    # This is a static list of the logins of all people in the
+    # Boundless organization: https://github.com/orgs/boundlessgeo/people
+    boundless_c = Set([
+        'aaryno', 'acalamito', 'adearing', 'alexbury', 'alisondrain',
+        'amillerBoundless', 'amirahav', 'arhote', 'asc1', 'bartvde',
+        'BerryDaniel', 'bitner', 'bmmpxf', 'bmpierson', 'boundlessgeo-yancy',
+        'boundlessgeoadmin', 'boundlessjiraconnect', 'boundlessmike',
+        'boundlessssengupta', 'cadamsQA', 'camerontesterman', 'CarlyLanglois',
+        'cdelpinogeo', 'ChristianWomack', 'cmedine', 'cuttlefish', 'dakcarto',
+        'darinacosta', 'davisc', 'DBlasby', 'dustinturp', 'dvntucker',
+        'ekemmons', 'elpaso', 'emerkle826', 'frankrowe', 'geopyguy',
+        'georific', 'gioman', 'goudine', 'groldan', 'harts-boundless',
+        'hemphillda', 'iant1212', 'j-meyer', 'jasonrydberg', 'jdgarrett',
+        'jjmulenex', 'jmiller-boundless', 'jodygarnett', 'johngschulz',
+        'josh-fix', 'jrbeckwith', 'JulieBoundless', 'luipir', 'mattkrusz',
+        'mbertrand', 'mrcnc', 'mtCarto', 'nstires-boundless', 'onwsk8r',
+        'qscripter', 'sarasafavi', 'shawmi', 'smithkm', 'Squalyboy',
+        'SrNetoChan', 'tbarsballe', 'tetriscode', 'theduckylittle',
+        'thirystheory', 'tingold', 'travislbrundage', 'vickdw', 'volaya',
+        'walker', 'wnordmann', 'zrouse-Boundless'
+    ])
+    # Intersect contributors for each project
+    geonode_c = requests.get(
+        'https://api.github.com/repos/GeoNode/geonode/contributors'
+    ).json()
+    geonode_c = Set([x['login'] for x in geonode_c])
+    geonode_c = geonode_c.intersection(boundless_c)
+
+    geoserver_c = requests.get(
+        'https://api.github.com/repos/geoserver/geoserver/contributors'
+    ).json()
+    geoserver_c = Set([x['login'] for x in geoserver_c])
+    geoserver_c = geoserver_c.intersection(boundless_c)
+
+    maploom_c = requests.get(
+        'https://api.github.com/repos/ROGUE-JCTD/MapLoom/contributors'
+    ).json()
+    maploom_c = Set([x['login'] for x in maploom_c])
+    maploom_c = maploom_c.intersection(boundless_c)
+
+    importer_c = requests.get(
+        'https://api.github.com/repos/GeoNode/django-osgeo-importer/' +
+        'contributors'
+    ).json()
+    importer_c = Set([x['login'] for x in importer_c])
+    importer_c = importer_c.intersection(boundless_c)
+
+    react_c = requests.get(
+        'https://api.github.com/repos/GeoNode/geonode-client/contributors'
+    ).json()
+    react_c = Set([x['login'] for x in react_c])
+    react_c = react_c.intersection(boundless_c)
+
     # Better way to define projects?
+    # Can probably pull commit hash from correct github repos as top commit
+    # How to get versions?
     projects = [{
-        'name': 'Name',
-        'description': 'lorem ipsum',
-        'website': 'http://www.google.com',
-        'repo': 'http://www.github.com',
-        'contributors': ['a', 'b', 'c']
-    }, {
         'name': 'GeoNode',
         'website': 'http://geonode.org/',
         'repo': 'https://github.com/GeoNode/geonode',
+        'contributors': geonode_c,
+        'version': '2.6',
+        'commit': 'cbe77b1'
+    }, {
+        'name': 'GeoServer',
+        'website': 'http://geoserver.org/',
+        'repo': 'https://github.com/geoserver/geoserver',
+        'contributors': geoserver_c,
+        'version': '2.9',
+        'commit': '4452a41'
     }, {
         'name': 'MapLoom',
         'website': 'http://prominentedge.com/projects/maploom.html',
-        'repo': 'https://github.com/ROGUE-JCTD/MapLoom'
+        'repo': 'https://github.com/ROGUE-JCTD/MapLoom',
+        'contributors': maploom_c,
+        'version': '1.5.60',  # This is in MapLoom's bower.json file
+        'commit': '320e098'
     }, {
         'name': 'OSGeo Importer',
-        'repo': 'https://github.com/GeoNode/django-osgeo-importer'
+        'repo': 'https://github.com/GeoNode/django-osgeo-importer',
+        'contributors': importer_c,
+        'version': '0.2.1',
+        'commit': 'd7045cf'
     }, {
         'name': 'React Viewer',
         'website': 'http://client.geonode.org',
-        'repo': 'https://github.com/GeoNode/geonode-client'
+        'repo': 'https://github.com/GeoNode/geonode-client',
+        'contributors': react_c,
+        'version': '0.0.23',
+        'commit': '4118783'
     }]
-    # Name: Define manually
-    # Description: Pull from somewhere?
-    # Web site: Define manually
-    # Repo: Define manually
-    # Contributors: Pull from somewhere?
     return render_to_response(template, RequestContext(request, {
         "projects": projects
     }))
