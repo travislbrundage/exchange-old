@@ -408,6 +408,8 @@
           });
           $scope.uploadSuccessful = true;
           $rootScope.$broadcast('upload:complete', response);
+          // perhaps here we can do a special call which will trigger a .save() on the layer?
+          console.log('this is the completion point');
         }
       };
 
