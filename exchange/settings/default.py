@@ -325,9 +325,10 @@ on same elasticsearch instance at ES_URL
 REGISTRY_URL must be set in order to provide links to Registry
 '''
 ES_UNIFIED_SEARCH = str2bool(os.getenv('ES_UNIFIED_SEARCH', 'False'))
-
+''
 # haystack settings
 ES_URL = os.getenv('ES_URL', 'http://127.0.0.1:9200/')
+'''
 ES_ENGINE = os.getenv(
     'ES_ENGINE',
     'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine'
@@ -347,6 +348,13 @@ if HAYSTACK_SEARCH:
     }
     INSTALLED_APPS = (
         'haystack',
+    ) + INSTALLED_APPS
+'''
+# elasticsearch-dsl settings
+ES_DSL_SEARCH = True # str2bool(os.getenv('ES_DSL_SEARCH', 'False'))
+if ES_DSL_SEARCH:
+    INSTALLED_APPS = (
+        'exchange.elasticsearchapp',
     ) + INSTALLED_APPS
 
 
