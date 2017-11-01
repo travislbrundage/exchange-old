@@ -5,6 +5,7 @@ import uuid
 
 from django import core, db
 from django.utils.translation import ugettext_lazy as _
+from exchange.elasticsearchapp.search import StoryIndex
 
 
 class Story(ResourceBase):
@@ -90,6 +91,95 @@ class Story(ResourceBase):
         verbose_name_plural = 'Stories'
         db_table = 'maps_story'
         pass
+
+    # elasticsearch_dsl indexing
+    def indexing(self):
+        obj = StoryIndex(
+            meta={'id': self.id},
+            id=self.id,
+            abstract=self.abstract,
+            # TODO: Does this work? It's a resourcebase_api field?
+            category__gn_description=self.category__gn_description,
+            distribution_description=self.distribution_description,
+            distribution_url=self.distribution_url,
+            detail_url=self.detail_url,
+            owner__username=self.owner,
+            # TODO: Do these work for grabbing the fields of owner?
+            owner__first_name=self.owner__first_name,
+            owner__last_name=self.owner__last_name,
+            is_published=self.is_published,
+            featured=self.featured,
+            popular_count=self.popular_count,
+            share_count=self.share_count,
+            rating=self.prepare_rating(),
+            thumbnail_url=self.thumbnail_url,
+            uuid=self.uuid,
+            title=self.title,
+            date=self.date,
+            type=self.prepare_type(),
+            title_sortable=self.prepare_title_sortable(),
+            # TODO: Does this work for grabbing the fields of category?
+            category=self.category__identifier,
+            bbox_left=self.bbox_x0,
+            bbox_right=self.bbox_x1,
+            bbox_bottom=self.bbox_y0,
+            bbox_top=self.bbox_y1,
+            temporal_extent_start=self.temporal_extent_start,
+            temporal_extent_end=self.temporal_extent_end,
+            # TODO: Does this need to be a function call?
+            keywords=self.keyword_slug_list,
+            # TODO: Does this need to be a function call?
+            regions=self.region_name_list,
+            num_ratings=self.prepare_num_ratings(),
+            num_comments=self.prepare_num_comments(),
+            num_chapters=self.prepare_num_chapters()
+        )
+        obj.save()
+        return obj.to_dict(include_meta=True)
+
+    # elasticsearch_dsl indexing helper functions
+    def prepare_type(self):
+        return "story"
+
+    def prepare_rating(self):
+        ct = ContentType.objects.get_for_model(self)
+        try:
+            rating = OverallRating.objects.filter(
+                object_id=self.pk,
+                content_type=ct
+            ).aggregate(r=Avg("rating"))["r"]
+            return float(str(rating or "0"))
+        except OverallRating.DoesNotExist:
+            return 0.0
+
+    def prepare_num_ratings(self):
+        ct = ContentType.objects.get_for_model(self)
+        try:
+            return OverallRating.objects.filter(
+                object_id=self.pk,
+                content_type=ct
+            ).all().count()
+        except OverallRating.DoesNotExist:
+            return 0
+
+    def prepare_num_comments(self):
+        ct = ContentType.objects.get_for_model(self)
+        try:
+            return Comment.objects.filter(
+                object_id=self.pk,
+                content_type=ct
+            ).all().count()
+        except:
+            return 0
+
+    def prepare_title_sortable(self):
+        return self.title.lower()
+
+    def prepare_num_chapters(self):
+        try:
+            return self.chapters.all().count()
+        except:
+            return 0
 
 
 class StoryChapter(db.models.Model):
