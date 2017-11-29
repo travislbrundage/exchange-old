@@ -225,15 +225,6 @@ def gen_dict_extract(key, var):
 def key_exists(key, var):
     return any(True for _ in gen_dict_extract(key, var))
 
-'''
-def unified_elastic_search(request, resourcetype='base'):
-    mock_json = {
-        'hello': 'fam'
-    }
-
-    return JsonResponse(mock_json)
-'''
-
 def unified_elastic_search(request, resourcetype='base'):
     import requests
     import collections
@@ -387,9 +378,11 @@ def unified_elastic_search(request, resourcetype='base'):
     # in order for a UI to build the choices
     # overall_results = search[0:0].execute()
 
+    # Compare this to before that iteration mess
     overall_results = search.execute()
 
     return JsonResponse(overall_results.to_dict())
+    
     '''
     # build up facets dict which contains all the options for a facet along
     # with overall count and any display name or icon that should be used in UI
