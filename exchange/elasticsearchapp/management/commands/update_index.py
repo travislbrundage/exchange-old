@@ -32,6 +32,14 @@ class Command(BaseCommand):
         ProfileIndex.init()
         GroupIndex.init()
         StoryIndex.init()
+
+        body = {
+            'analysis': {
+                'analyzer': 'snowball'
+            }
+        }
+        es.indices.put_settings(body, index='', ignore=400)
+
         bulk(client=es, actions=(index.indexing() for index in Layer.objects.all().iterator()))
         bulk(client=es, actions=(index.indexing() for index in Map.objects.all().iterator()))
         bulk(client=es, actions=(index.indexing() for index in Document.objects.all().iterator()))
