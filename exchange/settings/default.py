@@ -352,7 +352,9 @@ if HAYSTACK_SEARCH:
 
 '''
 # elasticsearch-dsl settings
-ES_DSL_SEARCH = True # str2bool(os.getenv('ES_DSL_SEARCH', 'False'))
+ES_DSL_SEARCH = str2bool(os.getenv('ES_DSL_SEARCH', 'False'))
+if ES_UNIFIED_SEARCH:
+    ES_DSL_SEARCH = True
 if ES_DSL_SEARCH:
     INSTALLED_APPS = (
         'exchange.elasticsearchapp',
