@@ -63,6 +63,7 @@ def resource_variables(request):
         MAP_CLIENT_USE_CROSS_ORIGIN_CREDENTIALS=getattr(
             settings, 'MAP_CLIENT_USE_CROSS_ORIGIN_CREDENTIALS', False
         ),
+        ES_UNIFIED_SEARCH=getattr(settings, 'ES_UNIFIED_SEARCH', False),
     )
 
     return defaults
