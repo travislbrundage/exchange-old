@@ -332,21 +332,14 @@ ES_ENGINE = os.getenv(
     'ES_ENGINE',
     'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine'
 )
-HAYSTACK_SEARCH = str2bool(os.getenv('HAYSTACK_SEARCH', 'False'))
+
+# elasticsearch-dsl settings
+ES_DSL_SEARCH = str2bool(os.getenv('ES_DSL_SEARCH', 'False'))
 if ES_UNIFIED_SEARCH:
-    HAYSTACK_SEARCH = True
-    HAYSTACK_FACET_COUNTS = True
-if HAYSTACK_SEARCH:
-    HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
-    HAYSTACK_CONNECTIONS = {
-        'default': {
-            'ENGINE': ES_ENGINE,
-            'URL': ES_URL,
-            'INDEX_NAME': 'exchange',
-        },
-    }
+    ES_DSL_SEARCH = True
+if ES_DSL_SEARCH:
     INSTALLED_APPS = (
-        'haystack',
+        'exchange.elasticsearchapp',
     ) + INSTALLED_APPS
 
 
