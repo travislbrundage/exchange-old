@@ -4,6 +4,10 @@ from . import ExchangeTest
 from exchange import settings
 import json
 from osgeo_importer.tasks import import_object
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.urlresolvers import reverse
+import logging
+logger = logging.getLogger(__name__)
 
 
 TESTDIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'files')
@@ -17,6 +21,7 @@ class ViewTestCase(ExchangeTest):
 
     def setUp(self):
         super(ViewTestCase, self).setUp()
+        self.create_test_user()
         self.login()
 
         self.url = '/'
@@ -233,6 +238,7 @@ class CSWStatusTableTest(ViewTestCase):
                     reason="Only run if using unified search")
 class UnifiedSearchTest(ViewTestCase, UploaderMixin):
 
+    # TODO: Creation of all object is very finnicky for some reason
     def setUp(self):
         super(UnifiedSearchTest, self).setUp()
         self.url = '/api/base/search/?limit=100&offset=0&q=test'
@@ -244,14 +250,18 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
         from geonode.base.models import TopicCategory, Region
 
         # Layer
-        # TODO: Make sure this upload is working
-        files = ['./relief_san_andres.tif', './boxes_with_end_date.zip']
-        configs = [{'upload_file_name': 'test_point.zip'},
-                   {'upload_file_name': 'boxes_with_end_date.zip'}]
+        #files = ['./boxes_with_end_date.zip']
+        #configs = [{'upload_file_name': 'boxes_with_end_date.zip',
+        #            'config': {'index': 2}}]
+        #files = ['./relief_san_andres.tif', './boxes_with_end_date.zip']
+        #configs = [{'upload_file_name': 'test_point.zip',
+        #            'config': {'index': 0}},
+        #           {'upload_file_name': 'boxes_with_end_date.zip',
+        #            'config': {'index': 1}}]
         # Upload the layer
-        upload_layers = self.upload_files(files, configs)
-        test_layer = upload_layers[0]
-        test_layer2 = upload_layers[1]
+        #upload_layers = self.upload_files(files, configs)
+        test_layer2 = Layer.objects.get(name='boxes_with_end_date_d7c2fe6f')
+        test_layer = Layer.objects.get(name='relief_san_andres_4206bcb5')
         # test_layers should hold test layer objects
         # abstracts
         test_layer.abstract = 'hello world'
@@ -271,10 +281,14 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
         test_layer.popular_count = 10
         test_layer2.popular_count = 20
         # define an owner
+        test_layer = self.admin_user
         test_layer2.owner = self.admin_user
         # save
         test_layer.save()
         test_layer2.save()
+        #test_layer = self.test_user
+        #test_layer.save()
+        #test_layer2 = test_layer
 
         # Map
         # This creates an empty map (contains no layers)
@@ -282,52 +296,14 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
             owner=self.admin_user,
             zoom=0,
             center_x=0,
-            center_y=0
+            center_y=0,
+            id=123456
         )
         # test_map should hold a test map object
         # rename it
         test_map.title = 'MapTest'
         test_map.save()
 
-        # TODO: Documents are not currently reflected correctly in search API
-        # Document
-        document = {
-            'title': 'Test Document',
-            # Does this need to be placed in a list?
-            'file': 'test.png'
-            # url and link to fields are not required
-        }
-        doc_form = DocumentCreateForm(document)
-        self.assertTrue(doc_form.is_valid(), "Test document failed validation")
-        test_doc = doc_form.save()
-        test_doc.save()
-        # test_doc should hold a test document object
-
-        # CSW Registry
-        record = {
-            'title': 'Test CSW Layer',
-            'modified': '01/01/2001',
-            'creator': 'Automated Testing',
-            'record_type': 'layer',
-            'alternative': 'test',
-            'abstract': 'This was created from automated testing.',
-            'source': 'http://foo.org/a.html',
-            'relation': '',
-            'record_format': 'csw',
-            'bbox_upper_corner': '45,45',
-            'bbox_lower_corner': '0,0',
-            'contact_email': 'test@boundlessgeo.fake',
-            'contact_phone': '555-555-5555',
-            'gold': '',
-            'category': ''
-        }
-
-        form = CSWRecordForm(record)
-        self.assertTrue(form.is_valid(), "Test record failed validation")
-
-        test_record = form.save()
-        test_record.save()
-        create_new_csw.apply(args=(new_record.id,)).get()
         # test_record should hold a test csw record
         # Should be valid & available in registry
         self.test_layer = test_layer
@@ -342,11 +318,11 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
     def test_phrase(self):
         # should be test_layer
         self.url = '/api/base/search/?' \
-                   'limit=100&offset=0&q="test"'
+                   'limit=100&offset=0&q="relief"'
         self.doit()
         search_results = json.loads(self.response.content)
         self.assertEqual(search_results['meta']['total_count'], 1)
-        self.assertEqual(search_results['meta']['facets']['type']['layer'], 1)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['layer']['count'], 1)
         self.assertEqual(search_results['objects'][0]['id'], self.test_layer.id)
 
     def test_bool(self):
@@ -357,17 +333,17 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
         self.doit()
         search_results = json.loads(self.response.content)
         self.assertEqual(search_results['meta']['total_count'], 1)
-        self.assertEqual(search_results['meta']['facets']['type']['layer'], 1)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['layer']['count'], 1)
         self.assertEqual(search_results['objects'][0]['id'], self.test_layer2.id)
 
     def test_or(self):
         # should get test_layer and test_layer2
         self.url = '/api/base/search/' \
-                   '?limit=100&offset=0&q=test or boxes'
+                   '?limit=100&offset=0&q=relief or boxes'
         self.doit()
         search_results = json.loads(self.response.content)
         self.assertEqual(search_results['meta']['total_count'], 2)
-        self.assertEqual(search_results['meta']['facets']['type']['layer'], 2)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['layer']['count'], 2)
         self.assertEqual(len(search_results['objects']), 2)
 
     def test_bbox(self):
@@ -377,7 +353,7 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
         self.doit()
         search_results = json.loads(self.response.content)
         self.assertEqual(search_results['meta']['total_count'], 1)
-        self.assertEqual(search_results['meta']['facets']['type']['layer'], 1)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['layer']['count'], 1)
         # should be test_layer's id
         self.assertEqual(search_results['objects'][0]['id'], self.test_layer.id)
 
@@ -402,8 +378,8 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
         self.doit()
         search_results = json.loads(self.response.content)
         self.assertEqual(search_results['meta']['total_count'], 3)
-        self.assertEqual(search_results['meta']['facets']['type']['layer'], 2)
-        self.assertEqual(search_results['meta']['facets']['type']['map'], 1)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['layer']['count'], 2)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['map']['count'], 1)
         self.assertEqual(len(search_results['objects']), 3)
         self.url = '/api/base/search/' \
                    '?limit=100&offset=0&' \
@@ -411,20 +387,20 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
         self.doit()
         search_results = json.loads(self.response.content)
         self.assertEqual(search_results['meta']['total_count'], 3)
-        self.assertEqual(search_results['meta']['facets']['type']['layer'], 2)
-        self.assertEqual(search_results['meta']['facets']['type']['map'], 1)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['layer']['count'], 2)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['map']['count'], 1)
         self.assertEqual(len(search_results['objects']), 3)
 
     def test_categories(self):
-        # Should get test_layer2, assigned to air category
+        # Should get test_layer, assigned to air category
         self.url = '/api/base/search/' \
                    '?limit=100&offset=0&category__in=air'
         self.doit()
         search_results = json.loads(self.response.content)
         self.assertEqual(search_results['meta']['total_count'], 1)
-        self.assertEqual(search_results['meta']['facets']['type']['layer'], 1)
-        # should be test_layer2's id
-        self.assertEqual(search_results['objects'][0]['id'], self.test_layer2.id)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['layer']['count'], 1)
+        # should be test_layer's id
+        self.assertEqual(search_results['objects'][0]['id'], self.test_layer.id)
 
     def test_keywords(self):
         # Should get test_layer, given foo keyword
@@ -433,7 +409,7 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
         self.doit()
         search_results = json.loads(self.response.content)
         self.assertEqual(search_results['meta']['total_count'], 1)
-        self.assertEqual(search_results['meta']['facets']['type']['layer'], 1)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['layer']['count'], 1)
         # should be test_layer's id
         self.assertEqual(search_results['objects'][0]['id'], self.test_layer.id)
 
@@ -444,7 +420,7 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
         self.doit()
         search_results = json.loads(self.response.content)
         self.assertEqual(search_results['meta']['total_count'], 2)
-        self.assertEqual(search_results['meta']['facets']['type']['layer'], 2)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['layer']['count'], 2)
         self.assertEqual(len(search_results['objects']), 2)
         # should get map
         self.url = '/api/base/search/' \
@@ -452,7 +428,7 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
         self.doit()
         search_results = json.loads(self.response.content)
         self.assertEqual(search_results['meta']['total_count'], 1)
-        self.assertEqual(search_results['meta']['facets']['type']['map'], 1)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['map']['count'], 1)
         self.assertEqual(len(search_results['objects']), 1)
 
     def test_datesorta(self):
@@ -461,8 +437,8 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
         self.doit()
         search_results = json.loads(self.response.content)
         self.assertEqual(search_results['meta']['total_count'], 3)
-        self.assertEqual(search_results['meta']['facets']['type']['layer'], 2)
-        self.assertEqual(search_results['meta']['facets']['type']['map'], 1)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['layer']['count'], 2)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['map']['count'], 1)
         self.assertEqual(len(search_results['objects']), 3)
         # Should get first uploaded first, so test_layer first
         self.assertEqual(search_results['objects'][0]['id'], self.test_layer.id)
@@ -477,8 +453,8 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
         self.doit()
         search_results = json.loads(self.response.content)
         self.assertEqual(search_results['meta']['total_count'], 3)
-        self.assertEqual(search_results['meta']['facets']['type']['layer'], 2)
-        self.assertEqual(search_results['meta']['facets']['type']['map'], 1)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['layer']['count'], 2)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['map']['count'], 1)
         self.assertEqual(len(search_results['objects']), 3)
         # Should get "most recent" first, so test_map first
         self.assertEqual(search_results['objects'][0]['id'], self.test_map.id)
@@ -494,8 +470,8 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
         self.doit()
         search_results = json.loads(self.response.content)
         self.assertEqual(search_results['meta']['total_count'], 3)
-        self.assertEqual(search_results['meta']['facets']['type']['layer'], 2)
-        self.assertEqual(search_results['meta']['facets']['type']['map'], 1)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['layer']['count'], 2)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['map']['count'], 1)
         self.assertEqual(len(search_results['objects']), 3)
         # test_layer2 comes alphabetically first
         self.assertEqual(search_results['objects'][0]['id'], self.test_layer2.id)
@@ -511,8 +487,8 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
         self.doit()
         search_results = json.loads(self.response.content)
         self.assertEqual(search_results['meta']['total_count'], 3)
-        self.assertEqual(search_results['meta']['facets']['type']['layer'], 2)
-        self.assertEqual(search_results['meta']['facets']['type']['map'], 1)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['layer']['count'], 2)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['map']['count'], 1)
         self.assertEqual(len(search_results['objects']), 3)
         # test_layer comes alphabetically last
         self.assertEqual(search_results['objects'][0]['id'], self.test_layer.id)
@@ -529,8 +505,8 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
         self.doit()
         search_results = json.loads(self.response.content)
         self.assertEqual(search_results['meta']['total_count'], 3)
-        self.assertEqual(search_results['meta']['facets']['type']['layer'], 2)
-        self.assertEqual(search_results['meta']['facets']['type']['map'], 1)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['layer']['count'], 2)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['map']['count'], 1)
         self.assertEqual(len(search_results['objects']), 3)
         # test_layer2 is most popular
         self.assertEqual(search_results['objects'][0]['id'], self.test_layer2.id)
@@ -545,7 +521,7 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
         self.doit()
         search_results = json.loads(self.response.content)
         self.assertEqual(search_results['meta']['total_count'], 1)
-        self.assertEqual(search_results['meta']['facets']['type']['layer'], 1)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['layer']['count'], 1)
         self.assertEqual(len(search_results['objects']), 1)
         self.assertEqual(search_results['objects'][0]['id'], self.test_layer2.id)
 
@@ -556,7 +532,7 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
         self.doit()
         search_results = json.loads(self.response.content)
         self.assertEqual(search_results['meta']['total_count'], 1)
-        self.assertEqual(search_results['meta']['facets']['type']['layer'], 1)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['layer']['count'], 1)
         self.assertEqual(len(search_results['objects']), 1)
         self.assertEqual(search_results['objects'][0]['id'], self.test_layer.id)
 
@@ -572,7 +548,7 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
                    '?limit=100&offset=0&extent__lte=2003-01-02'
         self.doit()
         self.assertEqual(search_results['meta']['total_count'], 1)
-        self.assertEqual(search_results['meta']['facets']['type']['layer'], 1)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['layer']['count'], 1)
         self.assertEqual(len(search_results['objects']), 1)
         self.assertEqual(search_results['objects'][0]['id'], self.test_layer2.id)
         # failure case - no layers returned
@@ -586,7 +562,7 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
                    '?limit=100&offset=0&extent__gte=2000-01-02'
         self.doit()
         self.assertEqual(search_results['meta']['total_count'], 1)
-        self.assertEqual(search_results['meta']['facets']['type']['layer'], 1)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['layer']['count'], 1)
         self.assertEqual(len(search_results['objects']), 1)
         self.assertEqual(search_results['objects'][0]['id'], self.test_layer2.id)
         # failure case - no layers returned
@@ -600,7 +576,7 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
                    '?limit=100&offset=0&extent__range=2000-01-02,2001-03-01'
         self.doit()
         self.assertEqual(search_results['meta']['total_count'], 1)
-        self.assertEqual(search_results['meta']['facets']['type']['layer'], 1)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['layer']['count'], 1)
         self.assertEqual(len(search_results['objects']), 1)
         self.assertEqual(search_results['objects'][0]['id'], self.test_layer2.id)
 
@@ -611,7 +587,7 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
         self.doit()
         search_results = json.loads(self.response.content)
         self.assertEqual(search_results['meta']['total_count'], 1)
-        self.assertEqual(search_results['meta']['facets']['type']['layer'], 1)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['layer']['count'], 1)
         self.assertEqual(len(search_results['objects']), 1)
         self.assertEqual(search_results['objects'][0]['id'], self.test_layer2.id)
         # gets test_layer
@@ -620,19 +596,19 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
         self.doit()
         search_results = json.loads(self.response.content)
         self.assertEqual(search_results['meta']['total_count'], 1)
-        self.assertEqual(search_results['meta']['facets']['type']['layer'], 1)
+        self.assertEqual(search_results['meta']['facets']['type']['facets']['layer']['count'], 1)
         self.assertEqual(len(search_results['objects']), 1)
         self.assertEqual(search_results['objects'][0]['id'], self.test_layer.id)
 
     def test_search_types(self):
         url = '/api/%s/search/?q=test'
-        self.url = url % 'layers' 
+        self.url = url % 'layers'
         self.doit()
 
-        self.url = url % 'documents' 
+        self.url = url % 'documents'
         self.doit()
 
-        self.url = url % 'maps' 
+        self.url = url % 'maps'
         self.doit()
 
     def test_search_layer_by_id(self):

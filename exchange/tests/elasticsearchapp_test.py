@@ -2,6 +2,7 @@ from . import ExchangeTest
 from elasticsearch_dsl.connections import connections
 from django.conf import settings
 from elasticsearch import Elasticsearch
+import pytest
 
 
 @pytest.mark.skipif(settings.ES_UNIFIED_SEARCH is False,
@@ -9,7 +10,7 @@ from elasticsearch import Elasticsearch
 class ElasticsearchappTest(ExchangeTest):
 
     def setUp(self):
-        super(ElasticsearchappTest, self).setup()
+        super(ElasticsearchappTest, self).setUp()
         self.login()
 
         # connect to the ES instance
@@ -75,7 +76,7 @@ class ElasticsearchappTest(ExchangeTest):
             },
             'title_sortable': {
                 'type': 'string'
-            }
+            },
             'type': {
                 'type': 'string',
                 'analyzer': 'snowball'
@@ -181,7 +182,7 @@ class ElasticsearchappTest(ExchangeTest):
             },
             'title_sortable': {
                 'type': 'string'
-            }
+            },
             'type': {
                 'type': 'string',
                 'analyzer': 'snowball'
@@ -316,7 +317,7 @@ class ElasticsearchappTest(ExchangeTest):
             },
             'title_sortable': {
                 'type': 'string'
-            }
+            },
             'type': {
                 'type': 'string',
                 'analyzer': 'snowball'
@@ -430,7 +431,7 @@ class ElasticsearchappTest(ExchangeTest):
             },
             'title_sortable': {
                 'type': 'string'
-            }
+            },
             'type': {
                 'type': 'string',
                 'analyzer': 'snowball'
@@ -465,14 +466,6 @@ class ElasticsearchappTest(ExchangeTest):
                 'analyzer': 'snowball'
             },
             'category__gn_description': {
-                'type': 'string',
-                'analyzer': 'snowball'
-            },
-            'csw_type': {
-                'type': 'string',
-                'analyzer': 'snowball'
-            },
-            'csw_wkt_geometry': {
                 'type': 'string',
                 'analyzer': 'snowball'
             },
@@ -557,7 +550,7 @@ class ElasticsearchappTest(ExchangeTest):
             },
             'title_sortable': {
                 'type': 'string'
-            }
+            },
             'type': {
                 'type': 'string',
                 'analyzer': 'snowball'

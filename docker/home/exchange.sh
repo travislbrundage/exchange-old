@@ -65,10 +65,11 @@ wait_for_url elastic "$ES_URL"
 wait_for_url registry "$REGISTRYURL"
 curl -XPUT "$REGISTRYURL/catalog/registry/csw"
 
-# Make sure the mappings are built correctly
-build_es_mappings
-
 log "Exchange is ready on http://172.16.238.2"
+
+# Make sure the mappings are built correctly
+# TODO: This does not seem to work
+build_es_mappings
 
 # Wait for Django process and propagate its exit status.
 started "${name}" "${pid}"
