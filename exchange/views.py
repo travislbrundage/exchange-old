@@ -330,8 +330,9 @@ def unified_elastic_search(request, resourcetype='base'):
     # is allowed to see and the overall types of documents to search.
     # This provides the overall counts and all fields for faceting
 
-    # only show registry, documents, layers, stories, and maps
-    q = Q({"match": {"type": "layer"}}) | Q(
+    # only show registry layers, layers, stories, documents, and maps
+    q = Q({"match": {"_type": "layer"}}) | Q(
+          {"match": {"type": "layer"}}) | Q(
           {"match": {"type": "story"}}) | Q(
           {"match": {"type": "document"}}) | Q(
           {"match": {"type": "map"}})
@@ -348,25 +349,26 @@ def unified_elastic_search(request, resourcetype='base'):
         filter_set_ids = map(str, filter_set.values_list('id', flat=True))
         # Do the query using the filterset and the query term. Facet the
         # results
+        # Always show registry layers since they lack permissions
+        q = Q({"match": {"_type": "layer"}})
         if len(filter_set_ids) > 0:
-            q = Q({"terms": {"id": filter_set_ids}})
+            q = Q({"terms": {"id": filter_set_ids}}) | q
 
         search = search.query(q)
 
     # Add facets to search
     # add filters to facet_filters to be used *after* initial overall search
-    valid_facet_fields = [];
+    valid_facet_fields = []
     facet_filters = []
     for fn in facet_fields:
-        fn
         if fn:
-            valid_facet_fields.append(f)
+            valid_facet_fields.append(fn)
             search.aggs.bucket(fn, 'terms', field=fn, order={"_count": "desc"}, size=nfacets)
             # if there is a filter set in the parameters for this facet
             # add to the filters
-            fp = parameters.getlist(f)
+            fp = parameters.getlist(fn)
             if not fp:
-                fp = parameters.getlist("%s__in"%(f))
+                fp = parameters.getlist("%s__in"%(fn))
             if fp:
                 fq = Q({'terms': {fn: fp}})
                 if fn == 'type': # search across both type_exact and subtype
