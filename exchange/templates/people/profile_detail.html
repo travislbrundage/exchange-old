@@ -206,9 +206,7 @@
     {% include "_permissions_form_js.html" %}
   {% endif %}
   <script type="text/javascript">
-      {% if HAYSTACK_SEARCH %}
-          SEARCH_URL = '{% url 'api_get_search' api_name='api' resource_name='base' %}?owner__username={{profile.username}}'
-      {% elif ES_UNIFIED_SEARCH %}
+      {% if ES_UNIFIED_SEARCH %}
           SEARCH_URL = '{% url 'unified_elastic_search' resourcetype='base' %}?owner__username={{profile.username}}'
       {% else %}
           SEARCH_URL = '{% url 'api_dispatch_list' api_name='api' resource_name='base' %}?owner__username={{profile.username}}';

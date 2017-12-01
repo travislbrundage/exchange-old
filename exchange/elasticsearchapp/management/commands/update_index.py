@@ -8,11 +8,11 @@ from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 from exchange.elasticsearchapp.search import LayerIndex, \
     MapIndex, DocumentIndex, ProfileIndex, GroupIndex, StoryIndex
-from geonode.layers.models import Layer
-from geonode.maps.models import Map
-from geonode.documents.models import Document
-from geonode.people.models import Profile
-from geonode.groups.models import GroupProfile
+from exchange.layers.models import Layer
+from exchange.maps.models import Map
+from exchange.documents.models import Document
+from exchange.people.models import Profile
+from exchange.groups.models import GroupProfile
 from exchange.storyscapes.models.base import Story
 
 
