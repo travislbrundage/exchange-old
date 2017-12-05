@@ -8,14 +8,26 @@ from elasticsearch import Elasticsearch
 
 
 class Command(BaseCommand):
-    help = "Clears out the search index completely."
+    help = "Clears the search index of all elasticsearchapp indices."
 
     def handle(self, **options):
         '''
-        Clears out the search index completely.
+        Clears the search index of all elasticsearchapp indices
         '''
-        self.stdout.write("Removing all documents from your index.")
+        self.stdout.write("Removing all documents indexed by elasticsearchapp")
         es = Elasticsearch(settings.ES_URL)
-        # Iterate through every index in our elasticsearch endpoint
-        for index in es.indices.get_mapping().iteritems():
-            es.indices.delete(index=index[0])
+
+        # Delete all the indices this application creates
+        elasticsearchapp_indicies = [
+            'layer-index',
+            'map-index',
+            'document-index',
+            'group-index',
+            'people-index',
+            'story-index'
+        ]
+        for index in elasticsearchapp_indicies:
+            try:
+                es.indices.delete(index=index)
+            except TransportError:
+                self.stdout.write("ERROR: Could not find index to delete: %s" % index)
