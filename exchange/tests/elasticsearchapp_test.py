@@ -3,6 +3,8 @@ from elasticsearch_dsl.connections import connections
 from django.conf import settings
 from elasticsearch import Elasticsearch
 import pytest
+from django.core.management import call_command
+import subprocess
 
 
 @pytest.mark.skipif(settings.ES_UNIFIED_SEARCH is False,
@@ -16,6 +18,39 @@ class ElasticsearchappTest(ExchangeTest):
         # connect to the ES instance
         connections.create_connection(hosts=[settings.ES_URL])
 
+    def test_management_commands(self):
+        self.maxDiff = None
+        es = Elasticsearch(settings.ES_URL)
+        mappings = es.indices.get_mapping()
+
+        # Ensure all the indices exist in our mappings upon build
+        self.assertTrue('profile-index' in mappings)
+        self.assertTrue('layer-index' in mappings)
+        self.assertTrue('map-index' in mappings)
+        self.assertTrue('document-index' in mappings)
+        self.assertTrue('group-index' in mappings)
+        self.assertTrue('story-index' in mappings)
+
+        # Call the clear command and ensure the indices have been wiped
+        call_command('clear_index')
+        mappings = es.indices.get_mapping()
+        self.assertFalse('profile-index' in mappings)
+        self.assertFalse('layer-index' in mappings)
+        self.assertFalse('map-index' in mappings)
+        self.assertFalse('document-index' in mappings)
+        self.assertFalse('group-index' in mappings)
+        self.assertFalse('story-index' in mappings)
+
+        # Rebuild the indices and ensure they return to our mappings
+        call_command('rebuild_index')
+        mappings = es.indices.get_mapping()
+        self.assertTrue('profile-index' in mappings)
+        self.assertTrue('layer-index' in mappings)
+        self.assertTrue('map-index' in mappings)
+        self.assertTrue('document-index' in mappings)
+        self.assertTrue('group-index' in mappings)
+        self.assertTrue('story-index' in mappings)
+
     def test_mappings(self):
         # We only want to test mappings because the rest should be covered
         # in the views_test.py for faceting and filtering
@@ -24,38 +59,40 @@ class ElasticsearchappTest(ExchangeTest):
 
         profile_mappings = mappings['profile-index']['mappings']['profile_index']['properties']
         profile_properties = {
-            'first_name': {
-                'type': 'string',
-                'analyzer': 'snowball'
+            u'first_name': {
+                u'type': u'string',
+                u'analyzer': u'snowball'
             },
-            'id': {
-                'type': 'integer'
+            u'id': {
+                u'type': u'integer'
             },
-            'last_name': {
-                'type': 'string',
-                'analyzer': 'snowball'
+            u'last_name': {
+                u'type': u'string',
+                u'analyzer': u'snowball'
             },
-            'organization': {
-                'type': 'string',
-                'analyzer': 'snowball'
+            u'organization': {
+                u'type': u'string',
+                u'analyzer': u'snowball'
             },
-            'position': {
-                'type': 'string',
-                'analyzer': 'snowball'
+            u'position': {
+                u'type': u'string',
+                u'analyzer': u'snowball'
             },
-            'profile': {
-                'type': 'string',
-                'analyzer': 'snowball'
+            u'profile': {
+                u'type': u'string',
+                u'analyzer': u'snowball'
             },
-            'type': {
-                'type': 'string',
-                'analyzer': 'snowball'
+            u'type': {
+                u'type': u'string',
+                u'analyzer': u'snowball'
             },
-            'username': {
-                'type': 'string',
-                'analyzer': 'snowball'
+            u'username': {
+                u'type': u'string',
+                u'analyzer': u'snowball'
             }
         }
+        print profile_mappings
+        print profile_properties
         self.assertDictEqual(profile_mappings, profile_properties)
 
         group_mappings = mappings['group-index']['mappings']['group_index']['properties']

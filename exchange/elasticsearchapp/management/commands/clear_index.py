@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from elasticsearch import Elasticsearch
+from elasticsearch import TransportError
 
 
 class Command(BaseCommand):
@@ -23,7 +24,7 @@ class Command(BaseCommand):
             'map-index',
             'document-index',
             'group-index',
-            'people-index',
+            'profile-index',
             'story-index'
         ]
         for index in elasticsearchapp_indicies:
