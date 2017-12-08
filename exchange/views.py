@@ -225,7 +225,7 @@ def gen_dict_extract(key, var):
 def key_exists(key, var):
     return any(True for _ in gen_dict_extract(key, var))
 
-def unified_elastic_search(request, resourcetype='base'):
+def elastic_search(request, resourcetype='base'):
     import requests
     import collections
     from elasticsearch import Elasticsearch

@@ -122,7 +122,7 @@ class AboutPageTest(ViewTestCase):
     def test(self):
         self.doit()
 
-@pytest.mark.skipif(settings.ES_UNIFIED_SEARCH is False,
+@pytest.mark.skipif(settings.ES_SEARCH is False,
                     reason="Only run if using unified search")
 class AutocompleteEmptyPageTest(ViewTestCase):
 
@@ -255,7 +255,7 @@ class CSWStatusTableTest(ViewTestCase):
         self.doit()
 
 
-@pytest.mark.skipif(settings.ES_UNIFIED_SEARCH is False,
+@pytest.mark.skipif(settings.ES_SEARCH is False,
                     reason="Only run if using unified search")
 class UnifiedSearchTest(ViewTestCase, UploaderMixin):
 
