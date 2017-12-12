@@ -9,10 +9,10 @@ import subprocess
 
 @pytest.mark.skipif(settings.ES_SEARCH is False,
                     reason="Only run if using unified search")
-class ElasticsearchappTest(ExchangeTest):
+class GeonodeElasticsearchTest(ExchangeTest):
 
     def setUp(self):
-        super(ElasticsearchappTest, self).setUp()
+        super(GeonodeElasticsearchTest, self).setUp()
         self.login()
 
         # connect to the ES instance
