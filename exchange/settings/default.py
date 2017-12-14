@@ -329,11 +329,6 @@ ES_SEARCH = str2bool(os.getenv('ES_SEARCH', 'False'))
 # elasticsearch-dsl settings
 ES_URL = os.getenv('ES_URL', 'http://127.0.0.1:9200/')
 
-if ES_SEARCH:
-    INSTALLED_APPS = (
-        'elasticsearch_app',
-    ) + INSTALLED_APPS
-
 
 # amqp settings
 BROKER_URL = os.getenv('BROKER_URL', 'amqp://guest:guest@localhost:5672/')
