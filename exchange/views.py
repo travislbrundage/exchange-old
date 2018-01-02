@@ -317,7 +317,8 @@ def elastic_search(request, resourcetype='base'):
     additional_facets = getattr(settings, 'ADDITIONAL_FACETS', {})
 
     facet_fields = ['type', 'subtype',
-                    'owner__username', 'keywords', 'category', 'source_host']
+                    'owner__username', 'keywords', 'category', 'source_host',
+                    'regions']
 
     if additional_facets:
         facet_fields.extend(additional_facets.keys())
@@ -351,7 +352,8 @@ def elastic_search(request, resourcetype='base'):
         'source_host': {'open': False, 'display': 'Host'},
         'owner__username': {'open': True, 'display': 'Owner'},
         'type': {'open': True, 'display': 'Type'},
-        'keywords': {'show': True}
+        'keywords': {'show': True},
+        'regions': {'show': True}
     }
 
     if additional_facets:
