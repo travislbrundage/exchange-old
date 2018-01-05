@@ -9,6 +9,7 @@ import json
 from osgeo_importer.tasks import import_object
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
+from django.core.management import call_command
 import logging
 logger = logging.getLogger(__name__)
 
@@ -175,6 +176,7 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
 
     # TODO: Creation of all object is very finnicky for some reason
     def setUp(self):
+        call_command('clear_index')
         super(UnifiedSearchTest, self).setUp()
         self.url = '/api/base/search/?limit=100&offset=0'
         self.expected_status = 200
@@ -656,6 +658,10 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
     def test_search_layer_by_id(self):
         self.url = '/api/layers/search/?id=1'
         self.doit()
+
+    def tearDown(self):
+        call_command('rebuild_index')
+        super(UnifiedSearchTest, self).tearDown()
 
 
 # This doesn't test a view but performs a functional
