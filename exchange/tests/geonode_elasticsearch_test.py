@@ -96,11 +96,11 @@ class GeonodeElasticsearchTest(ExchangeTest):
             },
             "title": {
                 "type": "text",
-                "analyzer" : "simple"
+                "analyzer": "simple"
             },
             "title_sortable": {
                 "type": "text",
-                "analyzer" : "simple"
+                "analyzer": "simple"
             },
             "json": {
                 "type": "text"
@@ -152,14 +152,14 @@ class GeonodeElasticsearchTest(ExchangeTest):
             },
             "title": {
                 "type": "text",
-                "analyzer" : "simple"
+                "analyzer": "simple"
             },
             "num_comments": {
                 "type": "integer"
             },
             "title_sortable": {
                 "type": "text",
-                "analyzer" : "simple"
+                "analyzer": "simple"
             },
             "regions": {
                 "type": "text"
@@ -256,14 +256,14 @@ class GeonodeElasticsearchTest(ExchangeTest):
             },
             "title": {
                 "type": "text",
-                "analyzer" : "simple"
+                "analyzer": "simple"
             },
             "num_comments": {
                 "type": "integer"
             },
             "title_sortable": {
                 "type": "text",
-                "analyzer" : "simple"
+                "analyzer": "simple"
             },
             "regions": {
                 "type": "text"
@@ -366,14 +366,14 @@ class GeonodeElasticsearchTest(ExchangeTest):
             },
             "title": {
                 "type": "text",
-                "analyzer" : "simple"
+                "analyzer": "simple"
             },
             "num_comments": {
                 "type": "integer"
             },
             "title_sortable": {
                 "type": "text",
-                "analyzer" : "simple"
+                "analyzer": "simple"
             },
             "regions": {
                 "type": "text"
@@ -464,14 +464,14 @@ class GeonodeElasticsearchTest(ExchangeTest):
             },
             "title": {
                 "type": "text",
-                "analyzer" : "simple"
+                "analyzer": "simple"
             },
             "num_comments": {
                 "type": "integer"
             },
             "title_sortable": {
                 "type": "text",
-                "analyzer" : "simple"
+                "analyzer": "simple"
             },
             "regions": {
                 "type": "text"
