@@ -95,10 +95,12 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "text"
             },
             "title": {
-                "type": "text"
+                "type": "text",
+                "analyzer" : "simple"
             },
             "title_sortable": {
-                "type": "text"
+                "type": "text",
+                "analyzer" : "simple"
             },
             "json": {
                 "type": "text"
@@ -149,13 +151,15 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "keyword"
             },
             "title": {
-                "type": "text"
+                "type": "text",
+                "analyzer" : "simple"
             },
             "num_comments": {
                 "type": "integer"
             },
             "title_sortable": {
-                "type": "text"
+                "type": "text",
+                "analyzer" : "simple"
             },
             "regions": {
                 "type": "text"
@@ -251,13 +255,15 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "keyword"
             },
             "title": {
-                "type": "text"
+                "type": "text",
+                "analyzer" : "simple"
             },
             "num_comments": {
                 "type": "integer"
             },
             "title_sortable": {
-                "type": "text"
+                "type": "text",
+                "analyzer" : "simple"
             },
             "regions": {
                 "type": "text"
@@ -359,13 +365,15 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "keyword"
             },
             "title": {
-                "type": "text"
+                "type": "text",
+                "analyzer" : "simple"
             },
             "num_comments": {
                 "type": "integer"
             },
             "title_sortable": {
-                "type": "text"
+                "type": "text",
+                "analyzer" : "simple"
             },
             "regions": {
                 "type": "text"
@@ -455,13 +463,15 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "keyword"
             },
             "title": {
-                "type": "text"
+                "type": "text",
+                "analyzer" : "simple"
             },
             "num_comments": {
                 "type": "integer"
             },
             "title_sortable": {
-                "type": "text"
+                "type": "text",
+                "analyzer" : "simple"
             },
             "regions": {
                 "type": "text"
