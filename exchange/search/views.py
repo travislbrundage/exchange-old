@@ -238,7 +238,8 @@ def get_main_query(search, query):
         'source',
         'source_type',
         'layer_originator',
-        'layer_identifier'
+        'layer_identifier',
+        'keywords'
     ]
 
     # Build main query to search in fields[]
