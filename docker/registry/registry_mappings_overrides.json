@@ -28,7 +28,16 @@
 					}
 				},
 				"category": {
-					"type": "keyword"
+					"type": "keyword",
+					"fields": {
+						"english": {
+							"type": "text",
+							"analyzer": "english"
+						},
+						"text": {
+							"type": "text"
+						}
+					}
 				},
 				"classification_exact": {
 					"type": "keyword"
@@ -47,6 +56,10 @@
 					"fields": {
 						"text": {
 							"type": "text"
+						},
+						"pattern": {
+							"type": "text",
+							"analyzer": "pattern_analyzer"
 						}
 					}
 				},
@@ -80,10 +93,24 @@
 					"copy_to": "bbox_top"
 				},
 				"source_host": {
-					"type": "keyword"
+					"type": "keyword",
+					"fields": {
+						"text": {
+							"type": "text"
+						}
+					}
 				},
 				"type": {
-					"type": "keyword"
+					"type": "keyword",
+					"fields": {
+						"english": {
+							"type": "text",
+							"analyzer": "english"
+						},
+						"text": {
+							"type": "text"
+						}
+					}
 				}
 			}
 		}
