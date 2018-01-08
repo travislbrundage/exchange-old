@@ -7,7 +7,7 @@
 					"properties": {
 						"category": {
 							"type": "keyword",
-							"copy_to": "category_exact"
+							"copy_to": "category"
 						},
 						"classification": {
 							"type": "text",
@@ -27,7 +27,7 @@
 						}
 					}
 				},
-				"category_exact": {
+				"category": {
 					"type": "keyword"
 				},
 				"classification_exact": {
@@ -43,7 +43,12 @@
 					"type": "keyword"
 				},
 				"subtype": {
-					"type": "keyword"
+					"type": "keyword",
+					"fields": {
+						"text": {
+							"type": "text"
+						}
+					}
 				},
 				"layer_date": {
 					"type": "date",

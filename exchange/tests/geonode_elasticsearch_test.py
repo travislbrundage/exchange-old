@@ -59,33 +59,40 @@ class GeonodeElasticsearchTest(ExchangeTest):
         profile_mappings = mappings[
             'profile-index']['mappings']['doc']['properties']
         profile_properties = {
-            "profile": {
-                "type": "keyword"
-            },
-            "username": {
-                "type": "text"
-            },
             "first_name": {
                 "type": "text"
             },
+            "id": {
+                "type": "integer"
+            },
             "last_name": {
+                "type": "text"
+            },
+            "organization": {
                 "type": "text"
             },
             "position": {
                 "type": "keyword"
             },
-            "organization": {
-                "type": "text"
-            },
-            "type": {
+            "profile": {
                 "type": "keyword"
             },
-            "id": {
-                "type": "integer"
+            "type": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                },
+                "type": "keyword"
+            },
+            "username": {
+                "type": "text"
             }
         }
-        print profile_mappings
-        print profile_properties
         self.assertDictEqual(profile_mappings, profile_properties)
 
         group_mappings = mappings[
@@ -94,22 +101,39 @@ class GeonodeElasticsearchTest(ExchangeTest):
             "description": {
                 "type": "text"
             },
-            "title": {
-                "type": "text",
-                "analyzer": "simple"
-            },
-            "title_sortable": {
-                "type": "text",
-                "analyzer": "simple"
+            "id": {
+                "type": "integer"
             },
             "json": {
                 "type": "text"
             },
-            "type": {
-                "type": "keyword"
+            "title": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "pattern": {
+                        "analyzer": "pattern_analyzer",
+                        "type": "text"
+                    }
+                },
+                "type": "text"
             },
-            "id": {
-                "type": "integer"
+            "title_sortable": {
+                "type": "text"
+            },
+            "type": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                },
+                "type": "keyword"
             }
         }
         self.assertDictEqual(group_mappings, group_properties)
@@ -117,82 +141,45 @@ class GeonodeElasticsearchTest(ExchangeTest):
         document_mappings = mappings[
             'document-index']['mappings']['doc']['properties']
         document_properties = {
-            "rating": {
-                "type": "integer"
-            },
-            "category__gn_description": {
-                "type": "text"
-            },
             "abstract": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "pattern": {
+                        "analyzer": "pattern_analyzer",
+                        "type": "text"
+                    }
+                },
                 "type": "text"
             },
             "bbox_bottom": {
                 "type": "float"
             },
-            "num_ratings": {
-                "type": "integer"
-            },
-            "date": {
-                "type": "date"
-            },
-            "keywords": {
-                "type": "keyword"
-            },
-            "detail_url": {
-                "type": "keyword"
-            },
-            "id": {
-                "type": "integer"
-            },
-            "category": {
-                "type": "keyword"
-            },
-            "uuid": {
-                "type": "keyword"
-            },
-            "title": {
-                "type": "text",
-                "analyzer": "simple"
-            },
-            "num_comments": {
-                "type": "integer"
-            },
-            "title_sortable": {
-                "type": "text",
-                "analyzer": "simple"
-            },
-            "regions": {
-                "type": "text"
-            },
-            "share_count": {
-                "type": "integer"
-            },
-            "type": {
-                "type": "keyword"
-            },
-            "bbox_top": {
+            "bbox_left": {
                 "type": "float"
-            },
-            "popular_count": {
-                "type": "integer"
             },
             "bbox_right": {
                 "type": "float"
             },
-            "srid": {
-                "type": "keyword"
-            },
-            "temporal_extent_end": {
-                "type": "date"
-            },
-            "supplemental_information": {
-                "type": "text"
-            },
-            "bbox_left": {
+            "bbox_top": {
                 "type": "float"
             },
-            "thumbnail_url": {
+            "category": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                },
                 "type": "keyword"
+            },
+            "category__gn_description": {
+                "type": "text"
             },
             "csw_type": {
                 "type": "keyword"
@@ -200,11 +187,107 @@ class GeonodeElasticsearchTest(ExchangeTest):
             "csw_wkt_geometry": {
                 "type": "keyword"
             },
-            "owner__username": {
+            "date": {
+                "type": "date"
+            },
+            "detail_url": {
                 "type": "keyword"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "keywords": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                },
+                "type": "keyword"
+            },
+            "num_comments": {
+                "type": "integer"
+            },
+            "num_ratings": {
+                "type": "integer"
+            },
+            "owner__username": {
+                "fields": {
+                    "text": {
+                        "type": "text"
+                    }
+                },
+                "type": "keyword"
+            },
+            "popular_count": {
+                "type": "integer"
+            },
+            "rating": {
+                "type": "integer"
+            },
+            "regions": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                },
+                "type": "keyword"
+            },
+            "share_count": {
+                "type": "integer"
+            },
+            "srid": {
+                "type": "keyword"
+            },
+            "supplemental_information": {
+                "type": "text"
+            },
+            "temporal_extent_end": {
+                "type": "date"
             },
             "temporal_extent_start": {
                 "type": "date"
+            },
+            "thumbnail_url": {
+                "type": "keyword"
+            },
+            "title": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "pattern": {
+                        "analyzer": "pattern_analyzer",
+                        "type": "text"
+                    }
+                },
+                "type": "text"
+            },
+            "title_sortable": {
+                "type": "text"
+            },
+            "type": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                },
+                "type": "keyword"
+            },
+            "uuid": {
+                "type": "keyword"
             }
         }
         self.assertDictEqual(document_mappings, document_properties)
@@ -212,103 +295,45 @@ class GeonodeElasticsearchTest(ExchangeTest):
         layer_mappings = mappings[
             'layer-index']['mappings']['doc']['properties']
         layer_properties = {
-            "rating": {
-                "type": "integer"
-            },
-            "owner__last_name": {
-                "type": "text"
-            },
-            "has_time": {
-                "type": "boolean"
-            },
-            "category__gn_description": {
-                "type": "text"
-            },
             "abstract": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "pattern": {
+                        "analyzer": "pattern_analyzer",
+                        "type": "text"
+                    }
+                },
                 "type": "text"
             },
             "bbox_bottom": {
                 "type": "float"
             },
-            "num_ratings": {
-                "type": "integer"
-            },
-            "srid": {
-                "type": "keyword"
-            },
-            "featured": {
-                "type": "boolean"
-            },
-            "keywords": {
-                "type": "keyword"
-            },
-            "detail_url": {
-                "type": "keyword"
-            },
-            "id": {
-                "type": "integer"
-            },
-            "category": {
-                "type": "keyword"
-            },
-            "uuid": {
-                "type": "keyword"
-            },
-            "title": {
-                "type": "text",
-                "analyzer": "simple"
-            },
-            "num_comments": {
-                "type": "integer"
-            },
-            "title_sortable": {
-                "type": "text",
-                "analyzer": "simple"
-            },
-            "regions": {
-                "type": "text"
-            },
-            "share_count": {
-                "type": "integer"
-            },
-            "type": {
-                "type": "keyword"
-            },
-            "geogig_link": {
-                "type": "keyword"
-            },
-            "bbox_top": {
+            "bbox_left": {
                 "type": "float"
-            },
-            "popular_count": {
-                "type": "integer"
             },
             "bbox_right": {
                 "type": "float"
             },
-            "date": {
-                "type": "date"
-            },
-            "owner__first_name": {
-                "type": "text"
-            },
-            "temporal_extent_end": {
-                "type": "date"
-            },
-            "supplemental_information": {
-                "type": "text"
-            },
-            "bbox_left": {
+            "bbox_top": {
                 "type": "float"
             },
-            "typename": {
+            "category": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                },
                 "type": "keyword"
             },
-            "subtype": {
-                "type": "keyword"
-            },
-            "thumbnail_url": {
-                "type": "keyword"
+            "category__gn_description": {
+                "type": "text"
             },
             "csw_type": {
                 "type": "keyword"
@@ -316,14 +341,136 @@ class GeonodeElasticsearchTest(ExchangeTest):
             "csw_wkt_geometry": {
                 "type": "keyword"
             },
-            "owner__username": {
+            "date": {
+                "type": "date"
+            },
+            "detail_url": {
                 "type": "keyword"
+            },
+            "featured": {
+                "type": "boolean"
+            },
+            "geogig_link": {
+                "type": "keyword"
+            },
+            "has_time": {
+                "type": "boolean"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "is_published": {
+                "type": "boolean"
+            },
+            "keywords": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                },
+                "type": "keyword"
+            },
+            "num_comments": {
+                "type": "integer"
+            },
+            "num_ratings": {
+                "type": "integer"
+            },
+            "owner__first_name": {
+                "type": "text"
+            },
+            "owner__last_name": {
+                "type": "text"
+            },
+            "owner__username": {
+                "fields": {
+                    "text": {
+                        "type": "text"
+                    }
+                },
+                "type": "keyword"
+            },
+            "popular_count": {
+                "type": "integer"
+            },
+            "rating": {
+                "type": "integer"
+            },
+            "regions": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                },
+                "type": "keyword"
+            },
+            "share_count": {
+                "type": "integer"
+            },
+            "srid": {
+                "type": "keyword"
+            },
+            "subtype": {
+                "fields": {
+                    "text": {
+                        "type": "text"
+                    }
+                },
+                "type": "keyword"
+            },
+            "supplemental_information": {
+                "type": "text"
+            },
+            "temporal_extent_end": {
+                "type": "date"
             },
             "temporal_extent_start": {
                 "type": "date"
             },
-            "is_published": {
-                "type": "boolean"
+            "thumbnail_url": {
+                "type": "keyword"
+            },
+            "title": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "pattern": {
+                        "analyzer": "pattern_analyzer",
+                        "type": "text"
+                    }
+                },
+                "type": "text"
+            },
+            "title_sortable": {
+                "type": "text"
+            },
+            "type": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                },
+                "type": "keyword"
+            },
+            "typename": {
+                "type": "keyword"
+            },
+            "uuid": {
+                "type": "keyword"
             }
         }
         self.assertDictEqual(layer_mappings, layer_properties)
@@ -331,82 +478,45 @@ class GeonodeElasticsearchTest(ExchangeTest):
         map_mappings = mappings[
             'map-index']['mappings']['doc']['properties']
         map_properties = {
-            "rating": {
-                "type": "integer"
-            },
-            "category__gn_description": {
-                "type": "text"
-            },
             "abstract": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "pattern": {
+                        "analyzer": "pattern_analyzer",
+                        "type": "text"
+                    }
+                },
                 "type": "text"
             },
             "bbox_bottom": {
                 "type": "float"
             },
-            "num_ratings": {
-                "type": "integer"
-            },
-            "date": {
-                "type": "date"
-            },
-            "keywords": {
-                "type": "keyword"
-            },
-            "detail_url": {
-                "type": "keyword"
-            },
-            "id": {
-                "type": "integer"
-            },
-            "category": {
-                "type": "keyword"
-            },
-            "uuid": {
-                "type": "keyword"
-            },
-            "title": {
-                "type": "text",
-                "analyzer": "simple"
-            },
-            "num_comments": {
-                "type": "integer"
-            },
-            "title_sortable": {
-                "type": "text",
-                "analyzer": "simple"
-            },
-            "regions": {
-                "type": "text"
-            },
-            "share_count": {
-                "type": "integer"
-            },
-            "type": {
-                "type": "keyword"
-            },
-            "bbox_top": {
+            "bbox_left": {
                 "type": "float"
-            },
-            "popular_count": {
-                "type": "integer"
             },
             "bbox_right": {
                 "type": "float"
             },
-            "srid": {
-                "type": "keyword"
-            },
-            "temporal_extent_end": {
-                "type": "date"
-            },
-            "supplemental_information": {
-                "type": "text"
-            },
-            "bbox_left": {
+            "bbox_top": {
                 "type": "float"
             },
-            "thumbnail_url": {
+            "category": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                },
                 "type": "keyword"
+            },
+            "category__gn_description": {
+                "type": "text"
             },
             "csw_type": {
                 "type": "keyword"
@@ -414,41 +524,8 @@ class GeonodeElasticsearchTest(ExchangeTest):
             "csw_wkt_geometry": {
                 "type": "keyword"
             },
-            "owner__username": {
-                "type": "keyword"
-            },
-            "temporal_extent_start": {
+            "date": {
                 "type": "date"
-            }
-        }
-        self.assertDictEqual(map_mappings, map_properties)
-
-        story_mappings = mappings[
-            'story-index']['mappings']['doc']['properties']
-        story_properties = {
-            "rating": {
-                "type": "integer"
-            },
-            "owner__last_name": {
-                "type": "text"
-            },
-            "category__gn_description": {
-                "type": "text"
-            },
-            "abstract": {
-                "type": "text"
-            },
-            "bbox_bottom": {
-                "type": "float"
-            },
-            "num_ratings": {
-                "type": "integer"
-            },
-            "featured": {
-                "type": "boolean"
-            },
-            "keywords": {
-                "type": "keyword"
             },
             "detail_url": {
                 "type": "keyword"
@@ -456,73 +533,261 @@ class GeonodeElasticsearchTest(ExchangeTest):
             "id": {
                 "type": "integer"
             },
-            "category": {
+            "keywords": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                },
                 "type": "keyword"
-            },
-            "uuid": {
-                "type": "keyword"
-            },
-            "title": {
-                "type": "text",
-                "analyzer": "simple"
             },
             "num_comments": {
                 "type": "integer"
             },
-            "title_sortable": {
-                "type": "text",
-                "analyzer": "simple"
-            },
-            "regions": {
-                "type": "text"
-            },
-            "num_chapters": {
+            "num_ratings": {
                 "type": "integer"
             },
-            "share_count": {
-                "type": "integer"
-            },
-            "type": {
+            "owner__username": {
+                "fields": {
+                    "text": {
+                        "type": "text"
+                    }
+                },
                 "type": "keyword"
-            },
-            "distribution_description": {
-                "type": "text"
-            },
-            "bbox_top": {
-                "type": "float"
             },
             "popular_count": {
                 "type": "integer"
             },
-            "bbox_right": {
-                "type": "float"
+            "rating": {
+                "type": "integer"
             },
-            "date": {
-                "type": "date"
+            "regions": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                },
+                "type": "keyword"
             },
-            "owner__first_name": {
+            "share_count": {
+                "type": "integer"
+            },
+            "srid": {
+                "type": "keyword"
+            },
+            "supplemental_information": {
                 "type": "text"
             },
             "temporal_extent_end": {
                 "type": "date"
             },
-            "distribution_url": {
-                "type": "keyword"
-            },
-            "bbox_left": {
-                "type": "float"
+            "temporal_extent_start": {
+                "type": "date"
             },
             "thumbnail_url": {
                 "type": "keyword"
             },
-            "owner__username": {
+            "title": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "pattern": {
+                        "analyzer": "pattern_analyzer",
+                        "type": "text"
+                    }
+                },
+                "type": "text"
+            },
+            "title_sortable": {
+                "type": "text"
+            },
+            "type": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                },
                 "type": "keyword"
+            },
+            "uuid": {
+                "type": "keyword"
+            }
+        }
+        self.assertDictEqual(map_mappings, map_properties)
+
+        story_mappings = mappings[
+            'story-index']['mappings']['doc']['properties']
+        story_properties = {
+            "abstract": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "pattern": {
+                        "analyzer": "pattern_analyzer",
+                        "type": "text"
+                    }
+                },
+                "type": "text"
+            },
+            "bbox_bottom": {
+                "type": "float"
+            },
+            "bbox_left": {
+                "type": "float"
+            },
+            "bbox_right": {
+                "type": "float"
+            },
+            "bbox_top": {
+                "type": "float"
+            },
+            "category": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                },
+                "type": "keyword"
+            },
+            "category__gn_description": {
+                "type": "text"
+            },
+            "date": {
+                "type": "date"
+            },
+            "detail_url": {
+                "type": "keyword"
+            },
+            "distribution_description": {
+                "type": "text"
+            },
+            "distribution_url": {
+                "type": "keyword"
+            },
+            "featured": {
+                "type": "boolean"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "is_published": {
+                "type": "boolean"
+            },
+            "keywords": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                },
+                "type": "keyword"
+            },
+            "num_chapters": {
+                "type": "integer"
+            },
+            "num_comments": {
+                "type": "integer"
+            },
+            "num_ratings": {
+                "type": "integer"
+            },
+            "owner__first_name": {
+                "type": "text"
+            },
+            "owner__last_name": {
+                "type": "text"
+            },
+            "owner__username": {
+                "fields": {
+                    "text": {
+                        "type": "text"
+                    }
+                },
+                "type": "keyword"
+            },
+            "popular_count": {
+                "type": "integer"
+            },
+            "rating": {
+                "type": "integer"
+            },
+            "regions": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                },
+                "type": "keyword"
+            },
+            "share_count": {
+                "type": "integer"
+            },
+            "temporal_extent_end": {
+                "type": "date"
             },
             "temporal_extent_start": {
                 "type": "date"
             },
-            "is_published": {
-                "type": "boolean"
+            "thumbnail_url": {
+                "type": "keyword"
+            },
+            "title": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "pattern": {
+                        "analyzer": "pattern_analyzer",
+                        "type": "text"
+                    }
+                },
+                "type": "text"
+            },
+            "title_sortable": {
+                "type": "text"
+            },
+            "type": {
+                "fields": {
+                    "english": {
+                        "analyzer": "english",
+                        "type": "text"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                },
+                "type": "keyword"
+            },
+            "uuid": {
+                "type": "keyword"
             }
         }
         self.assertDictEqual(story_mappings, story_properties)

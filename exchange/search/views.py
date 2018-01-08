@@ -137,8 +137,6 @@ def get_base_query(request):
         filter_set_ids = map(str, filter_set.values_list('id', flat=True))
         # Do the query using the filterset and the query term. Facet the
         # results
-        # Always show registry layers since they lack permissions
-        q = Q({"match": {"_type": "layer"}}) | q
         if len(filter_set_ids) > 0:
             q = Q({"terms": {"id": filter_set_ids}}) | q
 
@@ -222,29 +220,37 @@ def get_facet_results(aggregations, parameters):
 def get_main_query(search, query):
     # Set base fields to search
     fields = [
-        'title',
         'abstract',
-        'title_alternate',
-        'category',
-        'owner__username',
+        'abstract.english',
+        'abstract.pattern',
+        'category.text',
+        'category.english',
         'category__gn_description',
+        'keywords.text',
+        'keywords.english',
+        'layer_identifier',
+        'layer_originator',
         'owner__first_name',
         'owner__last_name',
-        'typename',
-        'type',
-        'subtype',
-        'supplemental_information',
+        'owner__username.text',
+        'title_alternate',
         'source_host',
         'source',
-        'source_type',
-        'layer_originator',
-        'layer_identifier',
-        'keywords'
+        'subtype.text',
+        'supplemental_information',
+        'title',
+        'title.pattern',
+        'title.english',
+        'typename',
+        'type.text',
+        'type.english'
     ]
 
     # Build main query to search in fields[]
     # Filter by Query Params
     if query:
+        query = re.sub(":\s+", ":", query)
+
         if query.startswith('"') or query.startswith('\''):
             # Match exact phrase
             phrase = query.replace('"', '')
@@ -259,31 +265,41 @@ def get_main_query(search, query):
             words = [w for w in query.split() if w]
 
             for i, search_word in enumerate(words):
-                if search_word in ['layers', 'documents', 'maps']:
-                    search_word = search_word[:-1]
+                search_fields = fields
+
+                if ":" in search_word:
+                    search_fields, search_word = search_word.split(':')
+                    search_fields = [search_fields]
 
                 if i == 0:
                     word_query = Q(
                         "multi_match",
                         type='phrase_prefix',
                         query=search_word,
-                        fields=fields
+                        fields=search_fields
                     )
-                elif search_word.upper() in ["AND", "OR"]:
+                elif search_word.upper() in ["AND", "OR", "NOT", "-", "+"]:
                     pass
                 elif words[i - 1].upper() == "OR":
                     word_query = word_query | Q(
                         "multi_match",
                         type='phrase_prefix',
                         query=search_word,
-                        fields=fields
+                        fields=search_fields
+                    )
+                elif words[i - 1].upper() in ["NOT", "-"]:
+                    search = search.exclude(
+                        "multi_match",
+                        type='phrase_prefix',
+                        query=search_word,
+                        fields=search_fields
                     )
                 else:  # previous word AND this word
                     word_query = word_query & Q(
                         "multi_match",
                         type='phrase_prefix',
                         query=search_word,
-                        fields=fields
+                        fields=search_fields
                     )
 
             if word_query is not None:
