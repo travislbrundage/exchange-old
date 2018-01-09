@@ -83,16 +83,13 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 u'analyzer': u'snowball'
             },
             u'type': {
-                u'type': u'string',
-                u'analyzer': u'snowball'
+                u'type': u'string'
             },
             u'username': {
                 u'type': u'string',
                 u'analyzer': u'snowball'
             }
         }
-        print profile_mappings
-        print profile_properties
         self.assertDictEqual(profile_mappings, profile_properties)
 
         group_mappings = mappings[
@@ -109,15 +106,13 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'type': 'string'
             },
             'title': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'title_sortable': {
                 'type': 'string'
             },
             'type': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
         }
         self.assertDictEqual(group_mappings, group_properties)
@@ -126,8 +121,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
             'document-index']['mappings']['document_index']['properties']
         document_properties = {
             'abstract': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'bbox_bottom': {
                 'type': 'float'
@@ -142,8 +136,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'type': 'float'
             },
             'category': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'category__gn_description': {
                 'type': 'string',
@@ -169,8 +162,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'type': 'integer'
             },
             'keywords': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'num_comments': {
                 'type': 'integer'
@@ -179,8 +171,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'type': 'integer'
             },
             'owner__username': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'popular_count': {
                 'type': 'integer'
@@ -189,8 +180,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'type': 'integer'
             },
             'regions': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'share_count': {
                 'type': 'integer'
@@ -216,15 +206,13 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'analyzer': 'snowball'
             },
             'title': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'title_sortable': {
                 'type': 'string'
             },
             'type': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'uuid': {
                 'type': 'string',
@@ -237,8 +225,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
             'layer-index']['mappings']['layer_index']['properties']
         layer_properties = {
             'abstract': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'bbox_bottom': {
                 'type': 'float'
@@ -253,8 +240,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'type': 'float'
             },
             'category': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'category__gn_description': {
                 'type': 'string',
@@ -293,8 +279,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'type': 'boolean'
             },
             'keywords': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'num_comments': {
                 'type': 'integer'
@@ -311,8 +296,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'analyzer': 'snowball'
             },
             'owner__username': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'popular_count': {
                 'type': 'integer'
@@ -321,8 +305,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'type': 'integer'
             },
             'regions': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'share_count': {
                 'type': 'integer'
@@ -332,8 +315,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'analyzer': 'snowball'
             },
             'subtype': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'supplemental_information': {
                 'type': 'string',
@@ -352,15 +334,13 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'analyzer': 'snowball'
             },
             'title': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'title_sortable': {
                 'type': 'string'
             },
             'type': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'typename': {
                 'type': 'string',
@@ -377,8 +357,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
             'map-index']['mappings']['map_index']['properties']
         map_properties = {
             'abstract': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'bbox_bottom': {
                 'type': 'float'
@@ -393,8 +372,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'type': 'float'
             },
             'category': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'category__gn_description': {
                 'type': 'string',
@@ -420,8 +398,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'type': 'integer'
             },
             'keywords': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'num_comments': {
                 'type': 'integer'
@@ -430,8 +407,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'type': 'integer'
             },
             'owner__username': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'popular_count': {
                 'type': 'integer'
@@ -440,8 +416,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'type': 'integer'
             },
             'regions': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'share_count': {
                 'type': 'integer'
@@ -467,15 +442,13 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'analyzer': 'snowball'
             },
             'title': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'title_sortable': {
                 'type': 'string'
             },
             'type': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'uuid': {
                 'type': 'string',
@@ -488,8 +461,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
             'story-index']['mappings']['story_index']['properties']
         story_properties = {
             'abstract': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'bbox_bottom': {
                 'type': 'float'
@@ -504,8 +476,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'type': 'float'
             },
             'category': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'category__gn_description': {
                 'type': 'string',
@@ -537,8 +508,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'type': 'boolean'
             },
             'keywords': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'num_chapters': {
                 'type': 'integer'
@@ -558,8 +528,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'analyzer': 'snowball'
             },
             'owner__username': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'popular_count': {
                 'type': 'integer'
@@ -568,8 +537,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'type': 'integer'
             },
             'regions': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'share_count': {
                 'type': 'integer'
@@ -594,8 +562,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 'type': 'string'
             },
             'type': {
-                'type': 'string',
-                'analyzer': 'snowball'
+                'type': 'string'
             },
             'uuid': {
                 'type': 'string',
