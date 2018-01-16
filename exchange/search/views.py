@@ -440,7 +440,14 @@ def filter_results_by_facets(aggregations, facet_results):
 def elastic_search(request, resourcetype='base'):
     parameters = request.GET
     es = Elasticsearch(settings.ES_URL)
-    search = elasticsearch_dsl.Search(using=es)
+
+    # exclude the profile and group indexes.
+    # They aren't being used, and cause issues with faceting
+    indices = es.indices.get_alias("*").keys()
+    exclude_indexes = ['profile-index', 'group-index']
+    [indices.remove(i) for i in exclude_indexes if i in indices]
+
+    search = elasticsearch_dsl.Search(using=es, index=indices)
     search = search.query(get_base_query(request))
 
     # Add facets to search
