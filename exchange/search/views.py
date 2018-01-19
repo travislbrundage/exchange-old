@@ -41,7 +41,6 @@ def get_unified_search_result_objects(hits):
             pass
         result = {}
         result['index'] = hit.get('_index', None)
-        registry_url = settings.REGISTRYURL.rstrip('/')
         for key, value in source.iteritems():
             if key == 'bbox':
                 result['bbox_left'] = value[0]
@@ -49,17 +48,6 @@ def get_unified_search_result_objects(hits):
                 result['bbox_right'] = value[2]
                 result['bbox_top'] = value[3]
                 bbox_str = ','.join(map(str, value))
-            elif key == 'links':
-                # Get source link from Registry
-                xml = value['xml']
-                js = '{}/{}'.format(
-                    registry_url,
-                    re.sub(r"xml$", "js", xml)
-                )
-                png = '{}/{}'.format(registry_url, value['png'])
-                result['registry_url'] = js
-                result['thumbnail_url'] = png
-
             else:
                 result[key] = source.get(key, None)
         objects.append(result)
@@ -100,11 +88,12 @@ def get_facet_settings():
     default_facet_settings = {'open': False, 'show': True}
     facet_settings = {
         'category': {'open': True, 'show': True},
-        'source_host': {'open': False, 'display': 'Host'},
-        'owner__username': {'open': False, 'display': 'Owner'},
+        'source_host': {'open': True, 'display': 'Host'},
+        'owner__username': {'open': True, 'display': 'Owner'},
         'type': {'open': True, 'display': 'Type'},
         'subtype': {'open': True, 'display': 'Data Type'},
-        'keywords': {'show': True}
+        'keywords': {'show': True},
+        'references.scheme': {'show': True, 'display': 'Service Type'}
     }
 
     if additional_facets:
@@ -119,9 +108,8 @@ def get_base_query(request):
     # is allowed to see and the overall types of documents to search.
     # This provides the overall counts and all fields for faceting
 
-    # only show registry, documents, layers, stories, and maps
-    q = Q({"match": {"_type": "layer"}}) | Q(
-        {"match": {"type": "layer"}}) | Q(
+    # only show documents, layers, stories, and maps
+    q = Q({"match": {"type": "layer"}}) | Q(
         {"match": {"type": "story"}}) | Q(
         {"match": {"type": "document"}}) | Q(
         {"match": {"type": "map"}})
@@ -155,7 +143,8 @@ def get_facet_fields():
         'owner__username',
         'keywords',
         'category',
-        'source_host'
+        'source_host',
+        'references.scheme'
     ]
 
     if additional_facets:
@@ -246,7 +235,9 @@ def get_main_query(search, query):
         'title.english',
         'typename',
         'type.text',
-        'type.english'
+        'type.english',
+        'references.scheme.text',
+        'references.scheme.pattern'
     ]
 
     # Build main query to search in fields[]
@@ -381,9 +372,9 @@ def apply_sort(search, sort):
             }}
         )
     elif sort.lower() == "title":
-        search = search.sort('title')
+        search = search.sort('title_sortable')
     elif sort.lower() == "-title":
-        search = search.sort('-title')
+        search = search.sort('-title_sortable')
     elif sort.lower() == "-popular_count":
         search = search.sort('-popular_count')
     else:
