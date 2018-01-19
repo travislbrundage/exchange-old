@@ -131,6 +131,7 @@ APP_ROOT = os.path.join(LOCAL_ROOT, os.pardir)
 STATICFILES_DIRS = [
     os.path.join(APP_ROOT, "static"),
     os.path.join(APP_ROOT, "thumbnails", "static"),
+    os.path.join(APP_ROOT, "maploom", "static"),
 ] + STATICFILES_DIRS
 
 # template settings
@@ -192,7 +193,7 @@ INSTALLED_APPS = (
     'geonode.contrib.geogig',
     'geonode.contrib.slack',
     'django_classification_banner',
-    'maploom',
+    'exchange.maploom',
     'solo',
     'exchange.storyscapes',
     'composer',

@@ -27,6 +27,9 @@ node {
           docker-compose down
           docker rm -f \$(docker ps -aq) || echo "no containers to remove"
           docker system prune -f
+          docker run -v \$(pwd -P):/code \
+	            -w /code quay.io/boundlessgeo/bex-nodejs-bower-grunt bash \
+	            -e -c '. docker/devops/helper.sh && build-maploom'
           docker-compose up --build --force-recreate -d
           echo "Waiting for exchange to finish loading"
           curl http://ron-swanson-quotes.herokuapp.com/v2/quotes || echo "API is down"

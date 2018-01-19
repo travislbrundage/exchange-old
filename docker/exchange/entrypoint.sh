@@ -2,17 +2,9 @@
 
 set -e
 
-maploom_static='/usr/local/lib/python2.7/site-packages/maploom/static/maploom'
-maploom_html='/usr/local/lib/python2.7/site-packages/maploom/templates/maps/maploom.html'
 manage='python /code/manage.py'
 setup='python /code/setup.py'
 
-if [[ $MAPLOOM_DEV == 1 ]]; then
-  rm -rf $maploom_static
-  mkdir -p /usr/local/lib/python2.7/site-packages/maploom/templates/maps
-  ln -s /code/vendor/maploom/build $maploom_static
-  ln -s /code/vendor/maploom/build/maploom.html $maploom_html
-fi
 # let the db intialize
 sleep 15
 until $manage migrate account --noinput; do

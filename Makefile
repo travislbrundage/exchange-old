@@ -2,7 +2,7 @@ SHELL:=bash
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 current_dir := $(dir $(mkfile_path))
 
-.PHONY: help html lint start purge stop recreate test
+.PHONY: help html lint start purge stop recreate test maploom
 
 help:
 	@echo "  make lint     - run to lint (style check) repo"
@@ -26,7 +26,7 @@ lint:
 stop:
 	@docker-compose down --remove-orphans
 
-start: stop
+start: stop maploom
 	@docker-compose up -d --build
 
 purge: stop
@@ -38,3 +38,8 @@ recreate: purge
 test:
 	@echo "Note: test requires the exchange container to be running and healthy"
 	@docker-compose exec exchange /code/docker/exchange/run_tests.sh
+
+maploom:
+	@docker run -v $(current_dir):/code \
+	            -w /code quay.io/boundlessgeo/bex-nodejs-bower-grunt bash \
+	            -e -c '. docker/devops/helper.sh && build-maploom'
