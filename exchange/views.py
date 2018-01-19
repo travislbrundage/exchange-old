@@ -168,7 +168,7 @@ def capabilities(request):
     capabilities["mobile"] = (
         mobile_extension_installed and
         # check that the OAuth application has been created
-        len(Application.objects.filter(name='Anywhere')) > 0
+        len(Application.objects.filter(client_id='anywhere')) > 0
     )
 
     current_site = get_current_site(request)
