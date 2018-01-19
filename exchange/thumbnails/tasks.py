@@ -33,6 +33,7 @@ def get_gs_thumbnail(instance):
             return None
     else:
         layers = instance.typename.encode('utf-8')
+        logger.debug('Instance storeType: %s', instance.storeType)
 
     params = {
         'layers': layers,
@@ -42,21 +43,38 @@ def get_gs_thumbnail(instance):
         'TIME': '-99999999999-01-01T00:00:00.0Z/99999999999-01-01T00:00:00.0Z'
     }
 
+    baseurl = ogc_server_settings.LOCATION + \
+        "wms/reflect?"
+
+    if (instance.storeType == 'remoteStore'):
+        params['request'] = 'getMap'
+        params['version'] = '1.3.0'
+        params['bbox'] = '%s,%s,%s,%s' % (
+            instance.bbox_x0,
+            instance.bbox_y0,
+            instance.bbox_x1,
+            instance.bbox_y1)
+        baseurl = instance.ows_url + '?'
+
     # Avoid using urllib.urlencode here because it breaks the url.
     # commas and slashes in values get encoded and then cause trouble
     # with the WMS parser.
     p = "&".join("%s=%s" % item for item in params.items())
 
-    thumbnail_create_url = ogc_server_settings.LOCATION + \
-        "wms/reflect?" + p
+    thumbnail_create_url = baseurl + p
+
+    logger.debug('Service type: %s', instance.service.type)
+    if (instance.storeType == 'remoteStore' and
+            instance.service.type == 'REST'):
+        thumbnail_create_url = "%s/info/thumbnail" % (instance.ows_url)
 
     tries = 0
     max_tries = 30
     while tries < max_tries:
         logger.debug(
             'Thumbnail: Requesting thumbnail from GeoServer. '
-            'Attempt %d of %d',
-            tries + 1, max_tries)
+            'Attempt %d of %d for %s',
+            tries + 1, max_tries, thumbnail_create_url)
         resp, image = http_client.request(thumbnail_create_url)
         if 200 <= resp.status <= 299:
             if 'ServiceException' not in image:
@@ -120,7 +138,12 @@ def generate_thumbnail_task(instance_id, class_name):
             logger.debug(
                 'Thumbnail: Thumbnail successfully generated for \'%s\'.',
                 instance_id)
-            save_thumbnail(obj_type, instance_id, 'image/png', thumb_png, True)
+            if (instance.is_remote):
+                save_thumbnail(obj_type, instance.service_typename,
+                               'image/png', thumb_png, True)
+            else:
+                save_thumbnail(obj_type, instance_id,
+                               'image/png', thumb_png, True)
         else:
             logger.debug(
                 'Thumbnail: Unable to get thumbnail image from '
