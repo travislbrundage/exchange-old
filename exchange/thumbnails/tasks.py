@@ -1,8 +1,10 @@
 import time
 import logging
+import base64
 from celery.task import task
 
 from django.db.models.signals import post_save
+from django.conf import settings
 from geonode.layers.models import Layer
 from geonode.maps.models import Map
 from geonode.utils import http_client
@@ -63,10 +65,9 @@ def get_gs_thumbnail(instance):
 
     thumbnail_create_url = baseurl + p
 
-    logger.debug('Service type: %s', instance.service.type)
-    if (instance.storeType == 'remoteStore' and
-            instance.service.type == 'REST'):
-        thumbnail_create_url = "%s/info/thumbnail" % (instance.ows_url)
+    if (instance.storeType == 'remoteStore'):
+        if (instance.service.type == 'REST'):
+            thumbnail_create_url = "%s/info/thumbnail" % (instance.ows_url)
 
     tries = 0
     max_tries = 30
@@ -75,10 +76,27 @@ def get_gs_thumbnail(instance):
             'Thumbnail: Requesting thumbnail from GeoServer. '
             'Attempt %d of %d for %s',
             tries + 1, max_tries, thumbnail_create_url)
-        resp, image = http_client.request(thumbnail_create_url)
+        if (instance.storeType == 'remoteStore'):
+            resp, image = http_client.request(thumbnail_create_url)
+        else:
+            # Login using basic auth as geoserver admin
+            user = settings.GEOSERVER_USER
+            pword = settings.GEOSERVER_PASSWORD
+            auth = base64.encodestring(user + ':' + pword)
+            resp, image = http_client.request(
+                thumbnail_create_url,
+                'GET',
+                headers={'Authorization': 'Basic ' + auth}
+            )
         if 200 <= resp.status <= 299:
             if 'ServiceException' not in image:
                 return image
+            else:
+                logger.debug(
+                    'Thumbnail: Encountered unexpected status code: %d.  '
+                    'Aborting.',
+                    resp.status)
+                logger.debug(resp)
         else:
             # Unexpected Error Code, Stop Trying
             logger.debug(
@@ -90,7 +108,7 @@ def get_gs_thumbnail(instance):
 
         # Layer not ready yet, try again
         tries += 1
-        time.sleep(1)
+        time.sleep(3)
 
     return None
 
