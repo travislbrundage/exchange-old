@@ -83,6 +83,10 @@ sources:
   dt_wms:
     type: wms
     supported_srs: ['EPSG:4326']
+    wms_opts:
+          legendgraphic: true
+          featureinfo: true
+          featureinfo_types: ['text', 'html', 'xml']
     req:
       url: http://data-test.boundlessgeo.io/geoserver/wms?
       transparent: true
