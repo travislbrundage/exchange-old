@@ -17,6 +17,10 @@ cp -f nginx/sites-available/default ${nginx_etc}/sites-available/
 cp nginx/sites-available/mapproxy.conf ${nginx_etc}/sites-available/
 ln -fs ../sites-available/mapproxy.conf ${nginx_etc}/sites-enabled/mapproxy.conf
 
+# forward request and error logs to docker log collector
+ln -sf /dev/stdout /var/log/nginx/access.log
+ln -sf /dev/stderr /var/log/nginx/error.log
+
 # Still necesssary with nginx-light on stretch?
 #cd /etc/nginx
 #ln -fs /usr/lib/nginx/modules modules
