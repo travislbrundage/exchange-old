@@ -24,6 +24,7 @@ from django.conf.urls.static import static
 from django.contrib.auth.decorators import login_required
 from geonode.urls import urlpatterns as geonode_urls
 from exchange.maploom.urls import urlpatterns as maploom_urls
+from exchange.pki.urls import urlpatterns as pki_urls
 from fileservice.urls import urlpatterns as fileservice_urls
 from storyscapes.urls import urlpatterns as story_urls
 from thumbnails.urls import urlpatterns as thumbnail_urls
@@ -114,3 +115,4 @@ urlpatterns += geonode_urls
 urlpatterns += fileservice_urls
 urlpatterns += thumbnail_urls
 urlpatterns += maploom_urls
+urlpatterns += pki_urls
