@@ -4,7 +4,6 @@ from django.conf import settings
 from elasticsearch import Elasticsearch
 import pytest
 from django.core.management import call_command
-import subprocess
 
 
 @pytest.mark.skipif(settings.ES_SEARCH is False,

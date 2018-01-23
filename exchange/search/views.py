@@ -47,7 +47,8 @@ def get_unified_search_result_objects(hits):
                 result['bbox_bottom'] = value[1]
                 result['bbox_right'] = value[2]
                 result['bbox_top'] = value[3]
-                bbox_str = ','.join(map(str, value))
+                # flake8 F841
+                # bbox_str = ','.join(map(str, value))
             else:
                 result[key] = source.get(key, None)
         objects.append(result)
@@ -85,7 +86,8 @@ def get_facet_settings():
     # Allows settings that can be used by a client for display of the facets
     # 'open' is used by exchange client side to determine if a facet menu shows
     # up open or closed by default
-    default_facet_settings = {'open': False, 'show': True}
+    # flake8 F841
+    # default_facet_settings = {'open': False, 'show': True}
     facet_settings = {
         'category': {'open': True, 'show': True},
         'source_host': {'open': True, 'display': 'Host'},

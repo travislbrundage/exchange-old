@@ -4,8 +4,10 @@
 function lint {
     echo "-------> exchange pycodestyle"
     pycodestyle exchange --ignore=E722,E731
-    echo "-------> docker-compose yamllint"
-    yamllint -d "{extends: relaxed, rules: {line-length: {max: 120}}}" docker-compose.yml
+    echo "-------> exchange flake8"
+    flake8 --ignore=F405,E722,E731 exchange
+    echo "-------> exchange yamllint"
+    yamllint -d "{extends: relaxed, rules: {line-length: {max: 120}}}" $(find . -name "*.yml" -not -path "./vendor/*")
 }
 
 # Jenkins specific function for builds on master branch, requires sonar auth token

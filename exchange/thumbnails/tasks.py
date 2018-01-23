@@ -174,13 +174,16 @@ def generate_thumbnail_task(instance_id, class_name):
 # before it.
 def generate_thumbnail(instance, sender, **kwargs):
     instance_id = None
-    obj_type = None
+    # flake8 issue F841
+    # obj_type = None
     if instance.class_name == 'Layer':
         instance_id = instance.typename
-        obj_type = 'layers'
+        # flake8 issue F841
+        # obj_type = 'layers'
     elif instance.class_name == 'Map':
         instance_id = instance.id
-        obj_type = 'maps'
+        # flake8 issue F841
+        # obj_type = 'maps'
 
     if instance_id is not None:
         if instance.is_published:
