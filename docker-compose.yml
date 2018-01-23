@@ -50,6 +50,26 @@ services:
       - db
     volumes:
       - geoserver_data:/usr/local/tomcat/webapps/geoserver/data:rw
+  mapproxy:
+    container_name: mapproxy
+    build: ./docker/mapproxy
+    image: bex/mapproxy:latest
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail mapproxy.boundless.test:8088/ || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    ports:
+      - "8088:8088"
+      - "8344:8344"
+    networks:
+      default:
+        aliases:
+         - mapproxy.boundless.test
+    volumes:
+      - $PWD/docker/mapproxy/mapproxy:/mapproxy:rw
+      - $PWD/docker/mapproxy/nginx/sites-available:/etc/nginx/sites-available:rw
+      - mapproxy_data:/cache_data
   db:
     container_name: db
     build: ./docker/postgis
@@ -110,6 +130,7 @@ services:
 volumes:  # volumes with no displayed path/relationship to the host
   django_media:
   geoserver_data:
+  mapproxy_data:
   db_data:
   search_data:
   queue_data:
