@@ -4,8 +4,17 @@ set -e
 
 manage='python /code/manage.py'
 setup='python /code/setup.py'
-
+maploom_static='/code/exchange/maploom/static/maploom'
+maploom_templates='/code/exchange/maploom/templates'
 # let the db intialize
+if [[ $MAPLOOM_DEV == True ]]; then
+  rm -r $maploom_static
+  ln -s /code/vendor/maploom/build $maploom_static
+  if [[ -f $maploom_templates/maps/maploom.html ]]; then
+    rm $maploom_templates/maps/maploom.html
+  fi
+  ln -s /code/vendor/maploom/build/maploom.html $maploom_templates/maps/maploom.html
+fi
 sleep 15
 until $manage migrate account --noinput; do
   >&2 echo "db is unavailable - sleeping"
