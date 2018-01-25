@@ -198,7 +198,7 @@ INSTALLED_APPS = (
     'exchange.storyscapes',
     'composer',
     'social_django',
-    'exchange.pki'
+    'exchange.pki',
 ) + ADDITIONAL_APPS + INSTALLED_APPS
 
 if OSGEO_IMPORTER_ENABLED:
