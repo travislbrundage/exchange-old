@@ -50,7 +50,8 @@ def make_thumb_request(instance, baseurl, params=None):
         'Thumbnail: Requesting thumbnail for %s. ',
         thumbnail_create_url
     )
-    if (instance.storeType == 'remoteStore'):
+    if (hasattr(instance, 'storeType') and
+            instance.storeType == 'remoteStore'):
         resp = http_client.get(thumbnail_create_url)
     else:
         # Login using basic auth as geoserver admin
@@ -80,7 +81,8 @@ def make_thumb_request(instance, baseurl, params=None):
 # @return PNG bytes.
 #
 def get_gs_thumbnail(instance):
-    if (instance.storeType == 'remoteStore'):
+    if (hasattr(instance, 'storeType') and
+            instance.storeType == 'remoteStore'):
         if (instance.service.type == 'REST'):
             thumbnail_create_url = "%s/info/thumbnail" % (instance.ows_url)
             content = make_thumb_request(instance, thumbnail_create_url)
@@ -112,7 +114,8 @@ def get_gs_thumbnail(instance):
     baseurl = ogc_server_settings.LOCATION + \
         "wms/reflect?"
 
-    if (instance.storeType == 'remoteStore'):
+    if (hasattr(instance, 'storeType') and
+            instance.storeType == 'remoteStore'):
         params['request'] = 'GetMap'
         params['service'] = 'wms'
         params['version'] = '1.3.0'
@@ -217,7 +220,8 @@ def generate_thumbnail_task(instance_id, class_name):
             logger.debug(
                 'Thumbnail: Thumbnail successfully generated for \'%s\'.',
                 instance_id)
-            if (instance.is_remote):
+            if (hasattr(instance, 'storeType') and
+                    instance.storeType == 'remoteStore'):
                 save_thumbnail(obj_type, instance.service_typename,
                                'image/png', thumb_png, True)
             else:
