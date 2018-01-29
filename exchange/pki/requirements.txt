@@ -1,0 +1,3 @@
+urllib3[secure]>=1.22
+# minimum of requests 2.12 needed, though not sure if it is urllib3-bug-free
+requests>=2.18.4
