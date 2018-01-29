@@ -4,8 +4,10 @@
 function lint {
     echo "-------> exchange pycodestyle"
     pycodestyle exchange --ignore=E722,E731
-    echo "-------> docker-compose yamllint"
-    yamllint -d "{extends: relaxed, rules: {line-length: {max: 120}}}" docker-compose.yml
+    echo "-------> exchange flake8"
+    flake8 --ignore=F405,E722,E731 exchange
+    echo "-------> exchange yamllint"
+    yamllint -d "{extends: relaxed, rules: {line-length: {max: 120}}}" $(find . -name "*.yml" -not -path "./vendor/*")
 }
 
 # Jenkins specific function for builds on master branch, requires sonar auth token
@@ -58,11 +60,24 @@ function build-maploom {
     echo '{% load staticfiles i18n %}{% verbatim %}' > bin/_maploom_map.html
     cat bin/index_body_no_tag.html >> bin/_maploom_map.html
     echo '{% endverbatim %}' >> bin/_maploom_map.html
-    mv bin/_maploom_js.html /code/exchange/maploom/templates/maploom/_maploom_js.html
-    mv bin/_maploom_map.html /code/exchange/maploom/templates/maploom/_maploom_map.html
-    mv bin/maploom.html /code/exchange/maploom/templates/maps/maploom.html
-    mv bin/assets/* /code/exchange/maploom/static/maploom/assets/
-    mv bin/fonts/* /code/exchange/maploom/static/maploom/fonts/
-    rm -fr bin build package-lock.json
+    if [[ -f /code/exchange/maploom/templates/maploom/_maploom_js.html ]]; then
+      rm /code/exchange/maploom/templates/maploom/_maploom_js.html
+    fi
+    cp bin/_maploom_js.html /code/exchange/maploom/templates/maploom/_maploom_js.html
+    if [[ -f /code/exchange/maploom/templates/maploom/_maploom_map.html ]]; then
+      rm /code/exchange/maploom/templates/maploom/_maploom_map.html
+    fi
+    cp bin/_maploom_map.html /code/exchange/maploom/templates/maploom/_maploom_map.html
+    if [[ -f /code/exchange/maploom/templates/maps/maploom.html ]]; then
+      rm /code/exchange/maploom/templates/maps/maploom.html
+    fi
+    cp bin/maploom.html /code/exchange/maploom/templates/maps/maploom.html
+    if [[ -d /code/exchange/maploom/static/maploom ]]; then
+      rm -r /code/exchange/maploom/static/maploom
+    fi
+    mkdir /code/exchange/maploom/static/maploom
+    cp -r bin/assets /code/exchange/maploom/static/maploom/assets
+    cp -r bin/fonts /code/exchange/maploom/static/maploom/fonts
+    rm -f package-lock.json
     popd
 }

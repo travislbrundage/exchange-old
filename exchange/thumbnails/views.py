@@ -9,7 +9,6 @@
 from django.http import HttpResponse
 
 from base64 import b64decode
-from PIL import Image, ImageDraw, ImageFont
 import imghdr
 import os
 

@@ -20,7 +20,6 @@
 
 import os
 import dj_database_url
-import copy
 from ast import literal_eval as le
 from geonode.settings import *  # noqa
 from geonode.settings import (
@@ -323,7 +322,7 @@ REGISTRY_CAT = os.getenv('REGISTRY_CAT', 'registry')
 REGISTRY_LOCAL_URL = os.getenv('REGISTRY_LOCAL_URL', 'http://localhost:8001')
 
 # CSW settings
-CATALOGUE = {
+CATALOGUE = {  # noqa
     'default': {
         'ENGINE': 'geonode.catalogue.backends.pycsw_http',
         # The FULLY QUALIFIED base url to the CSW instance for this GeoNode
