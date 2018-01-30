@@ -19,18 +19,13 @@
 #
 #########################################################################
 
-import os
-import sys
 import re
 # We need import ssl to fail if it can't be imported.
 # urllib3.create_urllib3_context() will create a context without support for
 # PKI private key password otherwise.
 import ssl
-import requests
 
-from ssl import SSLContext, Purpose, SSLError
-# noinspection PyPackageRequirements
-from requests import Session, Request, Response
+from ssl import Purpose, SSLError
 from requests.adapters import HTTPAdapter
 # noinspection PyPackageRequirements
 from urllib3.util.ssl_ import (create_urllib3_context,

@@ -24,17 +24,14 @@ import sys
 import unittest
 import django
 
-from requests import get, Session, Request, Response, ConnectionError
-from requests.adapters import HTTPAdapter
+from requests import get, Session, ConnectionError
 
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpResponse
 from django.conf import settings
 from django.test.utils import get_runner
-from django.test.runner import DiscoverRunner
 from django.test import TestCase
 
-from exchange.pki.settings import (SSL_DEFAULT_CONFIG,
-                                   SSL_CONFIGS,
+from exchange.pki.settings import (SSL_CONFIGS,
                                    SSL_CONFIG_MAP)
 from exchange.pki.utils import (hostname_port,
                                 requests_base_url,

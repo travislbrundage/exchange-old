@@ -1,6 +1,4 @@
-import os
-
-'''
+"""
 name:
     string; REQUIRED (display name of config, shown in popup on remote services
     registration page and details page after registration)
@@ -57,7 +55,7 @@ https_retries:
 https_redirects:
     None or int >= 0 or False.
     (0 doesn't follow redirect; False does the same, but skips rasising error.)
-'''
+"""
 SSL_DEFAULT_CONFIG = {
     "name": "Default",
     "ca_custom_certs": None,
@@ -76,7 +74,7 @@ SSL_DEFAULT_CONFIG = {
 
 SSL_CONFIGS = {}
 
-'''
+"""
 Example for adding new configs beyond the default
 
 SSL_CONFIGS = {
@@ -97,7 +95,7 @@ SSL_CONFIGS = {
 
 Note: It is NOT required to implement all settings in new configs, any values
 that are excluded will assume the values of SSL_DEFAULT_CONFIG
-'''
+"""
 
 # This TEMPORARILY represents an ssl_config_map model
 SSL_CONFIG_MAP = {}
