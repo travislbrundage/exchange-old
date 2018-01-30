@@ -22,19 +22,24 @@
 import os
 import sys
 import unittest
+import django
 
 from requests import get, Session, Request, Response, ConnectionError
 from requests.adapters import HTTPAdapter
 
 from django.http import HttpRequest, HttpResponse
+from django.conf import settings
+from django.test.utils import get_runner
+from django.test.runner import DiscoverRunner
+from django.test import TestCase
 
-from settings import (SSL_DEFAULT_CONFIG,
-                      SSL_CONFIGS,
-                      SSL_CONFIG_MAP)
-from utils import (hostname_port,
-                   requests_base_url,
-                   SslContextAdapter,
-                   get_ssl_context_opts)
+from exchange.pki.settings import (SSL_DEFAULT_CONFIG,
+                                   SSL_CONFIGS,
+                                   SSL_CONFIG_MAP)
+from exchange.pki.utils import (hostname_port,
+                                requests_base_url,
+                                SslContextAdapter,
+                                get_ssl_context_opts)
 
 
 TESTDIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'files')
@@ -161,7 +166,7 @@ def skipUnlessHasMapproxy():
 
 
 @skipUnlessHasMapproxy()
-class TestPkiRequest(unittest.TestCase):
+class TestPkiRequest(TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -226,14 +231,25 @@ class TestPkiRequest(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
 
 
-def suite():
-    test_suite = unittest.makeSuite(TestPkiRequest, 'test')
-    return test_suite
-
-
-def run_all():
-    unittest.TextTestRunner(verbosity=3, stream=sys.stdout).run(suite())
+# def suite():
+#     test_suite = unittest.makeSuite(TestPkiRequest, 'test')
+#     return test_suite
+#
+#
+# def run_all():
+#     unittest.TextTestRunner(verbosity=3, stream=sys.stdout).run(suite())
 
 
 if __name__ == '__main__':
-    unittest.main()
+    # unittest.main()
+
+    # Use standard Django test runner to test reusable applications
+    # https://docs.djangoproject.com/en/2.0/topics/testing/advanced/
+    #         #using-the-django-test-runner-to-test-reusable-applications
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'test_settings'
+    django.setup()
+    TestRunner = get_runner(settings)
+    """:type: django.test.runner.DiscoverRunner"""
+    test_runner = TestRunner(keepdb=True)
+    failures = test_runner.run_tests(['.'])
+    sys.exit(bool(failures))
