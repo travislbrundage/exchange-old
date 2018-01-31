@@ -31,14 +31,13 @@ from django.conf import settings
 from django.test.utils import get_runner
 from django.test import TestCase
 
-from exchange.pki.settings import (SSL_CONFIGS,
-                                   SSL_CONFIG_MAP,
-                                   PKI_DIRECTORY)
-from exchange.pki.models import HostnamePortSslConfig  # noqa
-from exchange.pki.utils import (hostname_port,
-                                requests_base_url,
-                                SslContextAdapter,
-                                get_ssl_context_opts)
+from ..settings import (SSL_CONFIGS,
+                        SSL_CONFIG_MAP)
+from ..models import HostnamePortSslConfig  # noqa
+from ..utils import (hostname_port,
+                     requests_base_url,
+                     SslContextAdapter,
+                     get_ssl_context_opts)
 
 
 TESTDIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'files')
@@ -127,14 +126,14 @@ def pki_request(resource_url=None):
     #   https://tools.ietf.org/html/rfc6125 <-- best practices
     req_ses.mount(base_url, SslContextAdapter(*get_ssl_context_opts(base_url)))
     # TODO: Passthru Django request headers, cookies, etc.
-    # Should we be sending cookies from Exchange's domain into remote endpoint?
+    # Should we be sending cookies from project's domain into remote endpoint?
     req_res = req_ses.get(url)
     """:type: requests.Response"""
-    # TODO: Capture errors and signal to Exchange UI for reporting to user.
+    # TODO: Capture errors and signal to web UI for reporting to user.
     #       Don't let errors just raise exceptions
 
     # TODO: Passthru requests headers, cookies, etc.
-    # Should we be setting cookies in Exchange's domain from remote endpoint?
+    # Should we be setting cookies in project's domain from remote endpoint?
     # TODO: Should we be sniffing encoding/charset and passing back?
     response = HttpResponse(
         content=req_res.content,
@@ -156,17 +155,6 @@ def skip_unless_has_mapproxy():
             'Test requires mapproxy docker-compose container running')
 
 
-def skip_unless_has_pki_dir():
-    if not os.path.exists(PKI_DIRECTORY):
-        return unittest.skip(
-            "PKI directory missing at '{0}'. Create it as a symlink with:\n"
-            "  ln -s '{1}' '{0}'"
-            .format(PKI_DIRECTORY, TESTDIR))
-    else:
-        return lambda func: func
-
-
-@skip_unless_has_pki_dir()
 @skip_unless_has_mapproxy()
 class TestPkiRequest(TestCase):
 

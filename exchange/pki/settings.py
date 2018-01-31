@@ -1,8 +1,3 @@
-# IMPORTANT: this directory should not be within application or www roots
-# For dev testing, either create a symlink from this location to:
-# <django project source>/pki/tests/files
-PKI_DIRECTORY = '/usr/local/exchange-pki'
-
 """
 name:
     string; REQUIRED (display name of config, shown in popup on remote services

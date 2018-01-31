@@ -35,7 +35,7 @@ from urllib3.util.retry import Retry
 # noinspection PyCompatibility
 from urlparse import urlparse
 
-from settings import SSL_DEFAULT_CONFIG, SSL_CONFIGS, SSL_CONFIG_MAP
+from .settings import SSL_DEFAULT_CONFIG, SSL_CONFIGS, SSL_CONFIG_MAP
 
 
 class SslContextAdapter(HTTPAdapter):

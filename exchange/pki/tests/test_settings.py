@@ -1,12 +1,21 @@
 import os
+import sys
+
+sys.path.insert(
+    0,
+    os.path.dirname(
+        os.path.dirname(
+            os.path.dirname(
+                os.path.realpath(__file__))))
+)
 
 TESTDIR = os.path.dirname(os.path.realpath(__file__))
 
 SECRET_KEY = 'fake-key'
 
 INSTALLED_APPS = [
-    "exchange.pki",
-    "exchange.pki.tests",
+    "pki",
+    "pki.tests",
 ]
 
 DATABASES = {

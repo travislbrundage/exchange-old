@@ -36,15 +36,14 @@ class Migration(migrations.Migration):
                               b'popup on remote services registration page '
                               b'and details page after registration.',
                     max_length=128, verbose_name=b'Name')),
-                ('ca_custom_certs', models.FilePathField(
-                    blank=True,
-                    help_text=b"(Optional) Certificate of concatenated "
-                              b"Certificate Authorities, from 'PKI_DIRECTORY' "
-                              b"directory, in PEM format. If undefined, "
-                              b"System (via OpenSSL) CAs are used.",
-                    path=b'/usr/local/exchange-pki',
-                    verbose_name=b'Custom CA cert file',
-                    match=b'.*\\.(crt|CRT|pem|PEM)$')),
+                ('ca_custom_certs', models.CharField(
+                    help_text=b'(Optional) Filesystem path to a certificate '
+                              b'of concatenated Certificate Authorities, in '
+                              b'PEM format. If undefined, System '
+                              b'(via OpenSSL) CAs are used. NOTE: should be '
+                              b'outside of your application and www roots!',
+                    max_length=255, verbose_name=b'Custom CA cert file',
+                    blank=True)),
                 ('ca_allow_invalid_certs', models.BooleanField(
                     default=False,
                     help_text=b'(Optional) Used during pre-validation of SSL '
@@ -52,25 +51,23 @@ class Migration(migrations.Migration):
                               b'mean OpenSSL will accept any invalid '
                               b'certificates.',
                     verbose_name=b'Allow invalid CAs')),
-                ('client_cert', models.FilePathField(
-                    blank=True,
-                    help_text=b"(Optional) Client certificate in PEM format, "
-                              b"from 'PKI_DIRECTORY' directory. REQUIRED if "
-                              b"client_key is defined. Client certs that "
-                              b"also contain keys are not supported.",
-                    path=b'/usr/local/exchange-pki',
-                    verbose_name=b'Client certificate file',
-                    match=b'.*\\.(crt|CRT|pem|PEM)$')),
-                ('client_key', models.FilePathField(
-                    blank=True,
-                    help_text=b"(Optional) Client certificate's private key "
-                              b"in PEM format, from 'PKI_DIRECTORY' "
-                              b"directory. REQUIRED if client_cert is "
-                              b"defined. It is highly recommended the key "
-                              b"be password-encrypted.",
-                    path=b'/usr/local/exchange-pki',
-                    verbose_name=b'Client cert private key file',
-                    match=b'.*\\.(key|KEY|pem|PEM)$')),
+                ('client_cert', models.CharField(
+                    help_text=b'(Optional) Filesystem path to a client '
+                              b'certificate in PEM format. REQUIRED if '
+                              b'client_key is defined. Client certs that also '
+                              b'contain keys are not supported. NOTE: should '
+                              b'be outside of your application and www roots!',
+                    max_length=255, verbose_name=b'Client certificate file',
+                    blank=True)),
+                ('client_key', models.CharField(
+                    help_text=b"(Optional) Filesystem path to a client "
+                              b"certificate's private key in PEM format. "
+                              b"REQUIRED if client_cert is defined. It is "
+                              b"highly recommended the key be "
+                              b"password-encrypted. NOTE: should be outside "
+                              b"of your application and www roots!",
+                    max_length=255,
+                    verbose_name=b'Client cert private key file', blank=True)),
                 ('client_key_pass', models.CharField(
                     help_text=b"(Optional) Client certificate's private "
                               b"key password.",

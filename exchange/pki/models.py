@@ -18,14 +18,11 @@
 #
 #########################################################################
 
-import os
 import ssl
 
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
-
-from exchange.pki.settings import PKI_DIRECTORY
 
 
 class SslConfig(models.Model):
@@ -84,14 +81,14 @@ class SslConfig(models.Model):
                   "remote services registration page and details page after "
                   "registration.",
     )
-    ca_custom_certs = models.FilePathField(
+    ca_custom_certs = models.CharField(
         "Custom CA cert file",
-        path=PKI_DIRECTORY,
-        match=_cert_match,
+        max_length=255,
         blank=True,
-        help_text="(Optional) Certificate of concatenated Certificate "
-                  "Authorities, from 'PKI_DIRECTORY' directory, in PEM "
-                  "format. If undefined, System (via OpenSSL) CAs are used.",
+        help_text="(Optional) Filesystem path to a certificate of "
+                  "concatenated Certificate Authorities, in PEM format. "
+                  "If undefined, System (via OpenSSL) CAs are used. "
+                  "NOTE: should be outside of your application and www roots!",
     )
     ca_allow_invalid_certs = models.BooleanField(
         "Allow invalid CAs",
@@ -102,25 +99,24 @@ class SslConfig(models.Model):
                   "a config. NOTE: this does not mean OpenSSL will accept any "
                   "invalid certificates.",
     )
-    client_cert = models.FilePathField(
+    client_cert = models.CharField(
         "Client certificate file",
-        path=PKI_DIRECTORY,
-        match=_cert_match,
+        max_length=255,
         blank=True,
-        help_text="(Optional) Client certificate in PEM format, from "
-                  "'PKI_DIRECTORY' directory. REQUIRED if client_key is "
-                  "defined. Client certs that also contain keys are not "
-                  "supported.",
+        help_text="(Optional) Filesystem path to a client certificate in PEM "
+                  "format. REQUIRED if client_key is defined. Client certs "
+                  "that also contain keys are not supported. "
+                  "NOTE: should be outside of your application and www roots!",
     )
-    client_key = models.FilePathField(
+    client_key = models.CharField(
         "Client cert private key file",
-        path=PKI_DIRECTORY,
-        match=_key_match,
+        max_length=255,
         blank=True,
-        help_text="(Optional) Client certificate's private key in PEM format, "
-                  "from 'PKI_DIRECTORY' directory. REQUIRED if client_cert is "
+        help_text="(Optional) Filesystem path to a client certificate's "
+                  "private key in PEM format. REQUIRED if client_cert is "
                   "defined. It is highly recommended the key be "
-                  "password-encrypted.",
+                  "password-encrypted. "
+                  "NOTE: should be outside of your application and www roots!",
     )
     # TODO: update ^ text with 'unless .p12|.pfx cert defined'
     client_key_pass = models.CharField(
@@ -160,7 +156,7 @@ class SslConfig(models.Model):
         blank=True,
         help_text="(Optional) Comman-separated list of SSL module options. "
                   "If undefined, defaults to "
-                  "'OP_NO_SSLv2, OP_NO_SSLv, OP_NO_COMPRESSION'."
+                  "'OP_NO_SSLv2, OP_NO_SSLv, OP_NO_COMPRESSION'. "
                   "See ssl OP_* constant docmentation for details: "
                   "https://docs.python.org/2/library/ssl.html",
     )
@@ -206,10 +202,6 @@ class SslConfig(models.Model):
         """Runtime collection of available ssl module PROTOCOL_* constants"""
         return [p for p in dir(ssl) if p.startswith('PROTOCOL_')]
 
-    @staticmethod
-    def pki_file(a_file):
-        return os.path.join(PKI_DIRECTORY, a_file)
-
     def clean(self):
         # validators
         if self.ssl_options:
@@ -239,16 +231,10 @@ class SslConfig(models.Model):
             if self.ssl_options else None
         return {
             "name": self.name,
-            "ca_custom_certs":
-                self.pki_file(self.ca_custom_certs)
-                if self.ca_custom_certs else None,
+            "ca_custom_certs": self.ca_custom_certs or None,
             "ca_allow_invalid_certs": bool(self.ca_allow_invalid_certs),
-            "client_cert":
-                self.pki_file(self.client_cert)
-                if self.client_cert else None,
-            "client_key":
-                self.pki_file(self.client_key)
-                if self.client_key else None,
+            "client_cert": self.client_cert or None,
+            "client_key": self.client_key or None,
             "client_key_pass": self.client_key_pass or None,
             "ssl_version":
                 self.ssl_version if self.ssl_version in self.ssl_protocols()
