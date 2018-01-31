@@ -32,7 +32,9 @@ from django.test.utils import get_runner
 from django.test import TestCase
 
 from exchange.pki.settings import (SSL_CONFIGS,
-                                   SSL_CONFIG_MAP)
+                                   SSL_CONFIG_MAP,
+                                   PKI_DIRECTORY)
+from exchange.pki.models import HostnamePortSslConfig  # noqa
 from exchange.pki.utils import (hostname_port,
                                 requests_base_url,
                                 SslContextAdapter,
@@ -46,36 +48,31 @@ TESTDIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'files')
 SSL_CONFIGS.update({
     "config1": {
         "name": "Custom CAs",
-        "ca_custom_certs": os.path.join(
-            TESTDIR, 'subissuer-issuer-root-ca_issuer-2-root-2-ca_chains.pem'),
+        "ca_custom_certs": os.path.join(TESTDIR, 'root-root2-chains.pem'),
     },
     "config2": {
         "name": "PKI: key with no password",
-        "ca_custom_certs": os.path.join(
-            TESTDIR, 'subissuer-issuer-root-ca_issuer-2-root-2-ca_chains.pem'),
+        "ca_custom_certs": os.path.join(TESTDIR, 'root-root2-chains.pem'),
         "client_cert": os.path.join(TESTDIR, 'alice-cert.pem'),
         "client_key": os.path.join(TESTDIR, 'alice-key.pem'),
     },
     "config3": {
         "name": "PKI: key with password",
-        "ca_custom_certs": os.path.join(
-            TESTDIR, 'subissuer-issuer-root-ca_issuer-2-root-2-ca_chains.pem'),
+        "ca_custom_certs": os.path.join(TESTDIR, 'root-root2-chains.pem'),
         "client_cert": os.path.join(TESTDIR, 'alice-cert.pem'),
         "client_key": os.path.join(TESTDIR, 'alice-key_w-pass.pem'),
         "client_key_pass": "password",
     },
     "config4": {
         "name": "PKI: alt client root CA chain",
-        "ca_custom_certs": os.path.join(
-            TESTDIR, 'subissuer-issuer-root-ca_issuer-2-root-2-ca_chains.pem'),
+        "ca_custom_certs": os.path.join(TESTDIR, 'root-root2-chains.pem'),
         "client_cert": os.path.join(TESTDIR, 'jane-cert.pem'),
         "client_key": os.path.join(TESTDIR, 'jane-key_w-pass.pem'),
         "client_key_pass": "password",
     },
     "config5": {
         "name": "PKI: key with password; TLSv1_2-only",
-        "ca_custom_certs": os.path.join(
-            TESTDIR, 'subissuer-issuer-root-ca_issuer-2-root-2-ca_chains.pem'),
+        "ca_custom_certs": os.path.join(TESTDIR, 'root-root2-chains.pem'),
         "client_cert": os.path.join(TESTDIR, 'alice-cert.pem'),
         "client_key": os.path.join(TESTDIR, 'alice-key_w-pass.pem'),
         "client_key_pass": "password",
@@ -83,16 +80,14 @@ SSL_CONFIGS.update({
     },
     "config6": {
         "name": "PKI: key with no password; custom CAs with no validation",
-        "ca_custom_certs": os.path.join(
-            TESTDIR, 'subissuer-issuer-root-ca_issuer-2-root-2-ca_chains.pem'),
+        "ca_custom_certs": os.path.join(TESTDIR, 'root-root2-chains.pem'),
         "client_cert": os.path.join(TESTDIR, 'alice-cert.pem'),
         "client_key": os.path.join(TESTDIR, 'alice-key.pem'),
         "ssl_verify_mode": "CERT_NONE",
     },
     "config7": {
         "name": "PKI: key with no password; TLSv1_2-only (via ssl_options)",
-        "ca_custom_certs": os.path.join(
-            TESTDIR, 'subissuer-issuer-root-ca_issuer-2-root-2-ca_chains.pem'),
+        "ca_custom_certs": os.path.join(TESTDIR, 'root-root2-chains.pem'),
         "client_cert": os.path.join(TESTDIR, 'alice-cert.pem'),
         "client_key": os.path.join(TESTDIR, 'alice-key.pem'),
         "ssl_version": "PROTOCOL_SSLv23",
@@ -151,8 +146,7 @@ def pki_request(resource_url=None):
     return response
 
 
-# noinspection PyPep8Naming
-def skipUnlessHasMapproxy():
+def skip_unless_has_mapproxy():
     try:
         mp_http = get('http://mapproxy.boundless.test:8088')
         assert mp_http.status_code == 200
@@ -162,7 +156,18 @@ def skipUnlessHasMapproxy():
             'Test requires mapproxy docker-compose container running')
 
 
-@skipUnlessHasMapproxy()
+def skip_unless_has_pki_dir():
+    if not os.path.exists(PKI_DIRECTORY):
+        return unittest.skip(
+            "PKI directory missing at '{0}'. Create it as a symlink with:\n"
+            "  ln -s '{1}' '{0}'"
+            .format(PKI_DIRECTORY, TESTDIR))
+    else:
+        return lambda func: func
+
+
+@skip_unless_has_pki_dir()
+@skip_unless_has_mapproxy()
 class TestPkiRequest(TestCase):
 
     @classmethod

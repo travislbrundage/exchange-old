@@ -65,7 +65,7 @@ services:
     networks:
       default:
         aliases:
-         - mapproxy.boundless.test
+          - mapproxy.boundless.test
     volumes:
       - $PWD/docker/mapproxy/mapproxy:/mapproxy:rw
       - $PWD/docker/mapproxy/nginx/sites-available:/etc/nginx/sites-available:rw

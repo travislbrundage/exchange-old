@@ -1,3 +1,8 @@
+# IMPORTANT: this directory should not be within application or www roots
+# For dev testing, either create a symlink from this location to:
+# <django project source>/pki/tests/files
+PKI_DIRECTORY = '/usr/local/exchange-pki'
+
 """
 name:
     string; REQUIRED (display name of config, shown in popup on remote services
@@ -27,7 +32,7 @@ client_key_pass:
 ssl_version:
     None or string; default 'PROTOCOL_SSLv23'.
     ('PROTOCOL_*' options from standard Python {{ssl}} package).
-    If None, urllib3 defaults to CERT_NONE (insecure).
+    If None, urllib3 defaults to PROTOCOL_SSLv23.
 
 ssl_verify_mode:
     None or string; default 'CERT_REQUIRED'.
@@ -61,7 +66,7 @@ SSL_DEFAULT_CONFIG = {
     "ca_custom_certs": None,
     "ca_allow_invalid_certs": False,
     "client_cert": None,
-    "client_key": None,  # TODO: Enforce separate client/key files in help text
+    "client_key": None,
     "client_key_pass": None,
     "ssl_version": "PROTOCOL_SSLv23",
     "ssl_verify_mode": "CERT_REQUIRED",
