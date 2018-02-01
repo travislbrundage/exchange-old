@@ -18,10 +18,14 @@
 #
 #########################################################################
 
+import os
 import ssl
+import logging
 
 from django.db import models
 from django.core.exceptions import ValidationError
+
+logger = logging.getLogger(__name__)
 
 
 class SslConfig(models.Model):
@@ -192,26 +196,52 @@ class SslConfig(models.Model):
         """Runtime collection of available ssl module PROTOCOL_* constants"""
         return [p for p in dir(ssl) if p.startswith('PROTOCOL_')]
 
+    @staticmethod
+    def _file_readable(a_file):
+        return all([
+            os.path.exists(a_file),
+            os.path.isfile(a_file),
+            os.access(a_file, os.R_OK)
+        ])
+
     def clean(self):
-        # validators
+        # Validators
+        # TODO: Move these validation routines to a more common location,
+        #       so they can be used for pre-validatin prior to connection
+
+        val_mgs = {}
         if self.ssl_options:
             opts = self.ssl_options.replace(' ', '').split(',')
+            # print(opts)
+            invalid_opts = []
             for opt in opts:
                 if opt and opt not in self.ssl_op_opts():
-                    msg = "{opt} not in ssl module options [{sslopts}]"\
-                          .format(opt=opt,
-                                  sslopts=','.join(self.ssl_op_opts()))
-                    raise ValidationError({'ssl_options': msg})
+                    invalid_opts.append(opt)
+            if invalid_opts:
+                    msg = "Options {0} not in ssl module options: [{1}]"\
+                          .format(', '.join(invalid_opts),
+                                  ','.join(self.ssl_op_opts()))
+                    val_mgs['ssl_options'] = msg
+
+        # Make sure PKI components are readable
+        for attr in ['ca_custom_certs', 'client_cert', 'client_key']:
+            f = getattr(self, attr, None)
+            if f and not self._file_readable(f):
+                msg = 'File does not exist or not readable at: {0}'.format(f)
+                val_mgs[attr] = msg
 
         # TODO: update when .p12|.pfx cert support added
         #       client_key NOT needed for .p12|.pfx  client_cert
         #       client_key_pass needed for .p12|.pfx  client_cert
         if self.client_cert and not self.client_key:
             msg = 'Client key must be defined if client cert is.'
-            raise ValidationError({'client_key': msg})
+            val_mgs['client_key'] = msg
         if self.client_key and not self.client_cert:
             msg = 'Client cert must be defined if client key is.'
-            raise ValidationError({'client_cert': msg})
+            val_mgs['client_cert'] = msg
+
+        if val_mgs:
+            raise ValidationError(val_mgs)
 
         # TODO: validate supplied PKI components
 
@@ -227,15 +257,16 @@ class SslConfig(models.Model):
             "client_key": self.client_key or None,
             "client_key_pass": self.client_key_pass or None,
             "ssl_version":
-                self.ssl_version if self.ssl_version in self.ssl_protocols()
+                str(self.ssl_version)
+                if str(self.ssl_version) in self.ssl_protocols()
                 else self._ssl_version_default,
-            "ssl_verify_mode": self.ssl_verify_mode,
+            "ssl_verify_mode": str(self.ssl_verify_mode),
             "ssl_options":
-                [o for o in ssl_opts if o in self.ssl_op_opts()]
+                [str(o) for o in ssl_opts if str(o) in self.ssl_op_opts()]
                 if ssl_opts else None,
-            "ssl_ciphers": self.ssl_ciphers or None,
-            "https_retries": self.https_retries or None,
-            "https_redirects": self.https_redirects or None,
+            "ssl_ciphers": str(self.ssl_ciphers) or None,
+            "https_retries": str(self.https_retries) or None,
+            "https_redirects": str(self.https_redirects) or None,
         }
 
     class Meta:
@@ -263,6 +294,16 @@ class HostnamePortSslConfig(models.Model):
     def __str__(self):
         return "{0} -> SSL config: {1}".format(self.hostname_port,
                                                self.ssl_config)
+
+    def clean(self):
+        # Validators
+        val_mgs = {}
+        if self.hostname_port.lower() != self.hostname_port:
+            msg = "Hostname must be all lowercase."
+            val_mgs['hostname_port'] = msg
+
+        if val_mgs:
+            raise ValidationError(val_mgs)
 
     class Meta:
         verbose_name = 'Hostname:Port to SSL Config Map'

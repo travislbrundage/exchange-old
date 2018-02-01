@@ -190,6 +190,14 @@ def requests_base_url(url):
     return '{0}://{1}'.format(parts.scheme, hostname_port(url))
 
 
+def _redo_value(value):
+    if value is None:
+        return None
+    if value == 'False':
+        return False
+    if int(value) in range(11):
+        return int(value)
+    return None
 
 
 def get_ssl_context_opts(url):
@@ -264,7 +272,9 @@ def get_ssl_context_opts(url):
 
     # SslContextAdapter adapter_options
     adptr_opts = dict()
-    adptr_opts['retries'] = ssl_config.get('https_retries', None)
-    adptr_opts['redirects'] = ssl_config.get('https_redirects', None)
+    adptr_opts['retries'] = _redo_value(
+        ssl_config.get('https_retries', None))
+    adptr_opts['redirects'] = _redo_value(
+        ssl_config.get('https_redirects', None))
 
     return ctx_c_opts, ctx_opts, adptr_opts
