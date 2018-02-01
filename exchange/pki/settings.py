@@ -90,31 +90,3 @@ SSL_DEFAULT_CONFIG = {
     "https_retries": 3,
     "https_redirects": 3,
 }
-
-SSL_CONFIGS = {}
-
-"""
-Example for adding new configs beyond the default
-
-SSL_CONFIGS = {
-    'config1': {
-        "name": "TLS v1.2-only network",
-        "ca_custom_certs": "/path/to/ca_certs.crt",
-        "ssl_version": ssl.PROTOCOL_TLSv1_2
-    },
-    'config2': {
-        "name": "TLS v1.2-only network with PKI",
-        "ca_custom_certs": "/path/to/ca_certs.crt",
-        "client_cert": "/path/to/npe_cert.crt",
-        "client_key": "/path/to/npe.key",
-        "client_key_pass": "password",
-        "ssl_version": ssl.PROTOCOL_TLSv1_2
-    }
-}
-
-Note: It is NOT required to implement all settings in new configs, any values
-that are excluded will assume the values of SSL_DEFAULT_CONFIG
-"""
-
-# This TEMPORARILY represents an ssl_config_map model
-SSL_CONFIG_MAP = {}

@@ -22,6 +22,7 @@
 import os
 import sys
 import unittest
+import logging
 import django
 
 from requests import get, Session, ConnectionError
@@ -31,74 +32,13 @@ from django.conf import settings
 from django.test.utils import get_runner
 from django.test import TestCase
 
-from ..settings import (SSL_CONFIGS,
-                        SSL_CONFIG_MAP)
-from ..models import HostnamePortSslConfig  # noqa
-from ..utils import (hostname_port,
-                     requests_base_url,
-                     SslContextAdapter,
-                     get_ssl_context_opts)
+from pki.models import SslConfig, HostnamePortSslConfig
+from pki.utils import (hostname_port,
+                       requests_base_url,
+                       SslContextAdapter,
+                       get_ssl_context_opts)
 
-
-TESTDIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'files')
-
-
-# This represents an ssl_config model
-SSL_CONFIGS.update({
-    "config1": {
-        "name": "Custom CAs",
-        "ca_custom_certs": os.path.join(TESTDIR, 'root-root2-chains.pem'),
-    },
-    "config2": {
-        "name": "PKI: key with no password",
-        "ca_custom_certs": os.path.join(TESTDIR, 'root-root2-chains.pem'),
-        "client_cert": os.path.join(TESTDIR, 'alice-cert.pem'),
-        "client_key": os.path.join(TESTDIR, 'alice-key.pem'),
-    },
-    "config3": {
-        "name": "PKI: key with password",
-        "ca_custom_certs": os.path.join(TESTDIR, 'root-root2-chains.pem'),
-        "client_cert": os.path.join(TESTDIR, 'alice-cert.pem'),
-        "client_key": os.path.join(TESTDIR, 'alice-key_w-pass.pem'),
-        "client_key_pass": "password",
-    },
-    "config4": {
-        "name": "PKI: alt client root CA chain",
-        "ca_custom_certs": os.path.join(TESTDIR, 'root-root2-chains.pem'),
-        "client_cert": os.path.join(TESTDIR, 'jane-cert.pem'),
-        "client_key": os.path.join(TESTDIR, 'jane-key_w-pass.pem'),
-        "client_key_pass": "password",
-    },
-    "config5": {
-        "name": "PKI: key with password; TLSv1_2-only",
-        "ca_custom_certs": os.path.join(TESTDIR, 'root-root2-chains.pem'),
-        "client_cert": os.path.join(TESTDIR, 'alice-cert.pem'),
-        "client_key": os.path.join(TESTDIR, 'alice-key_w-pass.pem'),
-        "client_key_pass": "password",
-        "ssl_version": "PROTOCOL_TLSv1_2",
-    },
-    "config6": {
-        "name": "PKI: key with no password; custom CAs with no validation",
-        "ca_custom_certs": os.path.join(TESTDIR, 'root-root2-chains.pem'),
-        "client_cert": os.path.join(TESTDIR, 'alice-cert.pem'),
-        "client_key": os.path.join(TESTDIR, 'alice-key.pem'),
-        "ssl_verify_mode": "CERT_NONE",
-    },
-    "config7": {
-        "name": "PKI: key with no password; TLSv1_2-only (via ssl_options)",
-        "ca_custom_certs": os.path.join(TESTDIR, 'root-root2-chains.pem'),
-        "client_cert": os.path.join(TESTDIR, 'alice-cert.pem'),
-        "client_key": os.path.join(TESTDIR, 'alice-key.pem'),
-        "ssl_version": "PROTOCOL_SSLv23",
-        "ssl_options": ['OP_NO_SSLv2', 'OP_NO_SSLv3', 'OP_NO_TLSv1',
-                        'OP_NO_TLSv1_1', 'OP_NO_COMPRESSION'],
-    },
-    # "config": {
-    #     "name": "PKI: use system CAs",
-    #     "client_cert": os.path.join(TESTDIR, 'alice-cert.pem'),
-    #     "client_key": os.path.join(TESTDIR, 'alice-key.pem'),
-    # },
-})
+logger = logging.getLogger(__name__)
 
 
 # This represents the pki app's view
@@ -175,48 +115,59 @@ class TestPkiRequest(TestCase):
         pass
 
     def setUp(self):
-        pass
+        HostnamePortSslConfig.objects.all().delete()
 
     def tearDown(self):
-        pass
+        HostnamePortSslConfig.objects.all().delete()
+
+    def _set_hostname_port_mapping(self, pk):
+        logger.debug("Attempt Hostname:Port record creation for pk: {0}"
+                     .format(pk))
+        ssl_config = SslConfig.objects.get(pk=pk)
+        host_port_map = HostnamePortSslConfig(
+            hostname_port=self.mp_host_port,
+            ssl_config=ssl_config)
+        host_port_map.save()
+        logger.debug("Hostname:Port objects now:\n{0}"
+                     .format(HostnamePortSslConfig.objects.all()))
 
     def test_no_client(self):
-        SSL_CONFIG_MAP[self.mp_host_port] = 'config1'
+        self._set_hostname_port_mapping(1)
         res = pki_request(resource_url=self.mp_root)
         # Nginx non-standard status code 400 is for no client cert supplied
         self.assertEqual(res.status_code, 400)
 
     def test_client_no_password(self):
-        SSL_CONFIG_MAP[self.mp_host_port] = 'config2'
+        self._set_hostname_port_mapping(2)
         res = pki_request(resource_url=self.mp_root)
         self.assertEqual(res.status_code, 200)
         self.assertIn(self.mp_txt, res.content.decode("utf-8"))
 
     def test_client_and_password(self):
-        SSL_CONFIG_MAP[self.mp_host_port] = 'config3'
+        self._set_hostname_port_mapping(3)
         res = pki_request(resource_url=self.mp_root)
         self.assertEqual(res.status_code, 200)
         self.assertIn(self.mp_txt, res.content.decode("utf-8"))
 
     def test_client_and_password_alt_root(self):
-        SSL_CONFIG_MAP[self.mp_host_port] = 'config4'
+        self._set_hostname_port_mapping(4)
         res = pki_request(resource_url=self.mp_root)
         self.assertEqual(res.status_code, 200)
         self.assertIn(self.mp_txt, res.content.decode("utf-8"))
 
     def test_client_and_password_tls12_only(self):
-        SSL_CONFIG_MAP[self.mp_host_port] = 'config5'
+        self._set_hostname_port_mapping(5)
         res = pki_request(resource_url=self.mp_root)
         self.assertEqual(res.status_code, 200)
         self.assertIn(self.mp_txt, res.content.decode("utf-8"))
 
     def test_no_client_no_validation(self):
-        SSL_CONFIG_MAP[self.mp_host_port] = 'config6'
+        self._set_hostname_port_mapping(6)
         res = pki_request(resource_url=self.mp_root)
         self.assertEqual(res.status_code, 200)
 
     def test_client_no_password_tls12_only_ssl_opts(self):
-        SSL_CONFIG_MAP[self.mp_host_port] = 'config7'
+        self._set_hostname_port_mapping(7)
         res = pki_request(resource_url=self.mp_root)
         self.assertEqual(res.status_code, 200)
 
@@ -240,6 +191,6 @@ if __name__ == '__main__':
     django.setup()
     TestRunner = get_runner(settings)
     """:type: django.test.runner.DiscoverRunner"""
-    test_runner = TestRunner(keepdb=True)
+    test_runner = TestRunner(keepdb=False)
     failures = test_runner.run_tests(['.'])
     sys.exit(bool(failures))
