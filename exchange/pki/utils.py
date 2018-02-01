@@ -23,6 +23,8 @@ import logging
 
 # noinspection PyCompatibility
 from urlparse import urlparse
+from django.contrib.sites.models import Site
+from urllib import quote
 
 
 logger = logging.getLogger(__name__)
@@ -47,3 +49,15 @@ def hostname_port(url):
 def requests_base_url(url):
     parts = urlparse(url)
     return '{0}://{1}'.format(parts.scheme, hostname_port(url))
+
+
+def pki_route(url):
+    '''
+    Reroutes a service url through our internal proxy
+    :param url: Original service url
+    :return: Modified url via internal proxy
+    Ex: url = https://myserver.com:port/geoserver/wms
+    return https://<site>/pki/myserver.com%3Aport/geoserver/wms
+    '''
+    pki_url = 'https://' + Site.objects.get_current().domain + '/pki' + quote(url)
+    return pki_url.lower()
