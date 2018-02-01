@@ -33,9 +33,13 @@ TESTDIR = os.path.dirname(os.path.realpath(__file__))
 SECRET_KEY = 'fake-key'
 
 INSTALLED_APPS = [
-    "pki",
-    "pki.tests",
+    'pki',
+    'pki.tests',
 ]
+
+MIDDLEWARE_CLASSES = (
+    'django.middleware.common.CommonMiddleware',
+)
 
 DATABASES = {
     'default': {
@@ -45,4 +49,51 @@ DATABASES = {
             'NAME': os.path.join(TESTDIR, 'development.db'),
         }
     }
+}
+
+# Logging settings
+# 'DEBUG', 'INFO', 'WARNING', 'ERROR', or 'CRITICAL'
+DJANGO_LOG_LEVEL = os.getenv('DJANGO_LOG_LEVEL', 'WARNING')
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'verbose': {
+            'format':
+                ('%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d'
+                 ' %(message)s'),
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': DJANGO_LOG_LEVEL,
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        }
+    },
+    'loggers': {},
+    # 'loggers': {
+    #     'pki': {
+    #         'handlers': ['console'],
+    #         'level': DJANGO_LOG_LEVEL,
+    #     },
+    #     'urllib3': {
+    #         'handlers': ['console'],
+    #         'level': DJANGO_LOG_LEVEL,
+    #     },
+    #     'requests': {
+    #         'handlers': ['console'],
+    #         'level': DJANGO_LOG_LEVEL,
+    #     },
+    # },
+    'root': {
+        'handlers': ['console'],
+        'level': DJANGO_LOG_LEVEL
+    },
+}
+
+LOGGING['loggers']['django.db.backends'] = {
+    'handlers': ['console'],
+    'propagate': False,
+    'level': 'WARNING',  # Django SQL logging is too noisy at DEBUG
 }
