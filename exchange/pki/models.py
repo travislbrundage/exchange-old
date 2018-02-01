@@ -150,7 +150,7 @@ class SslConfig(models.Model):
         blank=True,
         help_text="(Optional) Comman-separated list of SSL module options. "
                   "If undefined, defaults to "
-                  "'OP_NO_SSLv2, OP_NO_SSLv, OP_NO_COMPRESSION'. "
+                  "'OP_NO_SSLv2, OP_NO_SSLv3, OP_NO_COMPRESSION'. "
                   "See ssl OP_* constant docmentation for details: "
                   "https://docs.python.org/2/library/ssl.html",
     )

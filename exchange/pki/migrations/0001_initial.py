@@ -95,8 +95,8 @@ class Migration(migrations.Migration):
                 ('ssl_options', models.CharField(
                     help_text=b"(Optional) Comman-separated list of SSL "
                               b"module options. If undefined, defaults to "
-                              b"'OP_NO_SSLv2, OP_NO_SSLv, OP_NO_COMPRESSION'. "
-                              b"See ssl OP_* constant docmentation for "
+                              b"'OP_NO_SSLv2, OP_NO_SSLv3, OP_NO_COMPRESSION'."
+                              b" See ssl OP_* constant docmentation for "
                               b"details: "
                               b"https://docs.python.org/2/library/ssl.html",
                     max_length=255, verbose_name=b'SSL options', blank=True)),
