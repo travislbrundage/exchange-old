@@ -1,7 +1,6 @@
 """
 name:
-    string; REQUIRED (display name of config, shown in popup on remote services
-    registration page and details page after registration)
+    string; REQUIRED. Display name of configuration.
 
 ca_custom_certs:
     None or filesystem path; default None.

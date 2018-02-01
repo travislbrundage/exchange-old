@@ -26,13 +26,6 @@ from django.core.validators import MinValueValidator
 
 
 class SslConfig(models.Model):
-    # TODO: add .p12|.pfx regex support for _cert_match
-    _cert_match = ".*\.(crt|CRT|pem|PEM)$"
-    _key_match = ".*\.(key|KEY|pem|PEM)$"
-    # _allow_invalid = [
-    #     (True, 'Yes'),
-    #     (False, 'No'),
-    # ]
     # _ssl_versions = [
     #     v for v in dir(ssl) if v.startswith('PROTOCOL_')
     # ]
@@ -77,9 +70,7 @@ class SslConfig(models.Model):
         "Name",
         max_length=128,
         blank=False,
-        help_text="(REQUIRED) Display name of config, shown in popup on "
-                  "remote services registration page and details page after "
-                  "registration.",
+        help_text="(REQUIRED) Display name of configuration.",
     )
     ca_custom_certs = models.CharField(
         "Custom CA cert file",

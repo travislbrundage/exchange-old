@@ -32,9 +32,7 @@ class Migration(migrations.Migration):
                     verbose_name='ID', serialize=False, auto_created=True,
                     primary_key=True)),
                 ('name', models.CharField(
-                    help_text=b'(REQUIRED) Display name of config, shown in '
-                              b'popup on remote services registration page '
-                              b'and details page after registration.',
+                    help_text=b'(REQUIRED) Display name of configuration.',
                     max_length=128, verbose_name=b'Name')),
                 ('ca_custom_certs', models.CharField(
                     help_text=b'(Optional) Filesystem path to a certificate '
