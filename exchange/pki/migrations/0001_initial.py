@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import django.core.validators
 from django.db import migrations, models
 
 
@@ -10,21 +9,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.CreateModel(
-            name='HostnamePortSslConfig',
-            fields=[
-                ('hostname_port', models.CharField(
-                    max_length=255, unique=True, serialize=False,
-                    verbose_name=b'Hostname:Port', primary_key=True)),
-                ('ssl_config_id', models.IntegerField(
-                    validators=[django.core.validators.MinValueValidator(1)])),
-            ],
-            options={
-                'ordering': ['hostname_port'],
-                'verbose_name': 'Hostname:Port to SSL Config Map',
-                'verbose_name_plural': 'Hostname:Port to SSL Config Mappings',
-            },
-        ),
         migrations.CreateModel(
             name='SslConfig',
             fields=[
@@ -101,7 +85,7 @@ class Migration(migrations.Migration):
                     help_text=b'How to handle verification of peer '
                               b'certificates (e.g. from endpoints). Setting '
                               b'to anything other than REQUIRED is '
-                              b'notadvised. See ssl CERT_* constant '
+                              b'not advised. See ssl CERT_* constant '
                               b'docmentation for details: '
                               b'https://docs.python.org/2/library/ssl.html',
                     max_length=16, verbose_name=b'SSL peer verify mode',
@@ -129,7 +113,7 @@ class Migration(migrations.Migration):
                     default=b'3',
                     help_text=b'Number of connection retries to attempt. '
                               b'Value of 0 does not retry; False does the '
-                              b'same, but skips rasising an error.',
+                              b'same, but skips raising an error.',
                     max_length=6, verbose_name=b'Retry failed requests',
                     choices=[(b'0', b'0'), (b'1', b'1'), (b'2', b'2'),
                              (b'3', b'3'), (b'4', b'4'), (b'5', b'5'),
@@ -140,7 +124,7 @@ class Migration(migrations.Migration):
                     default=b'3',
                     help_text=b'Number of connection redirects to follow. '
                               b'Value of 0 does not follow any; False does '
-                              b'the same, but skips rasising an error.',
+                              b'the same, but skips raising an error.',
                     max_length=6, verbose_name=b'Follow request redirects',
                     choices=[(b'0', b'0'), (b'1', b'1'), (b'2', b'2'),
                              (b'3', b'3'), (b'4', b'4'), (b'5', b'5'),
@@ -153,8 +137,27 @@ class Migration(migrations.Migration):
                 'verbose_name_plural': 'SSL Configs',
             },
         ),
+        migrations.CreateModel(
+            name='HostnamePortSslConfig',
+            fields=[
+                ('hostname_port', models.CharField(
+                    primary_key=True, serialize=False, max_length=255,
+                    help_text=b"Hostname and (optional) port, e.g. "
+                              b"'mydomain.com' or 'mydomain.com:8000'. "
+                              b"MUST be all lowercase.",
+                    unique=True, verbose_name=b'Hostname:Port')),
+                ('ssl_config', models.ForeignKey(
+                    related_name='+', verbose_name=b'Ssl config',
+                    to='pki.SslConfig', null=True)),
+            ],
+            options={
+                'ordering': ['hostname_port'],
+                'verbose_name': 'Hostname:Port to SSL Config Map',
+                'verbose_name_plural': 'Hostname:Port to SSL Config Mappings',
+            },
+        ),
         migrations.AlterUniqueTogether(
             name='hostnameportsslconfig',
-            unique_together=set([('hostname_port', 'ssl_config_id')]),
+            unique_together=set([('hostname_port', 'ssl_config')]),
         ),
     ]

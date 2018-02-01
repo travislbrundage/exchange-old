@@ -22,7 +22,6 @@ import ssl
 
 from django.db import models
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator
 
 
 class SslConfig(models.Model):
@@ -166,7 +165,7 @@ class SslConfig(models.Model):
         default='3',
         blank=False,
         help_text="Number of connection retries to attempt. Value of 0 does "
-                  "not retry; False does the same, but skips rasising an "
+                  "not retry; False does the same, but skips raising an "
                   "error.",
     )
     https_redirects = models.CharField(
@@ -176,7 +175,7 @@ class SslConfig(models.Model):
         default='3',
         blank=False,
         help_text="Number of connection redirects to follow. Value of 0 does "
-                  "not follow any; False does the same, but skips rasising an "
+                  "not follow any; False does the same, but skips raising an "
                   "error.",
     )
 
@@ -251,17 +250,22 @@ class HostnamePortSslConfig(models.Model):
         blank=False,
         primary_key=True,
         unique=True,
+        help_text="Hostname and (optional) port, e.g. 'mydomain.com' or "
+                  "'mydomain.com:8000'. MUST be all lowercase."
     )
-    ssl_config_id = models.IntegerField(
-        validators=[MinValueValidator(1)]
+    ssl_config = models.ForeignKey(
+        SslConfig,
+        verbose_name='Ssl config',
+        related_name='+',
+        null=True,
     )
 
     def __str__(self):
         return "{0} -> SSL config: {1}".format(self.hostname_port,
-                                               self.ssl_config_id)
+                                               self.ssl_config)
 
     class Meta:
         verbose_name = 'Hostname:Port to SSL Config Map'
         verbose_name_plural = 'Hostname:Port to SSL Config Mappings'
         ordering = ["hostname_port"]
-        unique_together = (("hostname_port", "ssl_config_id"),)
+        unique_together = (("hostname_port", "ssl_config"),)
