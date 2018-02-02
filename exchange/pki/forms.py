@@ -66,20 +66,20 @@ class CreatePKIServiceForm(CreateServiceForm):
                     base_url=url, service_type=service_type)
             except Exception:
                 raise ValidationError(
-                    _("Could not connect to the service at %(url)s"),
+                    "Could not connect to the service at %(url)s",
                     params={"url": url}
                 )
             if not service_handler.has_resources():
                 raise ValidationError(
-                    _("Could not find importable resources for the service "
-                      "at %(url)s"),
+                    "Could not find importable resources for the service " +
+                    "at %(url)s",
                     params={"url": url}
                 )
             elif service_type not in (enumerations.AUTO, enumerations.OWS):
                 if service_handler.service_type != service_type:
                     raise ValidationError(
-                        _("Found service of type %(found_type)s instead "
-                          "of %(service_type)s"),
+                        "Found service of type %(found_type)s instead " +
+                        "of %(service_type)s",
                         params={
                             "found_type": service_handler.service_type,
                             "service_type": service_type
