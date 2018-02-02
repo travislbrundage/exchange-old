@@ -60,5 +60,5 @@ def pki_route(url):
     return https://<site>/pki/myserver.com%3Aport/geoserver/wms
     '''
     site_url = Site.objects.get_current().domain
-    pki_url = 'https://' + site_url + '/pki' + quote(url).lower()
+    pki_url = 'https://' + site_url + '/pki' + quote(normalize_hostname(url))
     return pki_url

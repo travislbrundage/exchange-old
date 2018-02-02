@@ -26,6 +26,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 
 from .utils import hostname_port as filter_hostname_port
+from .settings import SSL_DEFAULT_CONFIG
 logger = logging.getLogger(__name__)
 
 
@@ -284,7 +285,12 @@ class HostnamePortSslConfigManager(models.Manager):
         :param pk: The pk id of the ssl config
         :return: new HostnamePortSslConfig
         '''
-        ssl_config = SslConfig.objects.get(pk=pk)
+        # If the user tried to give a bad SslConfig,
+        # just assign it to the default
+        try:
+            ssl_config = SslConfig.objects.get(pk=pk)
+        except SslConfig.DoesNotExist:
+            ssl_config = SSL_DEFAULT_CONFIG
         try:
             service_hostnameportsslconfig = self.get(
                 hostname_port=filter_hostname_port(url)
