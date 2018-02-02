@@ -26,6 +26,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 
 from exchange.pki.utils import hostname_port
+logger = logging.getLogger(__name__)
 
 
 class SslConfig(models.Model):
