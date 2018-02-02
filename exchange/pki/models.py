@@ -25,7 +25,7 @@ import logging
 from django.db import models
 from django.core.exceptions import ValidationError
 
-from exchange.pki.utils import hostname_port
+from .utils import hostname_port as filter_hostname_port
 logger = logging.getLogger(__name__)
 
 
@@ -276,18 +276,27 @@ class SslConfig(models.Model):
 
 
 class HostnamePortSslConfigManager(models.Manager):
-    def create_hostnameportsslconfig(self, url, id):
+    def create_hostnameportsslconfig(self, url, pk):
         '''
         Instantiates a new HostnamePortSslConfig
         Expected to be done in creation of new service via form validation
         :param url: The url of the service, not parsed
-        :param id: The id of the ssl config
+        :param pk: The pk id of the ssl config
         :return: new HostnamePortSslConfig
         '''
-        service_hostnameportsslconfig = self.create(
-            hostname_port=hostname_port(url),
-            ssl_config_id=id
-        )
+        ssl_config = SslConfig.objects.get(pk=pk)
+        try:
+            service_hostnameportsslconfig = self.get(
+                hostname_port=filter_hostname_port(url)
+            )
+            service_hostnameportsslconfig.ssl_config = ssl_config
+            service_hostnameportsslconfig.save()
+        except HostnamePortSslConfig.DoesNotExist:
+            service_hostnameportsslconfig = self.create(
+                hostname_port=filter_hostname_port(url),
+                ssl_config_id=ssl_config
+            )
+
         return service_hostnameportsslconfig
 
 
