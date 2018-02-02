@@ -23,7 +23,8 @@ from geonode.services.forms import CreateServiceForm
 from geonode.services import enumerations
 from geonode.services.serviceprocessors import get_service_handler
 from django.core.exceptions import ValidationError
-from .models import SslConfig
+from .models import SslConfig, HostnamePortSslConfig
+from .utils import pki_route
 
 
 def get_ssl_config_choices():
@@ -52,6 +53,11 @@ class CreatePKIServiceForm(CreateServiceForm):
         # In order to inject the pki rerouting
         url = self.cleaned_data.get("url")
         service_type = self.cleaned_data.get("type")
+        ssl_config = self.cleaned_data("ssl_config")
+
+        HostnamePortSslConfig.objects.create_hostnameportsslconfig(url, ssl_config[0])
+        url = pki_route(url)
+
         if url is not None and service_type is not None:
             try:
                 service_handler = get_service_handler(
