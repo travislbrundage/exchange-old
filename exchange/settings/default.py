@@ -28,8 +28,7 @@ from geonode.settings import (
     INSTALLED_APPS,
     CELERY_IMPORTS,
     MAP_BASELAYERS,
-    DATABASES,
-    CATALOGUE
+    DATABASES
 )
 
 
@@ -77,7 +76,7 @@ CLASSIFICATION_LEVELS = os.getenv('CLASSIFICATION_LEVELS', ['UNCLASSIFIED', ])
 CAVEATS = os.getenv('CLASSIFICATION_LEVELS', ['FOUO', ])
 
 # MapLoom Styling Control
-LOOM_STYLING_ENABLED = str2bool(os.getenv('LOOM_STYLING_ENABLED', 'False'))
+LOOM_STYLING_ENABLED = str2bool(os.getenv('LOOM_STYLING_ENABLED', 'True'))
 
 # extent filter
 EXTENT_FILTER_ENABLED = str2bool(os.getenv('EXTENT_FILTER_ENABLED', 'True'))
@@ -319,33 +318,8 @@ WGS84_MAP_CRS = str2bool(os.getenv('WGS84_MAP_CRS', 'False'))
 if WGS84_MAP_CRS:
     DEFAULT_MAP_CRS = "EPSG:4326"
 
-# NEED TO UPDATE DJANGO_MAPLOOM FOR ONLY THIS ONE VALUE
-REGISTRY = str2bool(os.getenv('ENABLE_REGISTRY', 'False'))
-REGISTRYURL = os.getenv('REGISTRYURL', None)
-REGISTRY_CAT = os.getenv('REGISTRY_CAT', 'registry')
-REGISTRY_LOCAL_URL = os.getenv('REGISTRY_LOCAL_URL', 'http://localhost:8001')
-
-# CSW settings
-CATALOGUE = {  # noqa
-    'default': {
-        'ENGINE': 'geonode.catalogue.backends.pycsw_http',
-        # The FULLY QUALIFIED base url to the CSW instance for this GeoNode
-        'URL': REGISTRY_LOCAL_URL + '/catalog/' + REGISTRY_CAT + '/csw',
-    }
-}
-
-
-'''
-unified search settings
-ES_SEARCH must be set to True
-Elastic Search for both Registry and GeoNode must running
-on same elasticsearch instance at ES_URL
-REGISTRY_URL must be set in order to provide links to Registry
-'''
-
 # elasticsearch-dsl settings
 ES_URL = os.getenv('ES_URL', 'http://127.0.0.1:9200/')
-
 
 # amqp settings
 BROKER_URL = os.getenv('BROKER_URL', 'amqp://guest:guest@localhost:5672/')
@@ -532,7 +506,7 @@ USE_X_FORWARDED_HOST = True
 if SITEURL.startswith('https'):
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-ACCOUNT_EMAIL_UNIQUE = str2bool(os.getenv('ACCOUNT_EMAIL_UNIQUE', 'True'))
+ACCOUNT_EMAIL_UNIQUE = str2bool(os.getenv('ACCOUNT_EMAIL_UNIQUE', 'False'))
 
 if ENABLE_SOCIAL_LOGIN:
     SOCIAL_AUTH_NEW_USER_REDIRECT_URL = '/'

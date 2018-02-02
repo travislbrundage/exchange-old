@@ -3,7 +3,6 @@ import pytest
 import time
 import datetime
 from . import ExchangeTest
-from exchange import settings
 from exchange.tests.osgeo_importer_upload_test import UploaderMixin
 import json
 import logging
@@ -666,47 +665,3 @@ class UnifiedSearchTest(ViewTestCase, UploaderMixin):
     def test_search_layer_by_id(self):
         self.url = '/api/layers/search/?id=1'
         self.doit()
-
-
-# This doesn't test a view but performs a functional
-# test on one of the views transformational objects.
-#
-@pytest.mark.skipif(
-    settings.REGISTRYURL is None, reason="Only run if using registry")
-class ViewFunctionTests(ViewTestCase):
-
-    def test_get_unified_search_result_objects(self):
-        from exchange.search.views import get_unified_search_result_objects
-
-        test_hits = [{
-            '_index': 'registry',
-            '_source': {
-                'bbox': [1, 2, 3, 4],
-            }
-        }, {
-            '_index': 'exchange',
-            '_source': {
-                'links': {
-                    'xml': 'layers/exchange:dummy.xml',
-                    'png': 'layers/exchange:dummy/thumby.png'
-                }
-            }
-        }]
-
-        test_objects = get_unified_search_result_objects(test_hits)
-
-        # validate that the bbox parses correct in
-        # the first result.
-
-        self.assertEqual(test_objects[0]['bbox_left'], 1,
-                         'BBOX Was not formatted correctly!')
-
-        self.assertEqual(test_objects[0]['bbox_top'], 4,
-                         'BBOX Was not formatted correctly!')
-
-        # ensure the thumbnail link is generated.
-
-        self.assertEqual(
-            test_objects[1]['thumbnail_url'],
-            '%s/layers/exchange:dummy/thumby.png' % settings.REGISTRYURL,
-            'Wrong thumbnail URL (%s)' % test_objects[1]['thumbnail_url'])

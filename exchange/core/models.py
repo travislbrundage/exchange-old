@@ -88,7 +88,7 @@ def get_provenances():
                    ('Unknown', 'Unknown')]
 
         provenance_choices = [(x, str(x)) for x in getattr(
-            settings, 'REGISTRY_PROVENANCE_CHOICES', [])]
+            settings, 'PROVENANCE_CHOICES', [])]
 
         return provenance_choices + default
 

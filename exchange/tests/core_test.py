@@ -21,14 +21,6 @@ class resource_variablesTestCase(TestCase):
             self.defaults
         )
         self.assertIn(
-            'REGISTRYURL',
-            self.defaults
-        )
-        self.assertIn(
-            'REGISTRY',
-            self.defaults
-        )
-        self.assertIn(
             'MAP_CRS',
             self.defaults
         )
