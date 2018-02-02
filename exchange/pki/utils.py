@@ -36,8 +36,8 @@ from urllib3.util.retry import Retry
 # noinspection PyCompatibility
 from urlparse import urlparse
 
-from pki.settings import SSL_DEFAULT_CONFIG
-from pki.models import HostnamePortSslConfig
+from .settings import SSL_DEFAULT_CONFIG
+from .models import HostnamePortSslConfig
 
 
 logger = logging.getLogger(__name__)

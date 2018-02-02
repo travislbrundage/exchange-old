@@ -21,19 +21,13 @@
 from django.contrib import admin
 from django import forms
 
-from . import models
-
-# from django.contrib import admin
-#
-# from pki.models import SslConfig, HostnamePortSslConfig
-#
-# admin.site.register([SslConfig, HostnamePortSslConfig])
+from .models import SslConfig, HostnamePortSslConfig
 
 
 class SslConfigAdminForm(forms.ModelForm):
 
     class Meta:
-        model = models.SslConfig
+        model = SslConfig
         fields = '__all__'
 
 
@@ -46,7 +40,7 @@ class SslConfigAdmin(admin.ModelAdmin):
 
 class HostnamePortSslConfigAdminForm(forms.ModelForm):
     class Meta:
-        model = models.HostnamePortSslConfig
+        model = HostnamePortSslConfig
         fields = '__all__'
 
 
@@ -57,7 +51,7 @@ class HostnamePortSslConfigAdmin(admin.ModelAdmin):
     form = HostnamePortSslConfigAdminForm
 
 
-admin.site.register(models.SslConfig,
+admin.site.register(SslConfig,
                     SslConfigAdmin)
-admin.site.register(models.HostnamePortSslConfig,
+admin.site.register(HostnamePortSslConfig,
                     HostnamePortSslConfigAdmin)

@@ -32,11 +32,12 @@ from django.conf import settings
 from django.test.utils import get_runner
 from django.test import TestCase
 
-from pki.models import SslConfig, HostnamePortSslConfig
-from pki.utils import (hostname_port,
-                       requests_base_url,
-                       SslContextAdapter,
-                       get_ssl_context_opts)
+from ..models import SslConfig, HostnamePortSslConfig
+from ..utils import (hostname_port,
+                     requests_base_url,
+                     SslContextAdapter,
+                     get_ssl_context_opts)
+
 
 logger = logging.getLogger(__name__)
 
@@ -172,18 +173,7 @@ class TestPkiRequest(TestCase):
         self.assertEqual(res.status_code, 200)
 
 
-# def suite():
-#     test_suite = unittest.makeSuite(TestPkiRequest, 'test')
-#     return test_suite
-#
-#
-# def run_all():
-#     unittest.TextTestRunner(verbosity=3, stream=sys.stdout).run(suite())
-
-
 if __name__ == '__main__':
-    # unittest.main()
-
     # Use standard Django test runner to test reusable applications
     # https://docs.djangoproject.com/en/2.0/topics/testing/advanced/
     #         #using-the-django-test-runner-to-test-reusable-applications
