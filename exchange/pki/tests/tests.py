@@ -32,12 +32,14 @@ from django.conf import settings
 from django.test.utils import get_runner
 from django.test import TestCase
 
-from ..models import SslConfig, HostnamePortSslConfig
-from ..utils import (hostname_port,
-                     requests_base_url,
-                     SslContextAdapter,
-                     get_ssl_context_opts)
+TESTDIR = os.path.dirname(os.path.realpath(__file__))
 
+if __name__ != '__main__':
+    from ..models import SslConfig, HostnamePortSslConfig
+    from ..utils import (hostname_port,
+                         requests_base_url)
+    from ..ssl_adapter import (SslContextAdapter,
+                               get_ssl_context_opts)
 
 logger = logging.getLogger(__name__)
 
@@ -174,13 +176,25 @@ class TestPkiRequest(TestCase):
 
 
 if __name__ == '__main__':
+    sys.path.insert(0, os.path.dirname(os.path.dirname(TESTDIR)))
+    # print(sys.path)
+    os.chdir(os.path.dirname(os.path.dirname(TESTDIR)))
+    # print(os.getcwd())
+
     # Use standard Django test runner to test reusable applications
     # https://docs.djangoproject.com/en/2.0/topics/testing/advanced/
     #         #using-the-django-test-runner-to-test-reusable-applications
     os.environ['DJANGO_SETTINGS_MODULE'] = 'test_settings'
     django.setup()
+
+    # These imports need to come after loading settings, since settings is
+    # imported in crypto.Crypto class, for SECRET_KEY use
+    from pki.models import SslConfig, HostnamePortSslConfig  # noqa
+    from pki.utils import hostname_port, requests_base_url  # noqa
+    from pki.ssl_adapter import SslContextAdapter, get_ssl_context_opts  # noqa
+
     TestRunner = get_runner(settings)
     """:type: django.test.runner.DiscoverRunner"""
     test_runner = TestRunner(keepdb=False)
-    failures = test_runner.run_tests(['.'])
+    failures = test_runner.run_tests(['pki.tests'])
     sys.exit(bool(failures))
