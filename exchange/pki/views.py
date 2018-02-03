@@ -25,7 +25,6 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from geonode.services import enumerations
 from django.contrib.auth.decorators import login_required
-from geonode.services.forms import CreateServiceForm
 from .forms import CreatePKIServiceForm
 
 logger = logging.getLogger(__name__)
@@ -33,10 +32,6 @@ logger = logging.getLogger(__name__)
 
 def test_page(request):
     return render(request, 'test.html')
-
-
-class CreatePKIServiceForm(CreateServiceForm):
-    super(CreatePKIServiceForm)
 
 
 @login_required
