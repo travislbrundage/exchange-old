@@ -24,7 +24,6 @@ from django.conf.urls.static import static
 from django.contrib.auth.decorators import login_required
 from geonode.urls import urlpatterns as geonode_urls
 from exchange.maploom.urls import urlpatterns as maploom_urls
-from exchange.pki.urls import urlpatterns as pki_urls
 from fileservice.urls import urlpatterns as fileservice_urls
 from storyscapes.urls import urlpatterns as story_urls
 from thumbnails.urls import urlpatterns as thumbnail_urls
@@ -55,6 +54,10 @@ urlpatterns = patterns(
     url(r'^about/', views.about_page, name='about'),
     url(r'^capabilities/', views.capabilities, name='capabilities'),
 )
+
+if 'exchange.pki' in settings.INSTALLED_APPS:
+    from exchange.pki.urls import urlpatterns as pki_urls
+    urlpatterns += pki_urls
 
 if settings.ENABLE_SOCIAL_LOGIN is True:
     urlpatterns += [
@@ -115,4 +118,3 @@ urlpatterns += geonode_urls
 urlpatterns += fileservice_urls
 urlpatterns += thumbnail_urls
 urlpatterns += maploom_urls
-urlpatterns += pki_urls

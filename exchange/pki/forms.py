@@ -29,6 +29,7 @@ from .utils import pki_route
 
 def get_ssl_config_choices():
     SSL_CONFIG_CHOICES = ()
+    print SSL_CONFIG_CHOICES
     for ssl_config_choice in SslConfig.objects.all():
         SSL_CONFIG_CHOICES += ((ssl_config_choice.pk, ssl_config_choice.name),)
 
@@ -46,17 +47,17 @@ class CreatePKIServiceForm(CreateServiceForm):
 
     def clean_url(self):
         # Here we can add our own validation if necessary
-        super(CreatePKIServiceForm, self).clean_url()
+        return super(CreatePKIServiceForm, self).clean_url()
 
     def clean(self):
         # Unfortunately we have to override and redo the function
         # In order to inject the pki rerouting
         url = self.cleaned_data.get("url")
         service_type = self.cleaned_data.get("type")
-        ssl_config = self.cleaned_data("ssl_config")
+        ssl_config = self.cleaned_data.get("ssl_config")
 
         HostnamePortSslConfig.objects.create_hostnameportsslconfig(
-            url, ssl_config[0]
+            url, ssl_config
         )
         url = pki_route(url)
 

@@ -300,7 +300,7 @@ class HostnamePortSslConfigManager(models.Manager):
         except HostnamePortSslConfig.DoesNotExist:
             service_hostnameportsslconfig = self.create(
                 hostname_port=filter_hostname_port(url),
-                ssl_config_id=ssl_config
+                ssl_config=ssl_config
             )
 
         return service_hostnameportsslconfig

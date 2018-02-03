@@ -26,6 +26,11 @@ from django.shortcuts import render
 from geonode.services import enumerations
 from django.contrib.auth.decorators import login_required
 from .forms import CreatePKIServiceForm
+from urllib import unquote
+from .utils import requests_base_url
+from requests import get, Session, ConnectionError
+from django.http import HttpResponse
+from .ssl_adapter import SslContextAdapter, get_ssl_context_opts
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +43,7 @@ def test_page(request):
 def register_service(request):
     # This method suffers the same as the form's clean() override
     # There is no easy way to inject our custom template and form
-    service_register_template = "services/service_register.html"
+    service_register_template = "service_pki_register.html"
     if request.method == "POST":
         form = CreatePKIServiceForm(request.POST)
         if form.is_valid():
@@ -60,7 +65,7 @@ def register_service(request):
             messages.add_message(
                 request,
                 messages.SUCCESS,
-                _("Service registered successfully")
+                "Service registered successfully"
             )
             result = HttpResponseRedirect(
                 reverse("harvest_resources",
@@ -73,3 +78,47 @@ def register_service(request):
         result = render(
             request, service_register_template, {"form": form})
     return result
+
+
+# This represents the pki app's view
+def pki_request(request, resource_url=None):
+    """
+    :param resource_url:
+    :rtype: HttpResponse
+    """
+
+    # skip Django request passing for now
+    # skip Django path manipulation for now (just pass full URL for this test)
+
+    # needed if SslContextAdapter internal normalization causes issues
+    # url = normalize_hostname(resource_url)
+    url = 'https://' + unquote(resource_url)
+    base_url = requests_base_url(resource_url)
+
+    req_ses = Session()  # type: requests.Session
+
+    # IMPORTANT: base_url is (scheme://hostname:port), not full url.
+    # Note: urllib3 (as of 1.22) seems to care about case when matching the
+    # hostname to the peer server's SSL cert, in contrast to the spec, which
+    # says such matches should be case-insensitive (this is a bug):
+    #   https://tools.ietf.org/html/rfc5280#section-4.2.1.6
+    #   https://tools.ietf.org/html/rfc6125 <-- best practices
+    req_ses.mount(base_url, SslContextAdapter(*get_ssl_context_opts(base_url)))
+    # TODO: Passthru Django request headers, cookies, etc.
+    # Should we be sending cookies from project's domain into remote endpoint?
+    req_res = req_ses.get(url)
+    """:type: requests.Response"""
+    # TODO: Capture errors and signal to web UI for reporting to user.
+    #       Don't let errors just raise exceptions
+
+    # TODO: Passthru requests headers, cookies, etc.
+    # Should we be setting cookies in project's domain from remote endpoint?
+    # TODO: Should we be sniffing encoding/charset and passing back?
+    response = HttpResponse(
+        content=req_res.content,
+        status=req_res.status_code,
+        reason=req_res.reason,
+        content_type=req_res.headers.get('Content-Type'),
+    )
+
+    return response
