@@ -18,8 +18,63 @@
 #
 #########################################################################
 
+import logging
+from django.contrib import messages
+from django.core.urlresolvers import reverse
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
+from geonode.services import enumerations
+from django.contrib.auth.decorators import login_required
+from geonode.services.forms import CreateServiceForm
+from .forms import CreatePKIServiceForm
+
+logger = logging.getLogger(__name__)
 
 
 def test_page(request):
     return render(request, 'test.html')
+
+
+class CreatePKIServiceForm(CreateServiceForm):
+    super(CreatePKIServiceForm)
+
+
+@login_required
+def register_service(request):
+    # This method suffers the same as the form's clean() override
+    # There is no easy way to inject our custom template and form
+    service_register_template = "services/service_register.html"
+    if request.method == "POST":
+        form = CreatePKIServiceForm(request.POST)
+        if form.is_valid():
+            service_handler = form.cleaned_data["service_handler"]
+            service = service_handler.create_geonode_service(
+                owner=request.user)
+            service.full_clean()
+            service.save()
+            service.keywords.add(*service_handler.get_keywords())
+            service.set_permissions(
+                {'users': {
+                    ''.join(request.user.username):
+                        ['services.change_service', 'services.delete_service']
+                }})
+            if service_handler.indexing_method == enumerations.CASCADED:
+                service_handler.create_cascaded_store()
+            request.session[service_handler.url] = service_handler
+            logger.debug("Added handler to the session")
+            messages.add_message(
+                request,
+                messages.SUCCESS,
+                _("Service registered successfully")
+            )
+            result = HttpResponseRedirect(
+                reverse("harvest_resources",
+                        kwargs={"service_id": service.id})
+            )
+        else:
+            result = render(request, service_register_template, {"form": form})
+    else:
+        form = CreatePKIServiceForm()
+        result = render(
+            request, service_register_template, {"form": form})
+    return result
