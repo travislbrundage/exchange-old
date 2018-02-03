@@ -62,7 +62,6 @@ def pki_route(url):
     site_url = Site.objects.get_current().domain
     url = normalize_hostname(url)
     parts = urlparse(url)
-    url = url.replace('://', '', 1)
     url = re.sub(parts.scheme, '', url, count=1, flags=re.I)
-    pki_url = 'https://' + site_url + '/pki/' + quote(url)
-    return pki_url
+    url = url.replace('://', '', 1)
+    return 'https://' + site_url + '/pki/' + quote(url)

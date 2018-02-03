@@ -27,23 +27,12 @@ from .models import SslConfig, HostnamePortSslConfig
 from .utils import pki_route
 
 
-def get_ssl_config_choices():
-    SSL_CONFIG_CHOICES = ()
-    print SSL_CONFIG_CHOICES
-    for ssl_config_choice in SslConfig.objects.all():
-        SSL_CONFIG_CHOICES += ((ssl_config_choice.pk, ssl_config_choice.name),)
-
-    return SSL_CONFIG_CHOICES
-
-
 class CreatePKIServiceForm(CreateServiceForm):
     # In addition to normal service registration,
     # we want to be able to associate it with an SslConfig model
-    ssl_config = forms.ChoiceField(
-        label="SSL Config",
-        choices=get_ssl_config_choices(),
-        initial='',
-    )
+    ssl_config = forms.ModelChoiceField(queryset=SslConfig.objects.all(),
+                                        empty_label="Select",
+                                        required=False)
 
     def clean_url(self):
         # Here we can add our own validation if necessary

@@ -276,13 +276,14 @@ class SslConfig(models.Model):
 
 
 class HostnamePortSslConfigManager(models.Manager):
-    def create_hostnameportsslconfig(self, url, pk):
+    def create_hostnameportsslconfig(self, url, ssl_config):
         '''
         Instantiates a new HostnamePortSslConfig
         Expected to be done in creation of new service via form validation
         :param url: The url of the service, not parsed
         :param pk: The pk id of the ssl config
         :return: new HostnamePortSslConfig
+        '''
         '''
         try:
             ssl_config = SslConfig.objects.get(pk=pk)
@@ -291,6 +292,7 @@ class HostnamePortSslConfigManager(models.Manager):
             # is a result of form submission
             raise ValidationError("Could not find this SslConfig model;" +
                                   " check that the SslConfig exists")
+        '''
         try:
             service_hostnameportsslconfig = self.get(
                 hostname_port=filter_hostname_port(url)
