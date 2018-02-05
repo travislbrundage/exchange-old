@@ -25,10 +25,12 @@ from .models import SslConfig, HostnamePortSslConfig
 
 
 class SslConfigAdminForm(forms.ModelForm):
-
     class Meta:
         model = SslConfig
         fields = '__all__'
+        widgets = {
+            'client_key_pass': forms.PasswordInput(render_value=True),
+        }
 
 
 class SslConfigAdmin(admin.ModelAdmin):

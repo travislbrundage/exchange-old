@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+from ..models import EncryptedCharField
 
 
 class Migration(migrations.Migration):
@@ -50,10 +51,10 @@ class Migration(migrations.Migration):
                               b"of your application and www roots!",
                     max_length=255,
                     verbose_name=b'Client cert private key file', blank=True)),
-                ('client_key_pass', models.CharField(
+                ('client_key_pass', EncryptedCharField(
                     help_text=b"(Optional) Client certificate's private "
-                              b"key password.",
-                    max_length=48,
+                              b"key password. Limited to 100 characters.",
+                    max_length=255,
                     verbose_name=b'Client cert private key password',
                     blank=True)),
                 ('ssl_version', models.CharField(

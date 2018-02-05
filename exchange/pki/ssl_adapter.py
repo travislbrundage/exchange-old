@@ -122,22 +122,37 @@ class SslContextAdapter(HTTPAdapter):
         password = self._ctx_opts.get('password', None)
         supports_password = True
         if certfile and keyfile:
+            # if password:  # for debugging
+            #     print("password = {0}".format(password))
             try:
                 context.load_cert_chain(certfile=certfile,
                                         keyfile=keyfile,
                                         password=password)
+            except SSLError as e:
+                msg = ('Could not use client cert, key or password: {0}'
+                       .format(e.strerror))
+                raise SSLError(msg)
             except TypeError:
                 # urllib3.create_urllib3_context() (as of v1.22) and older ssl
                 # modules do not support setting a private key password.
                 # However, we can't use inspect to test for the kwarg, because
                 # load_cert_chain is a built-in method bound to OpenSSL lib.
-                context.load_cert_chain(certfile=certfile,
-                                        keyfile=keyfile)
+                # See try below
                 supports_password = False
 
-        if not supports_password and password is not None:
-            raise SSLError('Private key password defined, but underlying SSL '
-                           'context does not support setting it')
+            if not supports_password and password is not None:
+                raise SSLError('Private key password defined, but underlying '
+                               'SSL context does not support setting it')
+
+            if not supports_password:
+                try:
+                    # See try above, for why we are trying again
+                    context.load_cert_chain(certfile=certfile,
+                                            keyfile=keyfile)
+                except SSLError as e:
+                    msg = ('Could not use client cert or key: {0}'
+                           .format(e.strerror))
+                    raise SSLError(msg)
 
     def init_poolmanager(self, *args, **kwargs):
         context = create_urllib3_context(**self._ctx_create_opts)
@@ -236,7 +251,10 @@ def get_ssl_context_opts(url):
     ctx_opts['cafile'] = ssl_config.get('ca_custom_certs', None)
     ctx_opts['certfile'] = ssl_config.get('client_cert', None)
     ctx_opts['keyfile'] = ssl_config.get('client_key', None)
-    ctx_opts['password'] = ssl_config.get('client_key_pass', None)
+    # coerce password to str or pyOpenSSL complains
+    pw = ssl_config.get('client_key_pass', None)
+    ctx_opts['password'] = str(pw) if pw else None
+    # print('password: {0}'.format(ctx_opts['password']))
 
     # SslContextAdapter adapter_options
     def _redo_value(value):
