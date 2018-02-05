@@ -109,7 +109,7 @@ def load_configs(apps, _):  # unused schema_editor param
             ca_allow_invalid_certs=False,
             client_cert='{0}/alice-cert.pem'.format(TEST_FILES),
             client_key='{0}/alice-key.pem'.format(TEST_FILES),
-            client_key_pass='password',
+            client_key_pass='',
             ssl_version="PROTOCOL_TLSv1_2",
             ssl_verify_mode="CERT_NONE",
             ssl_options='',
@@ -123,7 +123,7 @@ def load_configs(apps, _):  # unused schema_editor param
             ca_allow_invalid_certs=False,
             client_cert='{0}/alice-cert.pem'.format(TEST_FILES),
             client_key='{0}/alice-key.pem'.format(TEST_FILES),
-            client_key_pass='password',
+            client_key_pass='',
             ssl_version="PROTOCOL_SSLv23",
             ssl_verify_mode="CERT_REQUIRED",
             ssl_options='OP_NO_SSLv2, OP_NO_SSLv3, OP_NO_TLSv1, '

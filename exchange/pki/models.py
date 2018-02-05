@@ -18,15 +18,124 @@
 #
 #########################################################################
 
+# Portions of code within EncryptedFieldMixin class culled from
+# https://github.com/defrex/django-encrypted-fields
+# Specifically, from EncryptedFieldMixin in encrypted_fields/fields.py
+# That code is licensed under MIT License, as follows (as of 2018-02-04)
+#########################################################################
+#
+# The MIT License (MIT)
+#
+# Copyright (c) 2013 Aron Jones
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+#########################################################################
+
 import os
+import types
 import ssl
 import logging
 
+from django.conf import settings
 from django.db import models
 from django.core.exceptions import ValidationError
 
+from .crypto import Crypto, CryptoInvalidToken
 from .utils import hostname_port as filter_hostname_port
+
 logger = logging.getLogger(__name__)
+
+
+class EncryptedFieldMixin(object):
+
+    def __init__(self, *args, **kwargs):
+        # Load crypter to handle encryption/decryption
+        self._crypter = Crypto()
+
+        # Prefix encrypted data with a static string to allow filtering
+        # of encrypted data vs. non-encrypted data using vanilla queries.
+        self.prefix = '___'
+
+        # Ensure the encrypted data does not exceed the max_length
+        # of the database. Data truncation is a possibility otherwise.
+        self.enforce_max_length = getattr(
+            settings,
+            'ENFORCE_MAX_LENGTH',
+            False
+        )
+
+        # noinspection PyArgumentList
+        super(EncryptedFieldMixin, self).__init__(*args, **kwargs)
+
+    def to_python(self, value):
+        if value is None or not isinstance(value, types.StringTypes):
+            return value
+
+        if self.prefix and value.startswith(self.prefix):
+            value = value[len(self.prefix):]
+
+            # print('value={0}'.format(value))
+            try:
+                value = self._crypter.decrypt(value)
+            except CryptoInvalidToken:
+                pass
+            except TypeError:
+                pass
+
+        return super(EncryptedFieldMixin, self).to_python(value)
+
+    def get_prep_value(self, value):
+        value = super(EncryptedFieldMixin, self).get_prep_value(value)
+
+        if value is None or value == '':
+            return value
+
+        return self.prefix + self._crypter.encrypt(value)
+
+    # noinspection PyUnusedLocal
+    def get_db_prep_value(self, value, connection, prepared=False):
+        if not prepared:
+            value = self.get_prep_value(value)
+
+            if self.enforce_max_length:
+                if (
+                        value and hasattr(self, 'max_length') and
+                        self.max_length and
+                        len(value) > self.max_length
+                ):
+                    raise ValueError(
+                        'Field {0} max_length={1} encrypted_len={2}'.format(
+                            self.name,
+                            self.max_length,
+                            len(value),
+                        )
+                    )
+        return value
+
+    # noinspection PyUnusedLocal
+    def from_db_value(self, value, expression, connection, context):
+        return self.to_python(value)
+
+
+class EncryptedCharField(EncryptedFieldMixin, models.CharField):
+    pass
 
 
 class SslConfig(models.Model):
@@ -114,11 +223,14 @@ class SslConfig(models.Model):
                   "NOTE: should be outside of your application and www roots!",
     )
     # TODO: update ^ text with 'unless .p12|.pfx cert defined'
-    client_key_pass = models.CharField(
+    # Password limited to 100 characters, otherwise encrypted result's length
+    # may exceed 255 character field limit
+    client_key_pass = EncryptedCharField(
         "Client cert private key password",
-        max_length=48,
+        max_length=255,
         blank=True,
-        help_text="(Optional) Client certificate's private key password.",
+        help_text="(Optional) Client certificate's private key password. "
+                  "Limited to 100 characters.",
     )
     # TODO: update ^ text with 'Required if .p12|.pfx cert defined'
     ssl_version = models.CharField(
@@ -211,6 +323,7 @@ class SslConfig(models.Model):
         #       so they can be used for pre-validatin prior to connection
 
         val_mgs = {}
+
         if self.ssl_options:
             opts = self.ssl_options.replace(' ', '').split(',')
             # print(opts)
@@ -240,6 +353,10 @@ class SslConfig(models.Model):
         if self.client_key and not self.client_cert:
             msg = 'Client cert must be defined if client key is.'
             val_mgs['client_cert'] = msg
+
+        if self.client_key_pass and len(self.client_key_pass) > 100:
+            msg = 'Client key password limited to 100 characters.'
+            val_mgs['client_key_pass'] = msg
 
         if val_mgs:
             raise ValidationError(val_mgs)
@@ -277,13 +394,13 @@ class SslConfig(models.Model):
 
 class HostnamePortSslConfigManager(models.Manager):
     def create_hostnameportsslconfig(self, url, ssl_config):
-        '''
+        """
         Instantiates a new HostnamePortSslConfig
         Expected to be done in creation of new service via form validation
         :param url: The url of the service, not parsed
         :param pk: The pk id of the ssl config
         :return: new HostnamePortSslConfig
-        '''
+        """
         '''
         try:
             ssl_config = SslConfig.objects.get(pk=pk)

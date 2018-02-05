@@ -38,6 +38,7 @@ if __name__ != '__main__':
     from ..models import SslConfig, HostnamePortSslConfig
     from ..utils import (hostname_port,
                          requests_base_url)
+    from ..crypto import Crypto
     from ..ssl_adapter import (SslContextAdapter,
                                get_ssl_context_opts)
 
@@ -134,6 +135,19 @@ class TestPkiRequest(TestCase):
         logger.debug("Hostname:Port objects now:\n{0}"
                      .format(HostnamePortSslConfig.objects.all()))
 
+    def test_crypto(self):
+        c = Crypto()
+        data = 'abcd'
+        self.assertEqual(c.decrypt(c.encrypt(data)), data)
+        udata = u'abcd'
+        self.assertEqual(c.decrypt(c.encrypt(udata)), data)
+        udata = u'abcd'
+        self.assertEqual(c.decrypt(c.encrypt(udata)), data)
+        accdata = 'çéàè↓'
+        self.assertEqual(c.decrypt(c.encrypt(accdata)), accdata)
+        uaccdata = u'çéàè↓'
+        self.assertEqual(c.decrypt(c.encrypt(uaccdata)), accdata)
+
     def test_no_client(self):
         self._set_hostname_port_mapping(1)
         res = pki_request(resource_url=self.mp_root)
@@ -191,6 +205,7 @@ if __name__ == '__main__':
     # imported in crypto.Crypto class, for SECRET_KEY use
     from pki.models import SslConfig, HostnamePortSslConfig  # noqa
     from pki.utils import hostname_port, requests_base_url  # noqa
+    from pki.crypto import Crypto  # noqa
     from pki.ssl_adapter import SslContextAdapter, get_ssl_context_opts  # noqa
 
     TestRunner = get_runner(settings)

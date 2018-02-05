@@ -42,6 +42,9 @@ DATABASES = {
     }
 }
 
+# Force max length validation on encrypted password fields
+ENFORCE_MAX_LENGTH = 1
+
 # Logging settings
 # 'DEBUG', 'INFO', 'WARNING', 'ERROR', or 'CRITICAL'
 DJANGO_LOG_LEVEL = os.getenv('DJANGO_LOG_LEVEL', 'WARNING')
