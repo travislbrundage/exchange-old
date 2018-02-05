@@ -40,8 +40,6 @@ def resource_variables(request):
     """Global exchange values to pass to templates"""
     defaults = dict(
         VERSION=get_version(),
-        REGISTRYURL=getattr(settings, 'REGISTRYURL', None),
-        REGISTRY=getattr(settings, 'REGISTRY', False),
         MAP_CRS=getattr(settings, 'DEFAULT_MAP_CRS', None),
         ENABLE_SOCIAL_LOGIN=getattr(settings, 'ENABLE_SOCIAL_LOGIN', False),
         ENABLE_GOOGLE_LOGIN=getattr(settings, 'ENABLE_GOOGLE_LOGIN', False),

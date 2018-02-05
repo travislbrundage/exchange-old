@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+# 3rd Party Migrations
 #########################################################################
 #
-# Copyright (C) 2017 Boundless Spatial
+# Copyright (C) 2018 Boundless Spatial
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
