@@ -19,17 +19,20 @@
 #########################################################################
 
 import logging
-from django.contrib import messages
-from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect
-from django.shortcuts import render
-from geonode.services import enumerations
-from django.contrib.auth.decorators import login_required
-from .forms import CreatePKIServiceForm
+
 from urllib import unquote
+from requests import Session
+
+from django.shortcuts import render
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.urlresolvers import reverse
+from django.http import HttpResponseRedirect, HttpResponse
+
+from geonode.services import enumerations
+
+from .forms import CreatePKIServiceForm
 from .utils import requests_base_url
-from requests import get, Session, ConnectionError
-from django.http import HttpResponse
 from .ssl_adapter import SslContextAdapter, get_ssl_context_opts
 
 logger = logging.getLogger(__name__)
@@ -45,7 +48,7 @@ def register_service(request):
     # There is no easy way to inject our custom template and form
     service_register_template = "service_pki_register.html"
     if request.method == "POST":
-        form = CreatePKIServiceForm(request.POST)
+        form = CreatePKIServiceForm(request.POST, request=request)
         if form.is_valid():
             service_handler = form.cleaned_data["service_handler"]
             service = service_handler.create_geonode_service(
@@ -80,20 +83,21 @@ def register_service(request):
     return result
 
 
-# This represents the pki app's view
 def pki_request(request, resource_url=None):
     """
-    :param resource_url:
+    App's main view
+    :param request: Django request object
+    :param resource_url: Remainder of parsed path, e.g. '/pki/<resource_url>'
     :rtype: HttpResponse
     """
 
-    # skip Django request passing for now
-    # skip Django path manipulation for now (just pass full URL for this test)
+    # TODO: add allowed proxy origination support
 
-    # needed if SslContextAdapter internal normalization causes issues
-    # url = normalize_hostname(resource_url)
-    url = 'https://' + unquote(resource_url)
-    base_url = requests_base_url(resource_url)
+    # Turn the remainder of path back into original URL
+    query = request.META['QUERY_STRING']
+    r_url = unquote(resource_url)
+    url = 'https://' + r_url + (('?' + query) if query else '')
+    base_url = requests_base_url('https://' + r_url)
 
     req_ses = Session()  # type: requests.Session
 
