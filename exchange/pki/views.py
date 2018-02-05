@@ -83,6 +83,7 @@ def register_service(request):
 # This represents the pki app's view
 def pki_request(request, resource_url=None):
     """
+    :param request:
     :param resource_url:
     :rtype: HttpResponse
     """
