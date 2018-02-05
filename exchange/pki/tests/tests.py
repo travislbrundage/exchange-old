@@ -106,7 +106,7 @@ class TestPkiRequest(TestCase):
     def setUpClass(cls):
         # This needs to be mixed case, to ensure SslContextAdapter handles
         # server cert matching always via lowercase hostname (bug in urllib3)
-        cls.mp_root = 'https://maPproxy.Boundless.test:8344/'
+        cls.mp_root = u'https://maPproxy.Boundless.test:8344/'
 
         # Already know what the lookup table key should be like
         cls.mp_host_port = hostname_port(cls.mp_root)
