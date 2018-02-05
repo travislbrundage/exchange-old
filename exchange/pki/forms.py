@@ -19,10 +19,12 @@
 #########################################################################
 
 from django import forms
+from django.core.exceptions import ValidationError
+
 from geonode.services.forms import CreateServiceForm
 from geonode.services import enumerations
 from geonode.services.serviceprocessors import get_service_handler
-from django.core.exceptions import ValidationError
+
 from .models import SslConfig, HostnamePortSslConfig
 from .utils import pki_route
 
@@ -34,6 +36,11 @@ class CreatePKIServiceForm(CreateServiceForm):
                                         empty_label="Select",
                                         required=False)
 
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        """:type: from django.http import HttpRequest"""
+        super(CreatePKIServiceForm, self).__init__(*args, **kwargs)
+
     def clean_url(self):
         # Here we can add our own validation if necessary
         return super(CreatePKIServiceForm, self).clean_url()
@@ -43,12 +50,14 @@ class CreatePKIServiceForm(CreateServiceForm):
         # In order to inject the pki rerouting
         url = self.cleaned_data.get("url")
         service_type = self.cleaned_data.get("type")
-        ssl_config = self.cleaned_data.get("ssl_config")
 
-        HostnamePortSslConfig.objects.create_hostnameportsslconfig(
-            url, ssl_config
-        )
-        url = pki_route(url)
+        if url.startswith('https'):
+            ssl_config = self.cleaned_data.get("ssl_config")
+
+            HostnamePortSslConfig.objects.create_hostnameportsslconfig(
+                url, ssl_config
+            )
+            url = pki_route(self.request, url)
 
         if url is not None and service_type is not None:
             try:
