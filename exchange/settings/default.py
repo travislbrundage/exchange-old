@@ -19,6 +19,7 @@
 #########################################################################
 
 import os
+import copy  # noqa
 import dj_database_url
 from ast import literal_eval as le
 from geonode.settings import *  # noqa
@@ -228,6 +229,7 @@ if isinstance(ADDITIONAL_AUTH_EXEMPT_URLS, str):
 AUTH_EXEMPT_URLS = ('/capabilities', '/complete/*', '/login/*',
                     '/api/o/*', '/api/roles', '/api/adminRole',
                     '/api/users', '/o/token/*', '/o/authorize/*',
+                    '/pki'
                     ) + ADDITIONAL_AUTH_EXEMPT_URLS
 
 # geoserver settings
@@ -375,7 +377,7 @@ if AUDIT_ENABLED:
 # 'DEBUG', 'INFO', 'WARNING', 'ERROR', or 'CRITICAL'
 DJANGO_LOG_LEVEL = os.getenv('DJANGO_LOG_LEVEL', 'ERROR')
 # Commenting out logging until it can be modified to log errors correctly
-'''
+
 installed_apps_conf = {
     'handlers': ['console'],
     'level': DJANGO_LOG_LEVEL,
@@ -412,7 +414,7 @@ LOGGING['loggers']['django.db.backends'] = {
     'propagate': False,
     'level': 'WARNING',  # Django SQL logging is too noisy at DEBUG
 }
-'''
+
 # Authentication Settings
 
 # ldap
