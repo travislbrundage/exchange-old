@@ -8,3 +8,7 @@
 [submodule "vendor/sphinx-theme"]
 	path = vendor/sphinx-theme
 	url = https://github.com/boundlessgeo/sphinx-theme
+[submodule "vendor/django-osgeo-importer"]
+	path = vendor/django-osgeo-importer
+	url = https://github.com/Geonode/django-osgeo-importer
+	branch = angular-1.6
