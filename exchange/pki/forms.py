@@ -28,6 +28,7 @@ from geonode.services.serviceprocessors import get_service_handler
 
 from .models import SslConfig, HostnamePortSslConfig
 from .utils import pki_route
+from .widgets import SelectPKIWidget
 
 
 class CreatePKIServiceForm(CreateServiceForm):
