@@ -27,6 +27,7 @@ from geonode.services.serviceprocessors import get_service_handler
 
 from .models import SslConfig, HostnamePortSslConfig
 from .utils import pki_route
+from .widgets import SelectPKIWidget
 
 
 class CreatePKIServiceForm(CreateServiceForm):
@@ -34,7 +35,9 @@ class CreatePKIServiceForm(CreateServiceForm):
     # we want to be able to associate it with an SslConfig model
     ssl_config = forms.ModelChoiceField(queryset=SslConfig.objects.all(),
                                         empty_label="Select",
-                                        required=False)
+                                        required=False,
+                                        #widget=SelectPKIWidget
+                                        )
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)

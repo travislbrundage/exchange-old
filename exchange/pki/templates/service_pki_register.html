@@ -17,13 +17,18 @@ $(document).ready(function () {
         // enable the ssl_config field when the service URL field
         // begins with https, and disable it when it no longer does
         if (service_url.startsWith('https')) {
-            console.log('we should enable now');
             $('#id_ssl_config').prop('disabled', false);
         } else {
-            console.log('we should disable now');
             $('#id_ssl_config').prop('disabled', true);
         }
     });
 })
+
+// Angular block relating to pki_select.html
+// Better way to organize this?
+    var app = angular.module('SSLConfigSelectApp', []);
+    app.controller('SSLConfigSelectCtrl', function ($scope) {
+        // nothing to do - template should cover everything we need
+    });
 </script>
 {% endblock %}
