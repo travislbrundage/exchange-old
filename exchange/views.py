@@ -81,17 +81,6 @@ def get_geonode_version():
 
 def about_page(request, template='about.html'):
     exchange_version = get_exchange_version()
-    try:
-        exchange_releases = requests.get(
-            'https://api.github.com/repos/boundlessgeo/exchange/releases'
-        ).json()
-    except:
-        exchange_releases = []
-    release_notes = 'No release notes available.'
-    for release in exchange_releases:
-        if release['tag_name'] == 'v{}'.format(exchange_version['version']):
-            release_notes = release['body'].replace(' - ', '\n-')
-
     geoserver_version = get_geoserver_version()
     geonode_version = get_geonode_version()
     maploom_version = get_pip_version('django-exchange-maploom')
@@ -141,8 +130,7 @@ def about_page(request, template='about.html'):
 
     return render_to_response(template, RequestContext(request, {
         'projects': projects,
-        'exchange_version': exchange_version['version'],
-        'exchange_release': release_notes
+        'exchange_version': exchange_version['version']
     }))
 
 
