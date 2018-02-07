@@ -276,3 +276,10 @@ def service_post_save(sender, **kwargs):
         assign_perm("delete_service", group, service)
         service.is_published = False
         service.save()
+
+
+def handler500(request):
+    response = render_to_response('500.html', {},
+                                  context_instance=RequestContext(request))
+    response.status_code = 500
+    return response
