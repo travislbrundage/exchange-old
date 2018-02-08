@@ -115,3 +115,5 @@ urlpatterns += geonode_urls
 urlpatterns += fileservice_urls
 urlpatterns += thumbnail_urls
 urlpatterns += maploom_urls
+
+handler500 = 'exchange.views.handler500'

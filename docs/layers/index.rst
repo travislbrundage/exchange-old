@@ -13,25 +13,7 @@ Exchange supports the following Vector formats:
 The following are the supported Raster formats:
 
 * GeoTIFF
-* ERDAS Imagine
-* JPEG2000
 * NITF (National Imagery Transmission Format)
-* CIB (Controlled Image Base)
-
-    * 1 Meter
-    * 5 Meter
-    * 10 Meter
-
-* CADRG (Compressed Arc Digitized Raster Graphic)
-
-    * GNC (Global Navigation Chart)
-    * JNC (Jet Navigation Chart)
-    * ONC (Operational Navigation Chart)
-    * TPC (Tactical Pilotage Chart)
-    * JOG (Joint Operations Graphic)
-    * TLM100 (Topographic Line Map 100K)
-    * TLM50 (Topographic Line Map 50K)
-
 
 All file types listed can be uploaded as a Zip Archive (.zip).
 
