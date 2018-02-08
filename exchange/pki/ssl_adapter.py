@@ -92,7 +92,14 @@ class SslContextAdapter(HTTPAdapter):
         retries = self._adptr_opts.get('retries', None)
         redirects = self._adptr_opts.get('redirects', None)
         if retries is not None:  # needs int; redirects can be None
-            kwargs['max_retries'] = Retry(total=retries, redirect=redirects)
+            kwargs['max_retries'] = Retry(
+                total=retries,
+                redirect=redirects,
+                backoff_factor=0.9,
+                status_forcelist=[502, 503, 504],
+                method_whitelist={'HEAD', 'TRACE', 'GET', 'PUT',
+                                  'POST', 'OPTIONS', 'DELETE'},
+            )
 
         super(SslContextAdapter, self).__init__(*args, **kwargs)
 
