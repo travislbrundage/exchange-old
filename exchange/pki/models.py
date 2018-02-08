@@ -395,25 +395,31 @@ class SslConfig(models.Model):
 class HostnamePortSslConfigManager(models.Manager):
     def create_hostnameportsslconfig(self, url, ssl_config):
         """
-        Instantiates a new HostnamePortSslConfig
-        Expected to be done in creation of new service via form validation
+        Instantiates a new HostnamePortSslConfig.
+        Expected to be done in creation of new service via form validation.
+        :param ssl_config: SslConfig instance, already saved in table
+        :type ssl_config: SslConfig
         :param url: The url of the service, not parsed
-        :param pk: The pk id of the ssl config
+        :type url: str
         :return: new HostnamePortSslConfig
+        :rtype: HostnamePortSslConfig
         """
-        '''
-        try:
-            ssl_config = SslConfig.objects.get(pk=pk)
-        except SslConfig.DoesNotExist:
-            # Raising a ValidationError because creation
-            # is a result of form submission
-            raise ValidationError("Could not find this SslConfig model;" +
-                                  " check that the SslConfig exists")
-        '''
+        # Raise ValidationError because creation is result of form submission
+        if not ssl_config or not isinstance(ssl_config, SslConfig):
+            raise ValidationError(
+                'SslConfig for hostname:port mapping is undefined.')
+        if ssl_config.pk is None:
+            raise ValidationError(
+                "SslConfig for hostname:port mapping is not saved in table.")
+
         try:
             service_hostnameportsslconfig = self.get(
                 hostname_port=filter_hostname_port(url)
             )
+            if not service_hostnameportsslconfig.ssl_config:
+                # something went pear-shaped with record's SslConfig; nix it
+                service_hostnameportsslconfig.delete()
+                raise HostnamePortSslConfig.DoesNotExist
             service_hostnameportsslconfig.ssl_config = ssl_config
             service_hostnameportsslconfig.save()
         except HostnamePortSslConfig.DoesNotExist:
