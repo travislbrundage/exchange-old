@@ -20,20 +20,21 @@
 
 import logging
 
-from urllib import unquote
-from requests import Session
+from urllib import unquote, urlencode
+# noinspection PyCompatibility
+from urlparse import parse_qs
 
 from django.shortcuts import render
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse
+from wsgiref import util as wsgiref_util
 
 from geonode.services import enumerations
 
 from .forms import CreatePKIServiceForm
-from .utils import requests_base_url
-from .ssl_adapter import SslContextAdapter, get_ssl_context_opts
+from .ssl_adapter import https_request
 
 logger = logging.getLogger(__name__)
 
@@ -91,38 +92,76 @@ def pki_request(request, resource_url=None):
     :rtype: HttpResponse
     """
 
-    # TODO: add allowed proxy origination support
+    # Culled from geonode.api.views.get_client_ip()
+    # x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    # if x_forwarded_for:
+    #     ip = x_forwarded_for.split(',')[0]
+    # else:
+    #     ip = request.META.get('REMOTE_ADDR')
+    # TODO: Finish allowed proxy origination IP support; restrict by IP
+
+    # Manually copy over headers, skipping unwanted ones
+    # IMPORTANT: Don't pass any OAuth2 headers or cookies to remote resource
+    headers = {}
+    if request.method in ("POST", "PUT") and "CONTENT_TYPE" in request.META:
+        headers["Content-Type"] = request.META["CONTENT_TYPE"]
+
+    # Strip any oauth2 token from query params!
+    query_str = request.META['QUERY_STRING']
+    query = None
+    if query_str != '':
+        params = parse_qs(query_str.strip(), keep_blank_values=True)
+        if 'access_token' in params:
+            del params['access_token']
+        query = urlencode(params, doseq=True)
 
     # Turn the remainder of path back into original URL
-    query = request.META['QUERY_STRING']
     r_url = unquote(resource_url)
+    # NOTE: Since no origin scheme is recorded (could be in rewritten pki
+    # proxy path), assume https
     url = 'https://' + r_url + (('?' + query) if query else '')
-    base_url = requests_base_url('https://' + r_url)
 
-    req_ses = Session()  # type: requests.Session
-
-    # IMPORTANT: base_url is (scheme://hostname:port), not full url.
-    # Note: urllib3 (as of 1.22) seems to care about case when matching the
-    # hostname to the peer server's SSL cert, in contrast to the spec, which
-    # says such matches should be case-insensitive (this is a bug):
-    #   https://tools.ietf.org/html/rfc5280#section-4.2.1.6
-    #   https://tools.ietf.org/html/rfc6125 <-- best practices
-    req_ses.mount(base_url, SslContextAdapter(*get_ssl_context_opts(base_url)))
-    # TODO: Passthru Django request headers, cookies, etc.
-    # Should we be sending cookies from project's domain into remote endpoint?
-    req_res = req_ses.get(url)
+    # Do remote request
+    # TODO: add option to pass a bearer token (but not ours for OAuth2!)
+    req_res = https_request(url, data=request.body,
+                            method=request.method, headers=headers)
     """:type: requests.Response"""
+
+    if not req_res:
+        return HttpResponse(status=400,
+                            content='Remote service did not return content.')
+
     # TODO: Capture errors and signal to web UI for reporting to user.
     #       Don't let errors just raise exceptions
 
-    # TODO: Passthru requests headers, cookies, etc.
-    # Should we be setting cookies in project's domain from remote endpoint?
+    if 'Content-Type' in req_res.headers:
+        content_type = req_res.headers.get('Content-Type')
+    else:
+        content_type = 'text/plain'
+
+    # If we get a redirect, beyond # allowed in config, add a useful message.
+    if req_res.status_code in (301, 302, 303, 307):
+        response = HttpResponse(
+            'This proxy does not support more than the configured redirects. '
+            'The server in "{0}" asked for this recent redirect: "{1}"'
+            .format(url, req_res.headers.get('Location')),
+            status=req_res.status_code,
+            content_type=content_type
+        )
+    else:
+        response = HttpResponse(
+            content=req_res.content,
+            status=req_res.status_code,
+            reason=req_res.reason,
+            content_type=content_type,
+        )
+
     # TODO: Should we be sniffing encoding/charset and passing back?
-    response = HttpResponse(
-        content=req_res.content,
-        status=req_res.status_code,
-        reason=req_res.reason,
-        content_type=req_res.headers.get('Content-Type'),
-    )
+
+    # Passthru headers from remote service
+    skip_headers = ['Content-Type']
+    for h, v in req_res.headers.items():
+        if h not in skip_headers and not wsgiref_util.is_hop_by_hop(h):
+            response[h] = v
 
     return response

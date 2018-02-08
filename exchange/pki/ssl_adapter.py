@@ -23,19 +23,22 @@ import re
 # urllib3.create_urllib3_context() will create a context without support for
 # PKI private key password otherwise.
 import ssl
+import traceback
 import logging
 
 from ssl import Purpose, SSLError
 from requests.adapters import HTTPAdapter
+from requests import Session, RequestException
 from urllib3.util.ssl_ import (create_urllib3_context,
                                resolve_ssl_version,
                                resolve_cert_reqs)
 from urllib3.util.retry import Retry
 # noinspection PyCompatibility
-from urlparse import urlparse
+from urlparse import urlparse, parse_qsl
+from urllib import urlencode
 
 from .settings import SSL_DEFAULT_CONFIG
-from .utils import hostname_port
+from .utils import hostname_port, requests_base_url, normalize_hostname
 from .models import HostnamePortSslConfig
 
 
@@ -279,3 +282,45 @@ def get_ssl_context_opts(url):
         ssl_config.get('https_redirects', None))
 
     return ctx_c_opts, ctx_opts, adptr_opts
+
+
+def https_request(url, data=None, method='get', headers=None,
+                  access_token=None):
+    if headers is None:
+        headers = {}
+
+    # IMPORTANT: base_url is (scheme://hostname:port), not full url.
+    # Note: urllib3 (as of 1.22) seems to care about case when matching the
+    # hostname to the peer server's SSL cert, in contrast to the spec, which
+    # says such matches should be case-insensitive (this is a bug):
+    #   https://tools.ietf.org/html/rfc5280#section-4.2.1.6
+    #   https://tools.ietf.org/html/rfc6125 <-- best practices
+    # normalize_hostname() handles this bug
+    base_url = requests_base_url(normalize_hostname(url))
+    http_client = Session()  # type: requests.Session
+    http_client.mount(base_url,
+                      SslContextAdapter(*get_ssl_context_opts(base_url)))
+
+    req_method = getattr(http_client, method.lower())
+
+    if access_token:
+        headers['Authorization'] = "Bearer {}".format(access_token)
+        parsed_url = urlparse(url)
+        params = parse_qsl(parsed_url.query.strip())
+        # Don't add access token to params; prefer header fields
+        # TODO: Should we add a call param option to enable/disable?
+        # params.append(('access_token', access_token))
+        params = urlencode(params)
+        url = "{proto}://{address}{path}?{params}"\
+              .format(proto=parsed_url.scheme, address=parsed_url.netloc,
+                      path=parsed_url.path, params=params)
+
+    resp = None
+    # TODO: Do we need GeoFence stuff here, like in geonode/security/models.py?
+    #       See: geonode.security.models.http_request() response handling
+    try:
+        resp = req_method(url, headers=headers, data=data)
+    except RequestException:
+        logger.debug(traceback.format_exc())
+
+    return resp
