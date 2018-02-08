@@ -45,7 +45,8 @@ def normalize_hostname(url):
 def hostname_port(url):
     parts = urlparse(url)
     port = parts.port
-    return parts.hostname + ":{0}".format(port) if port else ''
+    return '{0}{1}'.format(parts.hostname,
+                           ":{0}".format(port) if port else '')
 
 
 def requests_base_url(url):
