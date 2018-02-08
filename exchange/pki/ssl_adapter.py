@@ -211,7 +211,7 @@ def get_ssl_context_opts(url):
         logger.debug("Found Hostname:Port record get for: {0}"
                      .format(host_port))
         ssl_config = host_port_map.ssl_config.to_ssl_config()
-        logger.debug("Found SslConfig relate record: {0}"
+        logger.debug("Found SslConfig related record: {0}"
                      .format(ssl_config))
     except HostnamePortSslConfig.DoesNotExist:
         logger.debug("Hostname:Port record not found for: {0}"
@@ -314,6 +314,10 @@ def https_request(url, data=None, method='get', headers=None,
         url = "{proto}://{address}{path}?{params}"\
               .format(proto=parsed_url.scheme, address=parsed_url.netloc,
                       path=parsed_url.path, params=params)
+
+    # TODO: [FIXME] Temp workaround for decompression error in arcrest pkg,
+    #       in arcrest.web._base._chunk()
+    headers['Accept-Encoding'] = ''
 
     resp = None
     # TODO: Do we need GeoFence stuff here, like in geonode/security/models.py?
