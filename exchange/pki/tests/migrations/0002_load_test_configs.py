@@ -20,13 +20,7 @@
 
 from __future__ import unicode_literals
 
-import os
 from django.db import migrations
-
-TEST_FILES = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
-    'files'
-)
 
 
 def load_configs(apps, _):  # unused schema_editor param
@@ -35,7 +29,7 @@ def load_configs(apps, _):  # unused schema_editor param
     ssl_configs = [
         dict(
             name='Just custom CAs',
-            ca_custom_certs='{0}/root-root2-chains.pem'.format(TEST_FILES),
+            ca_custom_certs='root-root2-chains.pem',
             ca_allow_invalid_certs=False,
             client_cert='',
             client_key='',
@@ -49,10 +43,10 @@ def load_configs(apps, _):  # unused schema_editor param
         ),
         dict(
             name='PKI: key with no password',
-            ca_custom_certs='{0}/root-root2-chains.pem'.format(TEST_FILES),
+            ca_custom_certs='root-root2-chains.pem',
             ca_allow_invalid_certs=False,
-            client_cert='{0}/alice-cert.pem'.format(TEST_FILES),
-            client_key='{0}/alice-key.pem'.format(TEST_FILES),
+            client_cert='alice-cert.pem',
+            client_key='alice-key.pem',
             client_key_pass='',
             ssl_version="PROTOCOL_SSLv23",
             ssl_verify_mode="CERT_REQUIRED",
@@ -63,10 +57,10 @@ def load_configs(apps, _):  # unused schema_editor param
         ),
         dict(
             name='PKI: key with password',
-            ca_custom_certs='{0}/root-root2-chains.pem'.format(TEST_FILES),
+            ca_custom_certs='root-root2-chains.pem',
             ca_allow_invalid_certs=False,
-            client_cert='{0}/alice-cert.pem'.format(TEST_FILES),
-            client_key='{0}/alice-key_w-pass.pem'.format(TEST_FILES),
+            client_cert='alice-cert.pem',
+            client_key='alice-key_w-pass.pem',
             client_key_pass='password',
             ssl_version="PROTOCOL_SSLv23",
             ssl_verify_mode="CERT_REQUIRED",
@@ -77,10 +71,10 @@ def load_configs(apps, _):  # unused schema_editor param
         ),
         dict(
             name='PKI: key with password; TLSv1_2-only; alt root CA chain',
-            ca_custom_certs='{0}/root-root2-chains.pem'.format(TEST_FILES),
+            ca_custom_certs='root-root2-chains.pem',
             ca_allow_invalid_certs=False,
-            client_cert='{0}/jane-cert.pem'.format(TEST_FILES),
-            client_key='{0}/jane-key_w-pass.pem'.format(TEST_FILES),
+            client_cert='jane-cert.pem',
+            client_key='jane-key_w-pass.pem',
             client_key_pass='password',
             ssl_version="PROTOCOL_SSLv23",
             ssl_verify_mode="CERT_REQUIRED",
@@ -91,10 +85,10 @@ def load_configs(apps, _):  # unused schema_editor param
         ),
         dict(
             name='PKI: key with password; TLSv1_2-only',
-            ca_custom_certs='{0}/root-root2-chains.pem'.format(TEST_FILES),
+            ca_custom_certs='root-root2-chains.pem',
             ca_allow_invalid_certs=False,
-            client_cert='{0}/alice-cert.pem'.format(TEST_FILES),
-            client_key='{0}/alice-key_w-pass.pem'.format(TEST_FILES),
+            client_cert='alice-cert.pem',
+            client_key='alice-key_w-pass.pem',
             client_key_pass='password',
             ssl_version="PROTOCOL_TLSv1_2",
             ssl_verify_mode="CERT_REQUIRED",
@@ -105,10 +99,10 @@ def load_configs(apps, _):  # unused schema_editor param
         ),
         dict(
             name='PKI: key with no password; custom CAs with no validation',
-            ca_custom_certs='{0}/root-root2-chains.pem'.format(TEST_FILES),
+            ca_custom_certs='root-root2-chains.pem',
             ca_allow_invalid_certs=False,
-            client_cert='{0}/alice-cert.pem'.format(TEST_FILES),
-            client_key='{0}/alice-key.pem'.format(TEST_FILES),
+            client_cert='alice-cert.pem',
+            client_key='alice-key.pem',
             client_key_pass='',
             ssl_version="PROTOCOL_TLSv1_2",
             ssl_verify_mode="CERT_NONE",
@@ -119,10 +113,10 @@ def load_configs(apps, _):  # unused schema_editor param
         ),
         dict(
             name='PKI: key with no password; TLSv1_2-only (via ssl_options)',
-            ca_custom_certs='{0}/root-root2-chains.pem'.format(TEST_FILES),
+            ca_custom_certs='root-root2-chains.pem',
             ca_allow_invalid_certs=False,
-            client_cert='{0}/alice-cert.pem'.format(TEST_FILES),
-            client_key='{0}/alice-key.pem'.format(TEST_FILES),
+            client_cert='alice-cert.pem',
+            client_key='alice-key.pem',
             client_key_pass='',
             ssl_version="PROTOCOL_SSLv23",
             ssl_verify_mode="CERT_REQUIRED",

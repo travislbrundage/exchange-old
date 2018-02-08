@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
-from ..models import EncryptedCharField
+from ..fields import EncryptedCharField, DynamicFilePathField
+from ..settings import get_pki_dir, CERT_MATCH, KEY_MATCH
 
 
 class Migration(migrations.Migration):
@@ -19,13 +20,14 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(
                     help_text=b'(REQUIRED) Display name of configuration.',
                     max_length=128, verbose_name=b'Name')),
-                ('ca_custom_certs', models.CharField(
-                    help_text=b'(Optional) Filesystem path to a certificate '
-                              b'of concatenated Certificate Authorities, in '
-                              b'PEM format. If undefined, System '
-                              b'(via OpenSSL) CAs are used. NOTE: should be '
-                              b'outside of your application and www roots!',
-                    max_length=255, verbose_name=b'Custom CA cert file',
+                ('ca_custom_certs', DynamicFilePathField(
+                    help_text=b'(Optional) Certificate of concatenated '
+                              b'Certificate Authorities, in PEM format. '
+                              b'If undefined, System '
+                              b'(via OpenSSL) CAs are used.',
+                    path=get_pki_dir,
+                    match=CERT_MATCH,
+                    verbose_name=b'Custom CA cert file',
                     blank=True)),
                 ('ca_allow_invalid_certs', models.BooleanField(
                     default=False,
@@ -34,22 +36,23 @@ class Migration(migrations.Migration):
                               b'mean OpenSSL will accept any invalid '
                               b'certificates.',
                     verbose_name=b'Allow invalid CAs')),
-                ('client_cert', models.CharField(
-                    help_text=b'(Optional) Filesystem path to a client '
-                              b'certificate in PEM format. REQUIRED if '
-                              b'client_key is defined. Client certs that also '
-                              b'contain keys are not supported. NOTE: should '
-                              b'be outside of your application and www roots!',
-                    max_length=255, verbose_name=b'Client certificate file',
+                ('client_cert', DynamicFilePathField(
+                    help_text=b'(Optional) Client certificate in PEM format. '
+                              b'REQUIRED if client_key is defined. '
+                              b'Client certs that also contain keys are not '
+                              b'supported.',
+                    path=get_pki_dir,
+                    match=CERT_MATCH,
+                    verbose_name=b'Client certificate file',
                     blank=True)),
-                ('client_key', models.CharField(
-                    help_text=b"(Optional) Filesystem path to a client "
-                              b"certificate's private key in PEM format. "
-                              b"REQUIRED if client_cert is defined. It is "
-                              b"highly recommended the key be "
-                              b"password-encrypted. NOTE: should be outside "
-                              b"of your application and www roots!",
-                    max_length=255,
+                ('client_key', DynamicFilePathField(
+                    help_text=b"(Optional) Client certificate's private key "
+                              b"in PEM format. "
+                              b"REQUIRED if client_cert is defined. "
+                              b"It is highly recommended the key be "
+                              b"password-encrypted.",
+                    path=get_pki_dir,
+                    match=KEY_MATCH,
                     verbose_name=b'Client cert private key file', blank=True)),
                 ('client_key_pass', EncryptedCharField(
                     help_text=b"(Optional) Client certificate's private "

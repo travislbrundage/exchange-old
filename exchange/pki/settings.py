@@ -29,6 +29,11 @@ def get_pki_dir():
     )
 
 
+# TODO: add .p12|.pfx regex support for cert_match
+CERT_MATCH = ".*\.(crt|CRT|pem|PEM)$"
+KEY_MATCH = ".*\.(key|KEY|pem|PEM)$"
+
+
 """
 name:
     string; REQUIRED. Display name of configuration.

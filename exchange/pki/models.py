@@ -18,124 +18,18 @@
 #
 #########################################################################
 
-# Portions of code within EncryptedFieldMixin class culled from
-# https://github.com/defrex/django-encrypted-fields
-# Specifically, from EncryptedFieldMixin in encrypted_fields/fields.py
-# That code is licensed under MIT License, as follows (as of 2018-02-04)
-#########################################################################
-#
-# The MIT License (MIT)
-#
-# Copyright (c) 2013 Aron Jones
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-#
-#########################################################################
-
-import os
-import types
 import ssl
 import logging
 
-from django.conf import settings
 from django.db import models
 from django.core.exceptions import ValidationError
 
-from .crypto import Crypto, CryptoInvalidToken
+from .settings import get_pki_dir, CERT_MATCH, KEY_MATCH
 from .utils import hostname_port as filter_hostname_port
+from .utils import file_readable, pki_file
+from .fields import EncryptedCharField, DynamicFilePathField
 
 logger = logging.getLogger(__name__)
-
-
-class EncryptedFieldMixin(object):
-
-    def __init__(self, *args, **kwargs):
-        # Load crypter to handle encryption/decryption
-        self._crypter = Crypto()
-
-        # Prefix encrypted data with a static string to allow filtering
-        # of encrypted data vs. non-encrypted data using vanilla queries.
-        self.prefix = '___'
-
-        # Ensure the encrypted data does not exceed the max_length
-        # of the database. Data truncation is a possibility otherwise.
-        self.enforce_max_length = getattr(
-            settings,
-            'ENFORCE_MAX_LENGTH',
-            False
-        )
-
-        # noinspection PyArgumentList
-        super(EncryptedFieldMixin, self).__init__(*args, **kwargs)
-
-    def to_python(self, value):
-        if value is None or not isinstance(value, types.StringTypes):
-            return value
-
-        if self.prefix and value.startswith(self.prefix):
-            value = value[len(self.prefix):]
-
-            # print('value={0}'.format(value))
-            try:
-                value = self._crypter.decrypt(value)
-            except CryptoInvalidToken:
-                pass
-            except TypeError:
-                pass
-
-        return super(EncryptedFieldMixin, self).to_python(value)
-
-    def get_prep_value(self, value):
-        value = super(EncryptedFieldMixin, self).get_prep_value(value)
-
-        if value is None or value == '':
-            return value
-
-        return self.prefix + self._crypter.encrypt(value)
-
-    # noinspection PyUnusedLocal
-    def get_db_prep_value(self, value, connection, prepared=False):
-        if not prepared:
-            value = self.get_prep_value(value)
-
-            if self.enforce_max_length:
-                if (
-                        value and hasattr(self, 'max_length') and
-                        self.max_length and
-                        len(value) > self.max_length
-                ):
-                    raise ValueError(
-                        'Field {0} max_length={1} encrypted_len={2}'.format(
-                            self.name,
-                            self.max_length,
-                            len(value),
-                        )
-                    )
-        return value
-
-    # noinspection PyUnusedLocal
-    def from_db_value(self, value, expression, connection, context):
-        return self.to_python(value)
-
-
-class EncryptedCharField(EncryptedFieldMixin, models.CharField):
-    pass
 
 
 class SslConfig(models.Model):
@@ -185,14 +79,14 @@ class SslConfig(models.Model):
         blank=False,
         help_text="(REQUIRED) Display name of configuration.",
     )
-    ca_custom_certs = models.CharField(
+    ca_custom_certs = DynamicFilePathField(
         "Custom CA cert file",
-        max_length=255,
+        path=get_pki_dir,
+        match=CERT_MATCH,
         blank=True,
-        help_text="(Optional) Filesystem path to a certificate of "
-                  "concatenated Certificate Authorities, in PEM format. "
-                  "If undefined, System (via OpenSSL) CAs are used. "
-                  "NOTE: should be outside of your application and www roots!",
+        help_text="(Optional) Certificate of concatenated Certificate "
+                  "Authorities, in PEM format. "
+                  "If undefined, System (via OpenSSL) CAs are used.",
     )
     ca_allow_invalid_certs = models.BooleanField(
         "Allow invalid CAs",
@@ -203,24 +97,23 @@ class SslConfig(models.Model):
                   "a config. NOTE: this does not mean OpenSSL will accept any "
                   "invalid certificates.",
     )
-    client_cert = models.CharField(
+    client_cert = DynamicFilePathField(
         "Client certificate file",
-        max_length=255,
+        path=get_pki_dir,
+        match=CERT_MATCH,
         blank=True,
-        help_text="(Optional) Filesystem path to a client certificate in PEM "
-                  "format. REQUIRED if client_key is defined. Client certs "
-                  "that also contain keys are not supported. "
-                  "NOTE: should be outside of your application and www roots!",
+        help_text="(Optional) Client certificate in PEM format. "
+                  "REQUIRED if client_key is defined. "
+                  "Client certs that also contain keys are not supported.",
     )
-    client_key = models.CharField(
+    client_key = DynamicFilePathField(
         "Client cert private key file",
-        max_length=255,
+        path=get_pki_dir,
+        match=KEY_MATCH,
         blank=True,
-        help_text="(Optional) Filesystem path to a client certificate's "
-                  "private key in PEM format. REQUIRED if client_cert is "
-                  "defined. It is highly recommended the key be "
-                  "password-encrypted. "
-                  "NOTE: should be outside of your application and www roots!",
+        help_text="(Optional) Client certificate's private key in PEM format. "
+                  "REQUIRED if client_cert is defined. "
+                  "It is highly recommended the key be password-encrypted.",
     )
     # TODO: update ^ text with 'unless .p12|.pfx cert defined'
     # Password limited to 100 characters, otherwise encrypted result's length
@@ -309,14 +202,6 @@ class SslConfig(models.Model):
         """Runtime collection of available ssl module PROTOCOL_* constants"""
         return [p for p in dir(ssl) if p.startswith('PROTOCOL_')]
 
-    @staticmethod
-    def _file_readable(a_file):
-        return all([
-            os.path.exists(a_file),
-            os.path.isfile(a_file),
-            os.access(a_file, os.R_OK)
-        ])
-
     def clean(self):
         # Validators
         # TODO: Move these validation routines to a more common location,
@@ -340,8 +225,8 @@ class SslConfig(models.Model):
         # Make sure PKI components are readable
         for attr in ['ca_custom_certs', 'client_cert', 'client_key']:
             f = getattr(self, attr, None)
-            if f and not self._file_readable(f):
-                msg = 'File does not exist or not readable at: {0}'.format(f)
+            if f and not file_readable(pki_file(f)):
+                msg = 'File does not exist or not readable: {0}'.format(f)
                 val_mgs[attr] = msg
 
         # TODO: update when .p12|.pfx cert support added
@@ -369,10 +254,13 @@ class SslConfig(models.Model):
             if self.ssl_options else None
         return {
             "name": self.name,
-            "ca_custom_certs": self.ca_custom_certs or None,
+            "ca_custom_certs":
+                self.ca_custom_certs if self.ca_custom_certs else None,
             "ca_allow_invalid_certs": bool(self.ca_allow_invalid_certs),
-            "client_cert": self.client_cert or None,
-            "client_key": self.client_key or None,
+            "client_cert":
+                self.client_cert if self.client_cert else None,
+            "client_key":
+                self.client_key if self.client_key else None,
             "client_key_pass": self.client_key_pass or None,
             "ssl_version":
                 str(self.ssl_version)
