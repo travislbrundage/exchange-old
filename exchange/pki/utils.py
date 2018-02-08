@@ -26,7 +26,7 @@ import logging
 from urlparse import urlparse
 from urllib import quote
 
-from .settings import get_pki_dir
+from .settings import get_pki_dir, get_pki_local_url
 
 
 logger = logging.getLogger(__name__)
@@ -54,44 +54,23 @@ def requests_base_url(url):
     return '{0}://{1}'.format(parts.scheme, hostname_port(url))
 
 
-def pki_route(request, url):
+def pki_route(url):
     """
-    Reroutes a service url through our internal proxy
-    :param request: Request object from Django
-    :type request: django.http.HttpRequest
+    Reroutes a service url through the 'pki' internal proxy
     :param url: Original service url
-    :return: Modified url via internal proxy
+    :return: Modified url prepended with internal proxy route
     Ex: url = https://myserver.com:port/geoserver/wms
     return <site:scheme>://<site>/pki/myserver.com%3Aport/geoserver/wms
     """
     url = normalize_hostname(url)
     parts = urlparse(url)
+    # TODO: Consider leaving scheme; otherwise, https is assumed later
     url = re.sub(parts.scheme, '', url, count=1, flags=re.I)
     url = url.replace('://', '', 1)
 
-    # Determine local host and port that project is running on.
-    # Live host differs from SITEURL, which can differ from request.get_host().
-    # Under docker-compose setups, SITEURL is localhost, which may be the Web
-    # entrypoint on the same host or a reverse proxy sitting in front of it;
-    # while request.get_host() may be like SITEURL, plus may be a domain alias.
-    live_host = os.getenv('DJANGO_LIVE_TEST_SERVER_ADDRESS', None)
-    server_host = request.META.get('SITEURL', None)
-    server_port = request.META.get('SERVER_PORT', None)
-    server_scheme = None
-    if server_host:
-        s_parts = urlparse(server_host)
-        if s_parts.hostname:
-            s_port = s_parts.port or server_port
-            server_host = '{0}{1}'.format(
-                s_parts.hostname, (':{0}'.format(s_port) if s_port else ''))
-            server_scheme = s_parts.scheme
-        else:
-            server_host = None
-    # request.get_host() is fallback, but not good if reverse proxy exists
-    host = live_host or server_host or request.get_host()
+    pki_base_url = get_pki_local_url().lower().rstrip(os.sep)
 
-    return '{0}://{1}/pki/{2}'.format(
-        (server_scheme or request.scheme), host, quote(url))
+    return '{0}/pki/{1}'.format(pki_base_url, quote(url))
 
 
 def file_readable(a_file):

@@ -57,7 +57,7 @@ class CreatePKIServiceForm(CreateServiceForm):
                 HostnamePortSslConfig.objects.create_hostnameportsslconfig(
                     url, ssl_config
                 )
-                url = pki_route(self.request, url)
+                url = pki_route(url)
 
         if url is not None and service_type is not None:
             try:

@@ -23,13 +23,21 @@ import os
 
 # IMPORTANT: this directory should not be within application or www roots
 def get_pki_dir():
-    return os.getenv(
-        'PKI_DIRECTORY',
-        '/usr/local/exchange-pki'
-    )
+    path = os.getenv('PKI_DIRECTORY')
+    # can not be defined with empty value
+    return path if path else '/usr/local/exchange-pki'
 
 
-# TODO: add .p12|.pfx regex support for cert_match
+# TODO: Switch default to https, when test setup (or deployment) suppports it
+# NOTE: Single-word domains are considered invalid host names by Django,
+# e.g. 'exchange', excepting 'localhost'
+def get_pki_local_url():
+    url = os.getenv('PKI_LOCAL_URL')
+    # can not be defined with empty value
+    return url if url else 'http://localhost:8000'
+
+
+# TODO: Add .p12|.pfx regex support for cert_match
 CERT_MATCH = ".*\.(crt|CRT|pem|PEM)$"
 KEY_MATCH = ".*\.(key|KEY|pem|PEM)$"
 

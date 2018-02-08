@@ -28,6 +28,10 @@ services:
       retries: 10
     ports:
       - 8000:8000
+    networks:
+          default:
+            aliases:
+              - exchange.boundless.test
     depends_on:
       - db
       - geoserver
