@@ -26,6 +26,8 @@ import logging
 from urlparse import urlparse
 from urllib import quote
 
+from .settings import get_pki_dir
+
 
 logger = logging.getLogger(__name__)
 
@@ -89,3 +91,15 @@ def pki_route(request, url):
 
     return '{0}://{1}/pki/{2}'.format(
         (server_scheme or request.scheme), host, quote(url))
+
+
+def file_readable(a_file):
+    return all([
+        os.path.exists(a_file),
+        os.path.isfile(a_file),
+        os.access(a_file, os.R_OK)
+    ])
+
+
+def pki_file(a_file):
+    return os.path.join(get_pki_dir(), a_file)

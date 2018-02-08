@@ -18,6 +18,17 @@
 #
 #########################################################################
 
+import os
+
+
+# IMPORTANT: this directory should not be within application or www roots
+def get_pki_dir():
+    return os.getenv(
+        'PKI_DIRECTORY',
+        '/usr/local/exchange-pki'
+    )
+
+
 """
 name:
     string; REQUIRED. Display name of configuration.
