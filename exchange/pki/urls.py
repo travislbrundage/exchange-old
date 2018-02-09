@@ -19,10 +19,9 @@
 #########################################################################
 
 from django.conf.urls import patterns, url
-from .views import test_page, register_service, pki_request
+from .views import register_service, pki_request
 
 urlpatterns = patterns(
     '',
-    url(r'^pki/test', test_page, name='test-page'),
     url(r'^services/register/$', register_service, name="register_service"),
     url(r'^pki/(?P<resource_url>.*)$', pki_request, name="pki_request"),)

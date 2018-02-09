@@ -39,10 +39,6 @@ from .ssl_adapter import https_request
 logger = logging.getLogger(__name__)
 
 
-def test_page(request):
-    return render(request, 'test.html')
-
-
 @login_required
 def register_service(request):
     # This method suffers the same as the form's clean() override
@@ -84,6 +80,7 @@ def register_service(request):
     return result
 
 
+# TODO: Add @login_required decorator?
 def pki_request(request, resource_url=None):
     """
     App's main view
