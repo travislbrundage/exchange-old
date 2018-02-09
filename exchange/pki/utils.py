@@ -26,7 +26,9 @@ import logging
 from urlparse import urlparse
 from urllib import quote
 
-from .settings import get_pki_dir, get_pki_local_url
+from django.conf import settings
+
+from .settings import get_pki_dir
 
 
 logger = logging.getLogger(__name__)
@@ -68,7 +70,7 @@ def pki_route(url):
     url = re.sub(parts.scheme, '', url, count=1, flags=re.I)
     url = url.replace('://', '', 1)
 
-    pki_base_url = get_pki_local_url().lower().rstrip(os.sep)
+    pki_base_url = settings.SITEURL.rstrip('/')
 
     return '{0}/pki/{1}'.format(pki_base_url, quote(url))
 

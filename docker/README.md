@@ -5,7 +5,7 @@
 - Docker API 1.25+ (`docker version`)
 - Git
 
-**Note:** You will also need to append nginx to your 127.0.0.1 entry in `/etc/hosts`.
+**Note:** You will also need to append nginx.boundless.test to your 127.0.0.1 entry in `/etc/hosts`.
 
 ```bash
 ##
@@ -14,14 +14,14 @@
 # localhost is used to configure the loopback interface
 # when the system is booting.  Do not change this entry.
 ##
-127.0.0.1       localhost nginx
+127.0.0.1       localhost nginx.boundless.test
 255.255.255.255 broadcasthost
 ::1             localhost
 ```
 
 The reason for this is due to osgeo_importer. It uses gsconfig which parses `workspace_style_url` from geoserver rest 
 xml atom:link, which uses the entry from global.xml. Since each application is in separate containers, localhost will 
-not work as that value. To bypass this the nginx service alias `nginx` is used. If added to your `/etc/hosts` it will 
+not work as that value. To bypass this the nginx service alias `nginx.boundless.test` is used. If added to your `/etc/hosts` it will 
 resolve as localhost.
 
 
