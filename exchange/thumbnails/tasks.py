@@ -3,6 +3,7 @@ import time
 from celery.task import task
 
 from django.db.models.signals import post_save
+from exchange.utils import get_admin_token
 from geonode.layers.models import Layer
 from geonode.maps.models import Map
 from geonode.geoserver.helpers import ogc_server_settings
@@ -14,7 +15,7 @@ from .models import save_thumbnail
 from PIL import Image
 import io
 from urlparse import urlparse
-from .utils import get_admin_token
+
 
 try:
     xrange
