@@ -1,7 +1,6 @@
 import logging
 import time
 from celery.task import task
-import datetime
 
 from django.db.models.signals import post_save
 from geonode.layers.models import Layer
@@ -15,9 +14,7 @@ from .models import save_thumbnail
 from PIL import Image
 import io
 from urlparse import urlparse
-from oauthlib.common import generate_token
-from oauth2_provider.models import AccessToken, get_application_model
-from geonode.people.utils import get_default_user
+from .utils import get_admin_token
 
 try:
     xrange
@@ -46,18 +43,6 @@ retry = Retry(
 )
 http_client.mount('http://', HTTPAdapter(max_retries=retry))
 http_client.mount('https://', HTTPAdapter(max_retries=retry))
-
-
-def get_admin_token():
-    Application = get_application_model()
-    app = Application.objects.get(name="GeoServer")
-    token = generate_token()
-    AccessToken.objects.get_or_create(
-        user=get_default_user(),
-        application=app,
-        expires=datetime.datetime.now() + datetime.timedelta(days=3),
-        token=token)
-    return token
 
 
 # combines image content
