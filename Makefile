@@ -15,14 +15,14 @@ help:
 	@echo "  make maploom  - build maploom"
 
 html:
-	@docker run -v $(current_dir):/code \
-                -w /code quay.io/boundlessgeo/bex-py27-stretch bash \
-                -e -c 'python setup.py build_sphinx'
+	@docker run --rm -v $(current_dir):/code \
+	                 -w /code quay.io/boundlessgeo/bex-py27-stretch bash \
+	                 -e -c 'python setup.py build_sphinx'
 
 lint:
-	@docker run -v $(current_dir):/code \
-                -w /code quay.io/boundlessgeo/sonar-maven-py3-alpine bash \
-                -e -c '. docker/devops/helper.sh && lint'
+	@docker run --rm -v $(current_dir):/code \
+	                 -w /code quay.io/boundlessgeo/sonar-maven-py3-alpine bash \
+	                 -e -c '. docker/devops/helper.sh && lint'
 
 stop:
 	@docker-compose down --remove-orphans
@@ -41,9 +41,9 @@ test: migration-check
 	@docker-compose exec exchange /code/docker/exchange/run_tests.sh
 
 maploom:
-	@docker run -v $(current_dir):/code \
-	            -w /code quay.io/boundlessgeo/bex-nodejs-bower-grunt bash \
-	            -e -c '. docker/devops/helper.sh && build-maploom'
+	@docker run --rm -v $(current_dir):/code \
+	                 -w /code quay.io/boundlessgeo/bex-nodejs-bower-grunt bash \
+	                 -e -c '. docker/devops/helper.sh && build-maploom'
 
 migration-check:
 	@docker-compose exec -T exchange /bin/bash \
