@@ -3,7 +3,7 @@ import time
 from celery.task import task
 
 from django.db.models.signals import post_save
-from exchange.utils import get_admin_token
+from exchange.utils import get_bearer_token
 from geonode.layers.models import Layer
 from geonode.maps.models import Map
 from geonode.geoserver.helpers import ogc_server_settings
@@ -92,12 +92,13 @@ def make_thumb_request(remote, baseurl, params=None):
             'Thumbnail: Requesting thumbnail for %s. ',
             thumbnail_create_url
         )
+
         if (remote):
             logger.debug('fetching %s with no auth' % thumbnail_create_url)
             resp = http_client.get(thumbnail_create_url)
         else:
             # Log in to geoserver with token
-            token = get_admin_token()
+            token = get_bearer_token()
             thumbnail_create_url = '%s&access_token=%s' % (
                 thumbnail_create_url,
                 token)
