@@ -1,8 +1,12 @@
 <div id="div_id_{{ widget.name }}" class="form-group" ng-app="SSLConfigSelectApp"
      ng-controller="SSLConfigSelectCtrl">
-    <div ng-init="ssl_config_options = {{ widget.ssl_configs }}">
-
+    <div ng-init="grabConfigs({{ widget.ssl_configs }})">
+        <select id="id_{{ widget.name }}" name="{{ widget.name }}"
+            ng-model="selectedSSLConfig"
+            ng-options="ssl_config.name for ssl_config in ssl_config_options">
+        </select>
     </div>
+    <br>
     <!-- selectedSSLConfig is the SSLConfig model currently selected
          TODO: Change selectedSSLConfig.name -> SSLConfig.description when implemented -->
     {% verbatim %}

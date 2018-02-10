@@ -9,13 +9,10 @@ class SelectPKIWidget(Widget):
     template_name = 'pki_select.html'
 
     def get_context(self, name, value, attrs=None):
-        all_configs = [x for x in SslConfig.objects.all()]
-
         return {'widget': {
             'name': name,
             'value': value,
-            'ssl_configs': all_configs,
-            #'ssl_configs2': json.dumps({'data': [x.to_ssl_config() for x in SslConfig.objects.all()]}),
+            'ssl_configs': json.dumps([x.to_ssl_config() for x in SslConfig.objects.all()])
         }}
 
     def render(self, name, value, attrs=None):

@@ -6,28 +6,30 @@
 {{ block.super }}
 <script type="text/javascript">
 $(document).ready(function () {
+    var url_input_field = $('#id_url');
+    var ssl_config_select_field = $('#id_ssl_config');
     // normally should be empty, but first check just in case
-    var service_url = $('#id_url').val();
+    var service_url = url_input_field.val();
 
     // enable the ssl_config field when the service URL field
     // begins with https, and disable it when it no longer does
     if (service_url.startsWith('https')) {
-        $('#id_ssl_config').prop('disabled', false);
+        ssl_config_select_field.prop('disabled', false);
     } else {
-        $('#id_ssl_config').prop('disabled', true);
+        ssl_config_select_field.prop('disabled', true);
     }
 
     // detecting any change to the service URL input field
-    $('#id_url').on("change keyup paste", function(){
+    url_input_field.on("change keyup paste", function(){
         // if user entered https into service URL
-        var service_url = $('#id_url').val();
+        var service_url = url_input_field.val();
 
         // enable the ssl_config field when the service URL field
         // begins with https, and disable it when it no longer does
         if (service_url.startsWith('https')) {
-            $('#id_ssl_config').prop('disabled', false);
+            ssl_config_select_field.prop('disabled', false);
         } else {
-            $('#id_ssl_config').prop('disabled', true);
+            ssl_config_select_field.prop('disabled', true);
         }
     });
 })
@@ -36,8 +38,9 @@ $(document).ready(function () {
 // Better way to organize this?
     var app = angular.module('SSLConfigSelectApp', []);
     app.controller('SSLConfigSelectCtrl', function ($scope) {
-        // nothing to do - template should cover everything we need
-        console.log($scope.ssl_config_options);
+        $scope.grabConfigs = function(configs) {
+            $scope.ssl_config_options = configs;
+        }
     });
 </script>
 {% endblock %}
