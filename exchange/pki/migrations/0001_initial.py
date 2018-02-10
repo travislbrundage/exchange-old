@@ -20,6 +20,10 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(
                     help_text=b'(REQUIRED) Display name of configuration.',
                     max_length=128, verbose_name=b'Name')),
+                ('description', models.TextField(
+                    help_text=b"(Optional) Details about configuration for "
+                              b"user.",
+                    verbose_name=b'Description', blank=True)),
                 ('ca_custom_certs', DynamicFilePathField(
                     help_text=b'(Optional) Certificate of concatenated '
                               b'Certificate Authorities, in PEM format. '

@@ -79,6 +79,11 @@ class SslConfig(models.Model):
         blank=False,
         help_text="(REQUIRED) Display name of configuration.",
     )
+    description = models.TextField(
+        "Description",
+        blank=True,
+        help_text="(Optional) Details about configuration for user.",
+    )
     ca_custom_certs = DynamicFilePathField(
         "Custom CA cert file",
         path=get_pki_dir,

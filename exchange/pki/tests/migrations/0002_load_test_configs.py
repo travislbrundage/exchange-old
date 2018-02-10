@@ -29,6 +29,7 @@ def load_configs(apps, _):  # unused schema_editor param
     ssl_configs = [
         dict(
             name='Just custom CAs',
+            description='',
             ca_custom_certs='root-root2-chains.pem',
             ca_allow_invalid_certs=False,
             client_cert='',
@@ -43,6 +44,7 @@ def load_configs(apps, _):  # unused schema_editor param
         ),
         dict(
             name='PKI: key with no password',
+            description='',
             ca_custom_certs='root-root2-chains.pem',
             ca_allow_invalid_certs=False,
             client_cert='alice-cert.pem',
@@ -57,6 +59,7 @@ def load_configs(apps, _):  # unused schema_editor param
         ),
         dict(
             name='PKI: key with password',
+            description='',
             ca_custom_certs='root-root2-chains.pem',
             ca_allow_invalid_certs=False,
             client_cert='alice-cert.pem',
@@ -71,6 +74,7 @@ def load_configs(apps, _):  # unused schema_editor param
         ),
         dict(
             name='PKI: key with password; TLSv1_2-only; alt root CA chain',
+            description='',
             ca_custom_certs='root-root2-chains.pem',
             ca_allow_invalid_certs=False,
             client_cert='jane-cert.pem',
@@ -85,6 +89,7 @@ def load_configs(apps, _):  # unused schema_editor param
         ),
         dict(
             name='PKI: key with password; TLSv1_2-only',
+            description='',
             ca_custom_certs='root-root2-chains.pem',
             ca_allow_invalid_certs=False,
             client_cert='alice-cert.pem',
@@ -99,6 +104,7 @@ def load_configs(apps, _):  # unused schema_editor param
         ),
         dict(
             name='PKI: key with no password; custom CAs with no validation',
+            description='',
             ca_custom_certs='root-root2-chains.pem',
             ca_allow_invalid_certs=False,
             client_cert='alice-cert.pem',
@@ -113,6 +119,7 @@ def load_configs(apps, _):  # unused schema_editor param
         ),
         dict(
             name='PKI: key with no password; TLSv1_2-only (via ssl_options)',
+            description='',
             ca_custom_certs='root-root2-chains.pem',
             ca_allow_invalid_certs=False,
             client_cert='alice-cert.pem',

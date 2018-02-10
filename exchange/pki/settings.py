@@ -37,6 +37,9 @@ KEY_MATCH = ".*\.(key|KEY|pem|PEM)$"
 name:
     string; REQUIRED. Display name of configuration.
 
+description:
+    string; Details of configuration for user.
+
 ca_custom_certs:
     None or filesystem path; default None.
     If None, urllib3 defaults to None, and OpenSSL system CA certs are used.
@@ -92,6 +95,7 @@ https_redirects:
 """
 SSL_DEFAULT_CONFIG = {
     "name": "Default",
+    "description": "Default configuration, with good base security.",
     "ca_custom_certs": None,
     "ca_allow_invalid_certs": False,
     "client_cert": None,
