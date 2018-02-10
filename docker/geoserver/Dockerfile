@@ -5,19 +5,20 @@ RUN apt-get update \
     && unzip -o /tmp/geoserver.war -d $CATALINA_HOME/webapps/geoserver \
     && chmod -R 755 $CATALINA_HOME/webapps/geoserver \
     && rm -f /tmp/geoserver.war \
-    && rm -f $CATALINA_HOME/webapps/geoserver/data/security/masterpw.info \
-    && sed -i 's/localhost:8080/nginx/' $CATALINA_HOME/webapps/geoserver/data/global.xml \
-    && sed -i 's@http://localhost:8000/o/token/@http://nginx/o/token/@g' \
+    && rm -f $CATALINA_HOME/webapps/geoserver/data/security/masterpw.info
+
+RUN sed -i 's/localhost:8080/nginx.boundless.test/' $CATALINA_HOME/webapps/geoserver/data/global.xml \
+    && sed -i 's@http://localhost:8000/o/token/@http://nginx.boundless.test/o/token/@g' \
               $CATALINA_HOME/webapps/geoserver/data/security/filter/geonode-oauth2/config.xml \
-    && sed -i 's@http://localhost:8000/o/authorize/@http://localhost/o/authorize/@g' \
+    && sed -i 's@http://localhost:8000/o/authorize/@http://nginx.boundless.test/o/authorize/@g' \
               $CATALINA_HOME/webapps/geoserver/data/security/filter/geonode-oauth2/config.xml \
-    && sed -i 's@http://localhost:8080/geoserver@http://localhost/geoserver@g' \
+    && sed -i 's@http://localhost:8080/geoserver@http://nginx.boundless.test/geoserver@g' \
               $CATALINA_HOME/webapps/geoserver/data/security/filter/geonode-oauth2/config.xml \
-    && sed -i 's@http://localhost:8000/api/o/v4/tokeninfo/@http://nginx/api/o/v4/tokeninfo/@g' \
+    && sed -i 's@http://localhost:8000/api/o/v4/tokeninfo/@http://nginx.boundless.test/api/o/v4/tokeninfo/@g' \
               $CATALINA_HOME/webapps/geoserver/data/security/filter/geonode-oauth2/config.xml \
-    && sed -i 's@http://localhost:8000/account/logout/@http://nginx/account/logout/@g' \
+    && sed -i 's@http://localhost:8000/account/logout/@http://nginx.boundless.test/account/logout/@g' \
               $CATALINA_HOME/webapps/geoserver/data/security/filter/geonode-oauth2/config.xml \
-    && sed -i 's@http://localhost:8000@http://nginx@g' \
+    && sed -i 's@http://localhost:8000@http://nginx.boundless.test@g' \
               $CATALINA_HOME/webapps/geoserver/data/security/role/geonode\ REST\ role\ service/config.xml \
     && sed -i 's/<\/Context>/<Resources cacheMaxSize="35000" \/><\/Context>/' \
               $CATALINA_HOME/conf/context.xml

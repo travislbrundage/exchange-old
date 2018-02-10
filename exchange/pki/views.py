@@ -112,6 +112,8 @@ def pki_request(request, resource_url=None):
             del params['access_token']
         query = urlencode(params, doseq=True)
 
+    # TODO: strip OAuth2 header as well
+
     # Turn the remainder of path back into original URL
     r_url = unquote(resource_url)
     # NOTE: Since no origin scheme is recorded (could be in rewritten pki
