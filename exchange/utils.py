@@ -24,6 +24,7 @@ from oauthlib.common import generate_token
 from oauth2_provider.models import AccessToken, get_application_model
 from geonode.people.utils import get_default_user
 
+
 def get_admin_token():
     Application = get_application_model()
     app = Application.objects.get(name="GeoServer")
