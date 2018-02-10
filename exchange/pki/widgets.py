@@ -2,16 +2,20 @@ from django.forms.widgets import Widget
 from django.template import loader
 from django.utils.safestring import mark_safe
 from .models import SslConfig
+import json
 
 
 class SelectPKIWidget(Widget):
     template_name = 'pki_select.html'
 
     def get_context(self, name, value, attrs=None):
+        all_configs = [x for x in SslConfig.objects.all()]
+
         return {'widget': {
             'name': name,
             'value': value,
-            'ssl_configs': SslConfig.objects.all(),
+            'ssl_configs': all_configs,
+            #'ssl_configs2': json.dumps({'data': [x.to_ssl_config() for x in SslConfig.objects.all()]}),
         }}
 
     def render(self, name, value, attrs=None):
