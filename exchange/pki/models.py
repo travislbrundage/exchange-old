@@ -24,12 +24,31 @@ import logging
 from django.db import models
 from django.core.exceptions import ValidationError
 
-from .settings import get_pki_dir, CERT_MATCH, KEY_MATCH
+from .settings import get_pki_dir, CERT_MATCH, KEY_MATCH, SSL_DEFAULT_CONFIG
 from .utils import hostname_port as filter_hostname_port
 from .utils import file_readable, pki_file
 from .fields import EncryptedCharField, DynamicFilePathField
 
 logger = logging.getLogger(__name__)
+
+
+class SslConfigManager(models.Manager):
+
+    def create_default(self):
+        try:
+            self.get(pk=1)
+        except SslConfig.DoesNotExist:
+            config = SSL_DEFAULT_CONFIG
+            config['pk'] = 1
+            self.create(**config)
+
+    def get_create_default(self):
+        self.create_default()
+        return self.get(pk=1)
+
+    def default_and_all(self):
+        self.create_default()
+        return self.all()
 
 
 class SslConfig(models.Model):
@@ -194,6 +213,8 @@ class SslConfig(models.Model):
                   "error.",
     )
 
+    objects = SslConfigManager()
+
     def __str__(self):
         return self.name
 
@@ -252,6 +273,12 @@ class SslConfig(models.Model):
             raise ValidationError(val_mgs)
 
         # TODO: validate supplied PKI components
+
+    @staticmethod
+    def default_ssl_config():
+        ssl_config = SslConfig(**SSL_DEFAULT_CONFIG)
+        ssl_config.pk = 1
+        return ssl_config
 
     def to_ssl_config(self):
         """Dump model values to dict like pki.settings.SSL_DEFAULT_CONFIG"""

@@ -150,7 +150,7 @@ def delete_configs(apps, _):  # unused schema_editor param
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pki', '0001_initial'),
+        ('pki', '0002_default_config'),
     ]
 
     operations = [

@@ -33,14 +33,18 @@ from .utils import pki_route
 class CreatePKIServiceForm(CreateServiceForm):
     # In addition to normal service registration,
     # we want to be able to associate it with an SslConfig model
-    ssl_config = forms.ModelChoiceField(queryset=SslConfig.objects.all(),
-                                        empty_label="Select",
-                                        required=False)
+    ssl_config = forms.ModelChoiceField(
+        queryset=SslConfig.objects.none(),
+        empty_label="Select custom configuration...",
+        required=False,
+    )
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
         """:type: from django.http import HttpRequest"""
         super(CreatePKIServiceForm, self).__init__(*args, **kwargs)
+        self.fields['ssl_config'].queryset = \
+            SslConfig.objects.default_and_all()
 
     def clean_url(self):
         # Here we can add our own validation if necessary

@@ -25,9 +25,10 @@ import unittest
 import logging
 import django
 
-from requests import get, Session, ConnectionError
+from requests import get
+from requests.exceptions import ConnectionError
 
-from django.http import HttpResponse
+# from django.http import HttpRequest, HttpResponse
 from django.conf import settings
 from django.test.utils import get_runner
 from django.test import TestCase
@@ -36,57 +37,11 @@ TESTDIR = os.path.dirname(os.path.realpath(__file__))
 
 if __name__ != '__main__':
     from ..models import SslConfig, HostnamePortSslConfig
-    from ..utils import (hostname_port,
-                         requests_base_url)
+    from ..utils import hostname_port
     from ..crypto import Crypto
-    from ..ssl_adapter import (SslContextAdapter,
-                               get_ssl_context_opts)
+    from ..ssl_adapter import https_request
 
 logger = logging.getLogger(__name__)
-
-
-# This represents the pki app's view
-def pki_request(resource_url=None):
-    """
-    :param resource_url:
-    :rtype: HttpResponse
-    """
-
-    # skip Django request passing for now
-    # skip Django path manipulation for now (just pass full URL for this test)
-
-    # needed if SslContextAdapter internal normalization causes issues
-    # url = normalize_hostname(resource_url)
-    url = resource_url
-    base_url = requests_base_url(resource_url)
-
-    req_ses = Session()  # type: requests.Session
-
-    # IMPORTANT: base_url is (scheme://hostname:port), not full url.
-    # Note: urllib3 (as of 1.22) seems to care about case when matching the
-    # hostname to the peer server's SSL cert, in contrast to the spec, which
-    # says such matches should be case-insensitive (this is a bug):
-    #   https://tools.ietf.org/html/rfc5280#section-4.2.1.6
-    #   https://tools.ietf.org/html/rfc6125 <-- best practices
-    req_ses.mount(base_url, SslContextAdapter(*get_ssl_context_opts(base_url)))
-    # TODO: Passthru Django request headers, cookies, etc.
-    # Should we be sending cookies from project's domain into remote endpoint?
-    req_res = req_ses.get(url)
-    """:type: requests.Response"""
-    # TODO: Capture errors and signal to web UI for reporting to user.
-    #       Don't let errors just raise exceptions
-
-    # TODO: Passthru requests headers, cookies, etc.
-    # Should we be setting cookies in project's domain from remote endpoint?
-    # TODO: Should we be sniffing encoding/charset and passing back?
-    response = HttpResponse(
-        content=req_res.content,
-        status=req_res.status_code,
-        reason=req_res.reason,
-        content_type=req_res.headers.get('Content-Type'),
-    )
-
-    return response
 
 
 def skip_unless_has_mapproxy():
@@ -110,7 +65,6 @@ class TestPkiRequest(TestCase):
 
         # Already know what the lookup table key should be like
         cls.mp_host_port = hostname_port(cls.mp_root)
-        cls.mp_base = requests_base_url(cls.mp_root)
 
         cls.mp_txt = 'Welcome to MapProxy'
 
@@ -148,44 +102,75 @@ class TestPkiRequest(TestCase):
         uaccdata = u'çéàè↓'
         self.assertEqual(c.decrypt(c.encrypt(uaccdata)), accdata)
 
+    def test_default_config(self):
+        config_1 = SslConfig.objects.get(pk=1)
+        self.assertEqual(config_1, SslConfig.default_ssl_config())
+        del config_1
+
+        # Simulate admin removing it
+        SslConfig.objects.get(pk=1).delete()
+        with self.assertRaises(SslConfig.DoesNotExist):
+            SslConfig.objects.get(pk=1)
+
+        # Re-add default
+        SslConfig.objects.create_default()
+        config_1 = SslConfig.objects.get_create_default()
+        self.assertEqual(config_1, SslConfig.default_ssl_config())
+
+        config_1.https_retries = False
+        config_1.save()
+        host_port_map = HostnamePortSslConfig(
+            hostname_port=self.mp_host_port,
+            ssl_config=config_1)
+        host_port_map.save()
+        res = https_request(self.mp_root)
+        self.assertIsNone(res)
+
+        host_port_map = HostnamePortSslConfig(
+            hostname_port='example.com',
+            ssl_config=config_1)
+        host_port_map.save()
+        res = https_request('https://example.com')
+        self.assertEqual(res.status_code, 200)
+
     def test_no_client(self):
-        self._set_hostname_port_mapping(1)
-        res = pki_request(resource_url=self.mp_root)
+        self._set_hostname_port_mapping(2)
+        res = https_request(self.mp_root)
         # Nginx non-standard status code 400 is for no client cert supplied
         self.assertEqual(res.status_code, 400)
 
     def test_client_no_password(self):
-        self._set_hostname_port_mapping(2)
-        res = pki_request(resource_url=self.mp_root)
+        self._set_hostname_port_mapping(3)
+        res = https_request(self.mp_root)
         self.assertEqual(res.status_code, 200)
         self.assertIn(self.mp_txt, res.content.decode("utf-8"))
 
     def test_client_and_password(self):
-        self._set_hostname_port_mapping(3)
-        res = pki_request(resource_url=self.mp_root)
+        self._set_hostname_port_mapping(4)
+        res = https_request(self.mp_root)
         self.assertEqual(res.status_code, 200)
         self.assertIn(self.mp_txt, res.content.decode("utf-8"))
 
     def test_client_and_password_alt_root(self):
-        self._set_hostname_port_mapping(4)
-        res = pki_request(resource_url=self.mp_root)
+        self._set_hostname_port_mapping(5)
+        res = https_request(self.mp_root)
         self.assertEqual(res.status_code, 200)
         self.assertIn(self.mp_txt, res.content.decode("utf-8"))
 
     def test_client_and_password_tls12_only(self):
-        self._set_hostname_port_mapping(5)
-        res = pki_request(resource_url=self.mp_root)
+        self._set_hostname_port_mapping(6)
+        res = https_request(self.mp_root)
         self.assertEqual(res.status_code, 200)
         self.assertIn(self.mp_txt, res.content.decode("utf-8"))
 
     def test_no_client_no_validation(self):
-        self._set_hostname_port_mapping(6)
-        res = pki_request(resource_url=self.mp_root)
+        self._set_hostname_port_mapping(7)
+        res = https_request(self.mp_root)
         self.assertEqual(res.status_code, 200)
 
     def test_client_no_password_tls12_only_ssl_opts(self):
-        self._set_hostname_port_mapping(7)
-        res = pki_request(resource_url=self.mp_root)
+        self._set_hostname_port_mapping(8)
+        res = https_request(self.mp_root)
         self.assertEqual(res.status_code, 200)
 
 
@@ -204,9 +189,9 @@ if __name__ == '__main__':
     # These imports need to come after loading settings, since settings is
     # imported in crypto.Crypto class, for SECRET_KEY use
     from pki.models import SslConfig, HostnamePortSslConfig  # noqa
-    from pki.utils import hostname_port, requests_base_url  # noqa
+    from pki.utils import hostname_port  # noqa
     from pki.crypto import Crypto  # noqa
-    from pki.ssl_adapter import SslContextAdapter, get_ssl_context_opts  # noqa
+    from pki.ssl_adapter import https_request  # noqa
 
     TestRunner = get_runner(settings)
     """:type: django.test.runner.DiscoverRunner"""

@@ -37,9 +37,8 @@ from urllib3.util.retry import Retry
 from urlparse import urlparse, parse_qsl
 from urllib import urlencode
 
-from .settings import SSL_DEFAULT_CONFIG
 from .utils import hostname_port, requests_base_url, normalize_hostname
-from .models import HostnamePortSslConfig
+from .models import HostnamePortSslConfig, SslConfig
 
 
 logger = logging.getLogger(__name__)
@@ -200,8 +199,9 @@ def get_ssl_context_opts(url):
     :return: tuple of dicts that matches input for SslContextAdapter
     """
 
-    ssl_config = dict(SSL_DEFAULT_CONFIG)
-    """:type: SSL_DEFAULT_CONFIG"""
+    ssl_default_config = SslConfig.objects.get_create_default()
+    ssl_config = ssl_default_config.to_ssl_config()
+    """:type: dict"""
 
     host_port = hostname_port(url)  # MUST to be lowercase
 
@@ -210,9 +210,17 @@ def get_ssl_context_opts(url):
             hostname_port=host_port)
         logger.debug("Found Hostname:Port record get for: {0}"
                      .format(host_port))
-        ssl_config = host_port_map.ssl_config.to_ssl_config()
-        logger.debug("Found SslConfig related record: {0}"
-                     .format(ssl_config))
+        config = host_port_map.ssl_config
+
+        if config and isinstance(config, SslConfig):
+            logger.debug("Found SslConfig related record: {0}"
+                         .format(ssl_config))
+            ssl_config = config.to_ssl_config()
+        else:
+            logger.debug("Missing SslConfig related record, "
+                         "reverting to default")
+            host_port_map.ssl_config = ssl_default_config
+            host_port_map.save()
     except HostnamePortSslConfig.DoesNotExist:
         logger.debug("Hostname:Port record not found for: {0}"
                      .format(host_port))
