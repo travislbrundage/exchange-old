@@ -74,13 +74,12 @@ def register_service(request):
         else:
             result = render(request, service_register_template, {"form": form})
     else:
-        form = CreatePKIServiceForm()
+        form = CreatePKIServiceForm(request=request)
         result = render(
             request, service_register_template, {"form": form})
     return result
 
 
-# TODO: Add @login_required decorator?
 def pki_request(request, resource_url=None):
     """
     App's main view

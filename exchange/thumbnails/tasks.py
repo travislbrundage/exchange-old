@@ -75,6 +75,7 @@ def combine_images(images):
             return output.getvalue()
     return None
 
+
 def make_thumb_request(remote, baseurl, params=None):
     # Avoid using urllib.urlencode here because it breaks the url.
     # commas and slashes in values get encoded and then cause trouble

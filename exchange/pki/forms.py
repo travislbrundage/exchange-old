@@ -21,6 +21,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 
+from exchange.utils import append_access_token
 from geonode.services.forms import CreateServiceForm
 from geonode.services import enumerations
 from geonode.services.serviceprocessors import get_service_handler
@@ -50,6 +51,7 @@ class CreatePKIServiceForm(CreateServiceForm):
         # In order to inject the pki rerouting
         url = self.cleaned_data.get("url")
         service_type = self.cleaned_data.get("type")
+        save_url = None
 
         if url is not None and url.lower().startswith('https'):
             ssl_config = self.cleaned_data.get("ssl_config")
@@ -58,15 +60,17 @@ class CreatePKIServiceForm(CreateServiceForm):
                     url, ssl_config
                 )
                 url = pki_route(url)
+                save_url = url
+                url = append_access_token(url, request=self.request)
 
         if url is not None and service_type is not None:
             try:
                 service_handler = get_service_handler(
                     base_url=url, service_type=service_type)
-            except Exception:
+            except Exception, e:
                 raise ValidationError(
-                    "Could not connect to the service at %(url)s",
-                    params={"url": url}
+                    "Could not connect to the service at %(url)s\n%(trace)s",
+                    params={"url": url, "trace": repr(e)}
                 )
             if not service_handler.has_resources():
                 raise ValidationError(
@@ -84,5 +88,6 @@ class CreatePKIServiceForm(CreateServiceForm):
                             "service_type": service_type
                         }
                     )
+            service_handler.url = save_url or url
             self.cleaned_data["service_handler"] = service_handler
             self.cleaned_data["type"] = service_handler.service_type

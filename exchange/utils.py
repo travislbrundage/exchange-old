@@ -26,11 +26,14 @@ from geonode.people.utils import get_default_user, get_valid_user
 from geonode.people.models import Profile
 
 
-def get_bearer_token(app_name='GeoServer', valid_time=30, user_name=None):
+def get_bearer_token(app_name='GeoServer', valid_time=30, 
+                     user_name=None, request=None):
     '''
     Create a bearer token for a given application
     valid for the time specified in minutes
     '''
+    if request and 'access_token' in request.session:
+        return request.session['access_token']
 
     user = get_default_user()
     if user_name:
@@ -50,3 +53,18 @@ def get_bearer_token(app_name='GeoServer', valid_time=30, user_name=None):
         token=token
     )
     return token
+
+
+def append_access_token(url, **kwargs):
+    '''
+    kwargs = args for get_bearer_token
+    '''
+    access_token = get_bearer_token(**kwargs)
+    # no query params yet
+    if (url.find('?') is -1):
+        url = url + '?access_token=' + access_token
+    else:
+        # TODO: if it already has an access_token, do we want to overwrite it?
+        if (url.find('access_token') is -1):
+            url = url + '&access_token=' + access_token
+    return url
