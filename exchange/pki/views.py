@@ -80,6 +80,7 @@ def register_service(request):
     return result
 
 
+@login_required
 def pki_request(request, resource_url=None):
     """
     App's main view

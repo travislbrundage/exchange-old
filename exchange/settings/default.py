@@ -233,7 +233,6 @@ if isinstance(ADDITIONAL_AUTH_EXEMPT_URLS, str):
 AUTH_EXEMPT_URLS = ('/capabilities', '/complete/*', '/login/*',
                     '/api/o/*', '/api/roles', '/api/adminRole',
                     '/api/users', '/o/token/*', '/o/authorize/*',
-                    '/pki'
                     ) + ADDITIONAL_AUTH_EXEMPT_URLS
 
 # geoserver settings

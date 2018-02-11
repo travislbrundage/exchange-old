@@ -4,7 +4,7 @@ from celery.task import task
 
 from django.db.models.signals import post_save
 from exchange.settings import SITEURL
-from exchange.utils import get_bearer_token
+from geonode.utils import get_bearer_token
 from geonode.layers.models import Layer
 from geonode.maps.models import Map
 from geonode.geoserver.helpers import ogc_server_settings
@@ -96,17 +96,12 @@ def make_thumb_request(remote, baseurl, params=None):
 
         if (remote):
             # Check for PKI Proxied Remote Services
-            if (SITEURL in baseurl):
-                token = get_bearer_token()
-                thumbnail_create_url = '%s&access_token=%s' % (
-                    thumbnail_create_url,
-                    token)
-                logger.debug('fetching %s with token' % (thumbnail_create_url))
-                resp = http_client.get(thumbnail_create_url)
-
-            else:
-                logger.debug('fetching %s with no auth' % thumbnail_create_url)
-                resp = http_client.get(thumbnail_create_url)
+            headers = None
+            if SITEURL in baseurl:
+                logger.debug('fetching %s with token' % thumbnail_create_url)
+                headers = {'Authorization': "Bearer {0}".format(
+                    get_bearer_token(valid_time=30))}
+            resp = http_client.get(thumbnail_create_url, headers=headers)
         else:
             # Log in to geoserver with token
             token = get_bearer_token()
