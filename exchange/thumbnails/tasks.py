@@ -3,6 +3,7 @@ import time
 from celery.task import task
 
 from django.db.models.signals import post_save
+from exchange.settings import SITEURL
 from exchange.utils import get_bearer_token
 from geonode.layers.models import Layer
 from geonode.maps.models import Map
@@ -74,7 +75,6 @@ def combine_images(images):
             return output.getvalue()
     return None
 
-
 def make_thumb_request(remote, baseurl, params=None):
     # Avoid using urllib.urlencode here because it breaks the url.
     # commas and slashes in values get encoded and then cause trouble
@@ -94,8 +94,18 @@ def make_thumb_request(remote, baseurl, params=None):
         )
 
         if (remote):
-            logger.debug('fetching %s with no auth' % thumbnail_create_url)
-            resp = http_client.get(thumbnail_create_url)
+            # Check for PKI Proxied Remote Services
+            if (SITEURL in baseurl):
+                token = get_bearer_token()
+                thumbnail_create_url = '%s&access_token=%s' % (
+                    thumbnail_create_url,
+                    token)
+                logger.debug('fetching %s with token' % (thumbnail_create_url))
+                resp = http_client.get(thumbnail_create_url)
+
+            else:
+                logger.debug('fetching %s with no auth' % thumbnail_create_url)
+                resp = http_client.get(thumbnail_create_url)
         else:
             # Log in to geoserver with token
             token = get_bearer_token()
