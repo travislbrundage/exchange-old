@@ -6,22 +6,26 @@
 {{ block.super }}
 <script type="text/javascript">
 $(document).ready(function () {
-    // Disable ssl_config select by default
-    $('#id_ssl_config').prop('disabled', true);
+    var url_input_field = $('#id_url');
+    var ssl_config_select_field = $('#id_ssl_config');
+    var service_url = url_input_field.val();
 
+    // initial check on page load just in case
+    if (service_url.indexOf('https') === 0) {
+        ssl_config_select_field.prop('disabled', false);
+    } else {
+        ssl_config_select_field.prop('disabled', true);
+    }
     // detecting any change to the service URL input field
-    $('#id_url').on("change keyup paste", function(){
+    url_input_field.on("change keyup paste", function(){
+        service_url = url_input_field.val();
         // if user entered https into service URL
-        var service_url = $('#id_url').val();
-
         // enable the ssl_config field when the service URL field
         // begins with https, and disable it when it no longer does
-        if (service_url.startsWith('https')) {
-            console.log('we should enable now');
-            $('#id_ssl_config').prop('disabled', false);
+        if (service_url.indexOf('https') === 0) {
+            ssl_config_select_field.prop('disabled', false);
         } else {
-            console.log('we should disable now');
-            $('#id_ssl_config').prop('disabled', true);
+            ssl_config_select_field.prop('disabled', true);
         }
     });
 })
