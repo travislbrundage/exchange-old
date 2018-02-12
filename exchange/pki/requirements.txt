@@ -1,3 +1,5 @@
+# This should be run from <exchange> checkout dir
+-e ./vendor/arcrest/src
 # should be with [secure] for pyOpenSSL, cryptography, etc. for modern SSL
 # urllib3[secure]==1.22
 urllib3==1.22
