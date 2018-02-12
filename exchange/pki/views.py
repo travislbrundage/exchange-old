@@ -37,7 +37,7 @@ from geonode.services import enumerations
 
 from .forms import CreatePKIServiceForm
 from .ssl_adapter import https_request
-from .models import SslConfig
+from .models import SslConfig, HostnamePortSslConfig
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +54,11 @@ def register_service(request):
         ssl_descriptions[ssl_config.pk] = ssl_config.description \
                                                or 'No description available.'
     ssl_descriptions = mark_safe(json.dumps(ssl_descriptions))
+
+    hostname_mappings = {}
+    for hnp_sslc in HostnamePortSslConfig.objects.all():
+        hostname_mappings[hnp_sslc.hostname_port] = hnp_sslc.ssl_config.pk
+    hostname_mappings = mark_safe(json.dumps(hostname_mappings))
 
     if request.method == "POST":
         form = CreatePKIServiceForm(request.POST, request=request)
@@ -86,14 +91,16 @@ def register_service(request):
             result = render(
                 request,
                 service_register_template,
-                {"form": form, "ssl_descriptions": ssl_descriptions}
+                {"form": form, "ssl_descriptions": ssl_descriptions,
+                 "hostname_mappings": hostname_mappings}
             )
     else:
         form = CreatePKIServiceForm(request=request)
         result = render(
             request,
             service_register_template,
-            {"form": form, "ssl_descriptions": ssl_descriptions}
+            {"form": form, "ssl_descriptions": ssl_descriptions,
+             "hostname_mappings": hostname_mappings}
         )
     return result
 

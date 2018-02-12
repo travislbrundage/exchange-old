@@ -11,59 +11,86 @@
 {{ block.super }}
 <script type="text/javascript">
 $(document).ready(function () {
-    var url_input_field = $('#id_url');
-    var ssl_config_select_field = $('#id_ssl_config');
-    var selected_ssl_description = $('#selected_ssl_description');
-    var service_url = url_input_field.val();
+    // begin helper functions
+    var enableSelect = function(select_id) {
+        $('#' + select_id).prop('disabled', false);
+    };
+    var disableSelect = function(select_id) {
+        $('#' + select_id).prop('disabled', true);
+    };
+    var fullHttpsUrl = function(url) {
+        return url.indexOf('https://') === 0 && url.length > 8;
+    };
+    var parseUrlForHostnamePort = function(url) {
+        if (fullHttpsUrl(url)) {
+            return url.split('https://')[1].split('/')[0];
+        }
+        return url;
+    };
+    var getSslConfigPkByUrl = function(url) {
+        var hostname_mappings = {{ hostname_mappings }};
+        if (hostname_mappings && hostname_mappings[url]) {
+            return hostname_mappings[url];
+        }
+        return null;
+    };
+    var selectSslConfig = function(select_id, value) {
+        $('#' + select_id + ' option[value=' + value + ']').prop('selected', true);
+    };
+    var getSslDescriptionByPk = function(pk) {
+      var ssl_descriptions = {{ ssl_descriptions }};
+      if (ssl_descriptions && ssl_descriptions[pk]) {
+        return ssl_descriptions[pk];
+      }
+      return '';
+    };
+    var updateDescription = function(elem_id, description) {
+        $('#' + elem_id).text(description);
+    };
+    var toggleSslConfigSelectBasedOnUrl = function(url, input_id, select_id, description_id) {
+        if (url.indexOf('https') === 0) {
+            enableSelect(select_id);
+            if (fullHttpsUrl(url)) {
+                var ssl_pk = getSslConfigPkByUrl(parseUrlForHostnamePort(url));
+                if (ssl_pk) {
+                    selectSslConfig(select_id, ssl_pk);
+                    updateDescription(description_id, getSslDescriptionByPk(ssl_pk));
+                }
+            }
+        } else {
+            disableSelect(select_id);
+            selectSslConfig(select_id, '""');
+            updateDescription(description_id, '');
+        }
+    };
 
-    // initial check on page load just in case
-    if (service_url.indexOf('https') === 0) {
-        ssl_config_select_field.prop('disabled', false);
-    } else {
-        ssl_config_select_field.prop('disabled', true);
-    }
+    var getSelectedValue = function(select_id) {
+        return $('#' + select_id).find('option:selected').attr('value');
+    };
+    var displayDescriptionBasedOnSelection = function(select_id, description_id) {
+      updateDescription(description_id, getSslDescriptionByPk(getSelectedValue(select_id)));
+    };
+    // end helper functions
+
+
+    // check on initial page load
+    var input_id = 'id_url', select_id = 'id_ssl_config';
+    var description_id = 'selected_ssl_description';
+    var url_input_field = $('#' + input_id);
+    var service_url = url_input_field.val();
+    toggleSslConfigSelectBasedOnUrl(service_url, input_id, select_id, description_id);
+    displayDescriptionBasedOnSelection(select_id, description_id);
+
     // detecting any change to the service URL input field
     url_input_field.on("change keyup paste", function(){
         service_url = url_input_field.val();
-        // if user entered https into service URL
-        // enable the ssl_config field when the service URL field
-        // begins with https, and disable it when it no longer does
-        if (service_url.indexOf('https') === 0) {
-            ssl_config_select_field.prop('disabled', false);
-        } else {
-            ssl_config_select_field.prop('disabled', true);
-            // We also want to deselect the SSL config
-            $('#id_ssl_config option[value=""]').prop('selected', true);
-            // Need to manually update the description field to empty string
-            selected_ssl_description.text('');
-        }
+        toggleSslConfigSelectBasedOnUrl(service_url, input_id, select_id, description_id);
     });
 
-    // load ssl_descriptions (kvp of ssl.pk:ssl.description)
-    var selected_description, ssl_descriptions = {{ ssl_descriptions }};
-
-    // initial check on page load just in case
-    var selected_value = ssl_config_select_field.find("option:selected").attr("value");
-    if (ssl_descriptions && ssl_descriptions[selected_value]) {
-        selected_description = ssl_descriptions[selected_value];
-    } else {
-        selected_description = '';
-    }
-    selected_ssl_description.text(selected_description);
     // detecting any change to the SSL config select field
+    var ssl_config_select_field = $('#' + select_id);
     ssl_config_select_field.on("change", function() {
-        selected_value = ssl_config_select_field.find("option:selected").attr("value");
-        console.log(selected_value);
-        // if something has been selected
-        // search for the select value in the ssl_descriptions kvp
-        if (ssl_descriptions[selected_value]) {
-            selected_description = ssl_descriptions[selected_value];
-        } else {
-            selected_description = '';
-        }
-
-        // Set the description
-        selected_ssl_description.text(selected_description);
+        displayDescriptionBasedOnSelection(select_id, description_id);
     });
 })
 </script>
