@@ -129,9 +129,9 @@ def pki_request(request, resource_url=None):
         headers["Content-Type"] = request.META["CONTENT_TYPE"]
 
     # Strip any OAuth2 header!
-    auth_header = request.get('Authorization', None)
+    auth_header = request.META.get('HTTP_AUTHORIZATION', None)
     if auth_header and 'bearer' in auth_header.lower():
-        del request['Authorization']
+        del request.META['HTTP_AUTHORIZATION']
 
     # Strip any OAuth2 token from query params!
     query_str = request.META['QUERY_STRING']
