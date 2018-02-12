@@ -16,4 +16,4 @@
 [submodule "vendor/arcrest"]
 	path = vendor/arcrest
 	url = https://github.com/dakcarto/ArcREST.git
-	branch = master
+	branch = ps/pki
