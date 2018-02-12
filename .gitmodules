@@ -13,3 +13,7 @@
 	path = vendor/django-osgeo-importer
 	url = https://github.com/Geonode/django-osgeo-importer
 	branch = angular-1.6
+[submodule "vendor/arcrest"]
+	path = vendor/arcrest
+	url = https://github.com/dakcarto/ArcREST.git
+	branch = master
