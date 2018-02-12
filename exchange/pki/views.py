@@ -30,11 +30,14 @@ from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse
 from wsgiref import util as wsgiref_util
+import json
+from django.utils.safestring import mark_safe
 
 from geonode.services import enumerations
 
 from .forms import CreatePKIServiceForm
 from .ssl_adapter import https_request
+from .models import SslConfig
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +47,14 @@ def register_service(request):
     # This method suffers the same as the form's clean() override
     # There is no easy way to inject our custom template and form
     service_register_template = "service_pki_register.html"
+
+    # context variables to render
+    ssl_descriptions = {}
+    for ssl_config in SslConfig.objects.default_and_all():
+        ssl_descriptions[ssl_config.pk] = ssl_config.description \
+                                               or 'No description available.'
+    ssl_descriptions = mark_safe(json.dumps(ssl_descriptions))
+
     if request.method == "POST":
         form = CreatePKIServiceForm(request.POST, request=request)
         if form.is_valid():
@@ -72,11 +83,18 @@ def register_service(request):
                         kwargs={"service_id": service.id})
             )
         else:
-            result = render(request, service_register_template, {"form": form})
+            result = render(
+                request,
+                service_register_template,
+                {"form": form, "ssl_descriptions": ssl_descriptions}
+            )
     else:
         form = CreatePKIServiceForm(request=request)
         result = render(
-            request, service_register_template, {"form": form})
+            request,
+            service_register_template,
+            {"form": form, "ssl_descriptions": ssl_descriptions}
+        )
     return result
 
 

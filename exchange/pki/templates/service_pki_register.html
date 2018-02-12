@@ -1,7 +1,12 @@
 {% extends "services/service_register.html" %}
 {% load bootstrap_tags %}
 {% load i18n %}
-
+{% block body_outer %}
+{{ block.super }}
+<br>
+<!-- TODO: Make this element use a consistent amount of space to look sleeker -->
+<p id="selected_ssl_description"></p>
+{% endblock %}
 {% block extra_script %}
 {{ block.super }}
 <script type="text/javascript">
@@ -27,6 +32,33 @@ $(document).ready(function () {
         } else {
             ssl_config_select_field.prop('disabled', true);
         }
+    });
+
+    // load ssl_descriptions (kvp of ssl.pk:ssl.description)
+    var selected_description, ssl_descriptions = {{ ssl_descriptions }};
+    var selected_ssl_description = $('#selected_ssl_description');
+
+    // initial check on page load just in case
+    var selected_value = ssl_config_select_field.find("option:selected").attr("value");
+    if (ssl_descriptions && ssl_descriptions[selected_value]) {
+        selected_description = ssl_descriptions[selected_value];
+    } else {
+        selected_description = '';
+    }
+    selected_ssl_description.text(selected_description);
+    // detecting any change to the SSL config select field
+    ssl_config_select_field.on("change", function() {
+        selected_value = ssl_config_select_field.find("option:selected").attr("value");
+        // if something has been selected
+        // search for the select value in the ssl_descriptions kvp
+        if (ssl_descriptions[selected_value]) {
+            selected_description = ssl_descriptions[selected_value];
+        } else {
+            selected_description = '';
+        }
+
+        // Set the description
+        selected_ssl_description.text(selected_description);
     });
 })
 </script>
