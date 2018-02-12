@@ -51,8 +51,8 @@ def register_service(request):
     # context variables to render
     ssl_descriptions = {}
     for ssl_config in SslConfig.objects.default_and_all():
-        ssl_descriptions[ssl_config.pk] = ssl_config.description \
-                                               or 'No description available.'
+        description = ssl_config.description or 'No description available.'
+        ssl_descriptions[ssl_config.pk] = description
     ssl_descriptions = mark_safe(json.dumps(ssl_descriptions))
 
     hostname_mappings = {}
