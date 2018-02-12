@@ -85,25 +85,30 @@ def pki_request(request, resource_url=None):
     """
     App's main view
     :param request: Django request object
+    :type request: django.http.HttpRequest
     :param resource_url: Remainder of parsed path, e.g. '/pki/<resource_url>'
     :rtype: HttpResponse
     """
 
-    # Culled from geonode.api.views.get_client_ip()
-    # x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    # if x_forwarded_for:
-    #     ip = x_forwarded_for.split(',')[0]
-    # else:
-    #     ip = request.META.get('REMOTE_ADDR')
-    # TODO: Finish allowed proxy origination IP support; restrict by IP
+    # TODO: Currently, this is only used for calling remotes services URLs, or
+    #       ones about to be registered, i.e. referrer /services/register/; so,
+    #       we could possibly limit access to trusted referrers and pki-proxied
+    #       URLs as culled from Services. In this way, it is not a general
+    #       proxy, which could be abused. See docs for reason behind the
+    #       PROXY_ALLOWED_HOSTS settings for geonode.proxy app.
 
     # Manually copy over headers, skipping unwanted ones
-    # IMPORTANT: Don't pass any OAuth2 headers or cookies to remote resource
+    # IMPORTANT: Don't pass any cookies or OAuth2 headers to remote resource
     headers = {}
     if request.method in ("POST", "PUT") and "CONTENT_TYPE" in request.META:
         headers["Content-Type"] = request.META["CONTENT_TYPE"]
 
-    # Strip any oauth2 token from query params!
+    # Strip any OAuth2 header!
+    auth_header = request.get('Authorization', None)
+    if auth_header and 'bearer' in auth_header.lower():
+        del request['Authorization']
+
+    # Strip any OAuth2 token from query params!
     query_str = request.META['QUERY_STRING']
     query = None
     if query_str != '':
@@ -111,8 +116,6 @@ def pki_request(request, resource_url=None):
         if 'access_token' in params:
             del params['access_token']
         query = urlencode(params, doseq=True)
-
-    # TODO: strip OAuth2 header as well
 
     # Turn the remainder of path back into original URL
     r_url = unquote(resource_url)
