@@ -32,7 +32,7 @@ $(document).ready(function () {
             ssl_config_select_field.prop('disabled', true);
         }
     });
-})
+});
 
 // Angular block relating to pki_select.html
 // Better way to organize this?
@@ -40,7 +40,7 @@ $(document).ready(function () {
     app.controller('SSLConfigSelectCtrl', function ($scope) {
         $scope.grabConfigs = function(configs) {
             $scope.ssl_config_options = configs;
-        }
+        };
     });
 </script>
 {% endblock %}
