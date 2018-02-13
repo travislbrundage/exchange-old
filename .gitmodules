@@ -15,5 +15,5 @@
 	branch = angular-1.6
 [submodule "vendor/arcrest"]
 	path = vendor/arcrest
-	url = https://github.com/dakcarto/ArcREST.git
+	url = https://github.com/boundlessgeo/ArcREST.git
 	branch = ps/pki
