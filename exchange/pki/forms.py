@@ -35,7 +35,7 @@ class CreatePKIServiceForm(CreateServiceForm):
     # we want to be able to associate it with an SslConfig model
     ssl_config = forms.ModelChoiceField(
         queryset=SslConfig.objects.none(),
-        empty_label="Select custom configuration...",
+        empty_label="No custom configuration...",
         required=False,
     )
 
@@ -98,13 +98,14 @@ class CreatePKIServiceForm(CreateServiceForm):
             self.cleaned_data["service_handler"] = service_handler
             self.cleaned_data["type"] = service_handler.service_type
 
+
 class ModifySSLConfigForm(forms.Form):
     # In addition to normal service registration,
     # we want to be able to associate it with an SslConfig model
 
     ssl_config = forms.ModelChoiceField(
         queryset=SslConfig.objects.none(),
-        empty_label="Select custom configuration...",
+        empty_label="No custom configuration...",
         required=False,
     )
 
@@ -115,7 +116,6 @@ class ModifySSLConfigForm(forms.Form):
         super(ModifySSLConfigForm, self).__init__(*args, **kwargs)
         self.fields['ssl_config'].queryset = \
             SslConfig.objects.default_and_all()
-        
 
     def clean_url(self):
         # Here we can add our own validation if necessary
@@ -126,22 +126,24 @@ class ModifySSLConfigForm(forms.Form):
         # In order to inject the pki rerouting
         url = self.url
         ssl_config = self.cleaned_data.get("ssl_config")
-        headers = None
-        
+        # headers = None
+
         if ssl_config is not None:
             HostnamePortSslConfig.objects.create_hostnameportsslconfig(
                 url, ssl_config
             )
-            url = pki_route(url)
-            headers = {'Authorization': "Bearer {0}".format(
-                get_bearer_token(valid_time=30, request=self.request))}
+            # url = pki_route(url)
+            # headers = {'Authorization': "Bearer {0}".format(
+            #     get_bearer_token(valid_time=30, request=self.request))}
 
         else:
             try:
-                hostname_port_ssl_config = HostnamePortSslConfig.objects.get(hostname_port=filter_hostname(url))
+                hostname_port_ssl_config = \
+                    HostnamePortSslConfig.objects.get(
+                        hostname_port=filter_hostname(url))
                 hostname_port_ssl_config.delete()
-            except Exception, e:
-                raise ValidationError()
-                
-            headers = {'Authorization': "Bearer {0}".format(
-                get_bearer_token(valid_time=30, request=self.request))}
+            except Exception:
+                raise ValidationError('Error deleting hostname:port mapping')
+
+            # headers = {'Authorization': "Bearer {0}".format(
+            #     get_bearer_token(valid_time=30, request=self.request))}
