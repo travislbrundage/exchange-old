@@ -162,7 +162,7 @@ def pki_request(request, resource_url=None):
     #       Don't let errors just raise exceptions
 
     if 'Content-Type' in req_res.headers:
-        content_type = req_res.headers.get('Content-Type')
+        content_type = req_res.headers['Content-Type']
     else:
         content_type = 'text/plain'
 
@@ -175,6 +175,7 @@ def pki_request(request, resource_url=None):
             status=req_res.status_code,
             content_type=content_type
         )
+        response['Location'] = req_res.headers['Location']
     else:
         response = HttpResponse(
             content=req_res.content,
@@ -185,10 +186,12 @@ def pki_request(request, resource_url=None):
 
     # TODO: Should we be sniffing encoding/charset and passing back?
 
-    # Passthru headers from remote service
-    skip_headers = ['Content-Type']
+    # Passthru headers from remote service, but don't overwrite defined headers
+    skip_headers = ['content-type']  # add any as lowercase
     for h, v in req_res.headers.items():
-        if h not in skip_headers and not wsgiref_util.is_hop_by_hop(h):
+        if h.lower() not in skip_headers \
+                and not wsgiref_util.is_hop_by_hop(h)\
+                and h not in response:
             response[h] = v
 
     return response
