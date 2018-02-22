@@ -1,8 +1,6 @@
 node {
   withCredentials([string(credentialsId: 'boundlessgeoadmin-token', variable: 'GITHUB_TOKEN'), string(credentialsId: 'sonar-jenkins-pipeline-token', variable: 'SONAR_TOKEN')]) {
 
-    currentBuild.result = "SUCCESS"
-
     try {
       stage('Checkout'){
         checkout scm
@@ -106,7 +104,7 @@ node {
             """
         }
       }
-
+      currentBuild.result = "SUCCESS"
     }
     catch (err) {
 
