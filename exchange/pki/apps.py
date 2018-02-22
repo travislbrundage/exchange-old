@@ -18,4 +18,16 @@
 #
 #########################################################################
 
-default_app_config = 'exchange.pki.apps.PkiAppConfig'
+from django.apps import AppConfig
+
+
+class PkiAppConfig(AppConfig):
+    name = 'exchange.pki'
+    label = 'pki'
+    verbose_name = 'SSL/PKI'
+
+
+class PkiTestAppConfig(AppConfig):
+    name = 'pki'
+    label = 'pki'
+    verbose_name = 'SSL/PKI'

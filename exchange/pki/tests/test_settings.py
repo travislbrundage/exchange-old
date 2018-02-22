@@ -24,7 +24,7 @@ TESTDIR = os.path.dirname(os.path.realpath(__file__))
 SECRET_KEY = 'fake-key'
 
 INSTALLED_APPS = [
-    'pki',
+    'pki.apps.PkiTestAppConfig',
     'pki.tests',
 ]
 
@@ -47,7 +47,7 @@ ENFORCE_MAX_LENGTH = 1
 
 # Logging settings
 # 'DEBUG', 'INFO', 'WARNING', 'ERROR', or 'CRITICAL'
-DJANGO_LOG_LEVEL = os.getenv('DJANGO_LOG_LEVEL', 'WARNING')
+DJANGO_LOG_LEVEL = os.getenv('DJANGO_LOG_LEVEL', 'DEBUG')
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
