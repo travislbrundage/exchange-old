@@ -72,7 +72,7 @@ class Migration(migrations.Migration):
                               b'supports all stable TLS versions), then add '
                               b'ssl_options to remove any unwanted '
                               b'protocols. See ssl PROTOCOL_* constant '
-                              b'docmentation for details: '
+                              b'documentation for details: '
                               b'https://docs.python.org/2/library/ssl.html',
                     max_length=18,
                     verbose_name=b'SSL version',
@@ -94,17 +94,17 @@ class Migration(migrations.Migration):
                               b'certificates (e.g. from endpoints). Setting '
                               b'to anything other than REQUIRED is '
                               b'not advised. See ssl CERT_* constant '
-                              b'docmentation for details: '
+                              b'documentation for details: '
                               b'https://docs.python.org/2/library/ssl.html',
                     max_length=16, verbose_name=b'SSL peer verify mode',
                     choices=[(b'CERT_NONE', b'CERT NONE'),
                              (b'CERT_OPTIONAL', b'CERT OPTIONAL'),
                              (b'CERT_REQUIRED', b'CERT REQUIRED')])),
                 ('ssl_options', models.CharField(
-                    help_text=b"(Optional) Comman-separated list of SSL "
+                    help_text=b"(Optional) Comma-separated list of SSL "
                               b"module options. If undefined, defaults to "
                               b"'OP_NO_SSLv2, OP_NO_SSLv3, OP_NO_COMPRESSION'."
-                              b" See ssl OP_* constant docmentation for "
+                              b" See ssl OP_* constant documentation for "
                               b"details: "
                               b"https://docs.python.org/2/library/ssl.html",
                     max_length=255, verbose_name=b'SSL options', blank=True)),

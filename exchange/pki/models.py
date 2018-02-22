@@ -160,7 +160,7 @@ class SslConfig(models.Model):
                   "version of TLS is required, it is recommended to set this "
                   "to SSLv23 (which supports all stable TLS versions), then "
                   "add ssl_options to remove any unwanted protocols. See ssl "
-                  "PROTOCOL_* constant docmentation for details: "
+                  "PROTOCOL_* constant documentation for details: "
                   "https://docs.python.org/2/library/ssl.html",
     )
     ssl_verify_mode = models.CharField(
@@ -171,17 +171,17 @@ class SslConfig(models.Model):
         blank=False,
         help_text="How to handle verification of peer certificates (e.g. from "
                   "endpoints). Setting to anything other than REQUIRED is not "
-                  "advised. See ssl CERT_* constant docmentation for details: "
-                  "https://docs.python.org/2/library/ssl.html",
+                  "advised. See ssl CERT_* constant documentation for details:"
+                  " https://docs.python.org/2/library/ssl.html",
     )
     ssl_options = models.CharField(
         "SSL options",
         max_length=255,
         blank=True,
-        help_text="(Optional) Comman-separated list of SSL module options. "
+        help_text="(Optional) Comma-separated list of SSL module options. "
                   "If undefined, defaults to "
                   "'OP_NO_SSLv2, OP_NO_SSLv3, OP_NO_COMPRESSION'. "
-                  "See ssl OP_* constant docmentation for details: "
+                  "See ssl OP_* constant documentation for details: "
                   "https://docs.python.org/2/library/ssl.html",
     )
     ssl_ciphers = models.TextField(
@@ -231,7 +231,7 @@ class SslConfig(models.Model):
     def clean(self):
         # Validators
         # TODO: Move these validation routines to a more common location,
-        #       so they can be used for pre-validatin prior to connection
+        #       so they can be used for pre-validation prior to connection
 
         val_mgs = {}
 
