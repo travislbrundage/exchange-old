@@ -163,6 +163,7 @@ TEMPLATES = [
 # middleware
 MIDDLEWARE_CLASSES = (
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'exchange.auth.middleware.RedirectOnForbiddenMiddleware',
 ) + MIDDLEWARE_CLASSES
 
 ADDITIONAL_APPS = os.getenv(

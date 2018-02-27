@@ -42,17 +42,11 @@ class AuthZeroOAuth2(BaseOAuth2):
         user_roles = app_metadata.get('SiteRole').split(',')
         superuser = False
         staff = False
+        active = True
 
         if any(role in self.admin_roles for role in user_roles):
             superuser = True
             staff = True
-
-        active = False
-        if self.allowed_roles:
-            if any(role in self.allowed_roles for role in user_roles):
-                active = True
-        else:
-            active = True
 
         user_info = {
             'username': response.get('nickname'),
@@ -74,3 +68,15 @@ class AuthZeroOAuth2(BaseOAuth2):
             self.USER_INFO_URL.format(
                 domain=self.HOST, access_token=access_token))
         return response
+
+    def auth_allowed(self, response, details):
+        app_metadata = response.get('app_metadata')
+        user_roles = app_metadata.get('SiteRole').split(',')
+        allowed = False
+        if self.allowed_roles:
+            if any(role in self.allowed_roles for role in user_roles):
+                allowed = True
+        else:
+            allowed = True
+
+        return allowed
