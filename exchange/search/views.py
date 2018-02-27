@@ -68,12 +68,13 @@ def get_facet_lookup():
 
     facet_lookups = {
         'category': category_lookup,
-        'type': {
-            'OGC:WMS': {'display': 'ESRI MapServer'},
-            'OGC:WFS': {'display': 'ESRI MapServer'},
-            'OGC:WCS': {'display': 'ESRI MapServer'},
-            'ESRI:ArcGIS:MapServer': {'display': 'ArcGIS MapServer'},
-            'ESRI:ArcGIS:ImageServer': {'display': 'ArcGIS ImageServer'}
+        'references.scheme': {
+            'OGC:WMS': {'display': 'WMS'},
+            'OGC:WFS': {'display': 'WFS'},
+            'OGC:WCS': {'display': 'WCS'},
+            'OGC:KML': {'display': 'KML'},
+            'ESRI:ArcGIS:MapServer': {'display': 'MapServer'},
+            'ESRI:ArcGIS:ImageServer': {'display': 'ImageServer'}
         }
     }
 
