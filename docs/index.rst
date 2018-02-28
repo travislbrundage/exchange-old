@@ -24,6 +24,5 @@ User Guide
    editing/index
    styles/index
    analysis/index
-   stories/index
    admin/index
    support/index
