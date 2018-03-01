@@ -24,85 +24,13 @@ from urllib import unquote, urlencode
 # noinspection PyCompatibility
 from urlparse import parse_qs
 
-from django.shortcuts import render
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponse
 from wsgiref import util as wsgiref_util
-import json
-from django.utils.safestring import mark_safe
 
-from geonode.services import enumerations
-
-from .forms import CreatePKIServiceForm
 from .ssl_adapter import https_request
-from .models import SslConfig, HostnamePortSslConfig
 
 logger = logging.getLogger(__name__)
-
-
-@login_required
-def register_service(request):
-    # This method suffers the same as the form's clean() override
-    # There is no easy way to inject our custom template and form
-    service_register_template = "service_pki_register.html"
-
-    # context variables to render
-    ssl_descriptions = {}
-    for ssl_config in SslConfig.objects.default_and_all():
-        description = ssl_config.description or 'No description available.'
-        ssl_descriptions[ssl_config.pk] = description
-    ssl_descriptions = mark_safe(json.dumps(ssl_descriptions))
-
-    hostname_mappings = {}
-    for hnp_sslc in HostnamePortSslConfig.objects.all():
-        hostname_mappings[hnp_sslc.hostname_port] = hnp_sslc.ssl_config.pk
-    hostname_mappings = mark_safe(json.dumps(hostname_mappings))
-
-    if request.method == "POST":
-        form = CreatePKIServiceForm(request.POST, request=request)
-        if form.is_valid():
-            service_handler = form.cleaned_data["service_handler"]
-            service = service_handler.create_geonode_service(
-                owner=request.user)
-            service.full_clean()
-            service.save()
-            service.keywords.add(*service_handler.get_keywords())
-            service.set_permissions(
-                {'users': {
-                    ''.join(request.user.username):
-                        ['services.change_service', 'services.delete_service']
-                }})
-            if service_handler.indexing_method == enumerations.CASCADED:
-                service_handler.create_cascaded_store()
-            request.session[service_handler.url] = service_handler
-            logger.debug("Added handler to the session")
-            messages.add_message(
-                request,
-                messages.SUCCESS,
-                "Service registered successfully"
-            )
-            result = HttpResponseRedirect(
-                reverse("harvest_resources",
-                        kwargs={"service_id": service.id})
-            )
-        else:
-            result = render(
-                request,
-                service_register_template,
-                {"form": form, "ssl_descriptions": ssl_descriptions,
-                 "hostname_mappings": hostname_mappings}
-            )
-    else:
-        form = CreatePKIServiceForm(request=request)
-        result = render(
-            request,
-            service_register_template,
-            {"form": form, "ssl_descriptions": ssl_descriptions,
-             "hostname_mappings": hostname_mappings}
-        )
-    return result
 
 
 @login_required
