@@ -93,6 +93,17 @@ node {
         """
       }
 
+      stage('Regression Tests'){
+        parallel (
+          "Mozilla Firefox" : {
+            katalonDocker([browser: 'Firefox', rpath: 'docker/qa'], 'Test Suites/regression')
+          },
+          "Google Chrome" : {
+            katalonDocker([browser: 'Chrome', rpath: 'docker/qa'], 'Test Suites/regression')
+          }
+        )
+      }
+
       if (env.BRANCH_NAME == 'master') {
         stage('SonarQube Analysis') {
           sh """

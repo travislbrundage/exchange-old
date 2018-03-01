@@ -1,0 +1,6 @@
+bin/
+Libs/
+.settings/
+.classpath
+console.properties
+.DS_store

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>Add and Modify User</description>
+   <name>Exchange Add and Modify Profile</name>
+   <tag>User Management</tag>
+   <comment></comment>
+   <testCaseGuid>d7450482-cb01-4e44-af37-ea5111ab96f3</testCaseGuid>
+</TestCaseEntity>
