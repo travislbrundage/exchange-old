@@ -27,6 +27,7 @@ from exchange.maploom.urls import urlpatterns as maploom_urls
 from fileservice.urls import urlpatterns as fileservice_urls
 from storyscapes.urls import urlpatterns as story_urls
 from thumbnails.urls import urlpatterns as thumbnail_urls
+from castling.urls import urlpatterns as castling_urls
 from . import views
 
 js_info_dict = {
@@ -113,3 +114,6 @@ urlpatterns += thumbnail_urls
 urlpatterns += maploom_urls
 
 handler500 = 'exchange.views.handler500'
+
+if settings.CASTLING_ENABLED:
+    urlpatterns += castling_urls
