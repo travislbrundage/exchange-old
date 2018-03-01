@@ -24,9 +24,6 @@ import logging
 
 # noinspection PyCompatibility
 from urlparse import urlparse
-from urllib import quote
-
-from django.conf import settings
 
 from .settings import get_pki_dir
 
@@ -54,25 +51,6 @@ def hostname_port(url):
 def requests_base_url(url):
     parts = urlparse(url)
     return '{0}://{1}'.format(parts.scheme, hostname_port(url))
-
-
-def pki_route(url):
-    """
-    Reroutes a service url through the 'pki' internal proxy
-    :param url: Original service url
-    :return: Modified url prepended with internal proxy route
-    Ex: url = https://myserver.com:port/geoserver/wms
-    return <site:scheme>://<site>/pki/myserver.com%3Aport/geoserver/wms
-    """
-    url = normalize_hostname(url)
-    parts = urlparse(url)
-    # TODO: Consider leaving scheme; otherwise, https is assumed later
-    url = re.sub(parts.scheme, '', url, count=1, flags=re.I)
-    url = url.replace('://', '', 1)
-
-    pki_base_url = settings.SITEURL.rstrip('/')
-
-    return '{0}/pki/{1}'.format(pki_base_url, quote(url))
 
 
 def file_readable(a_file):
