@@ -324,8 +324,13 @@
             <input type="text" class="form-control" readonly
             value="{{ resource.service.base_url}}/{{resource.alternate}}" id="copy-input">
           {% else %}
-            <input type="text" class="form-control" readonly
-            value="{{ resource.service.base_url}}" id="copy-input">
+            {% if "https" in resource.service.online_resource %}
+              <input type="text" class="form-control" readonly
+              value="{{ resource.service.online_resource}}" id="copy-input">
+            {% else %}
+              <input type="text" class="form-control" readonly
+              value="{{ resource.service.base_url}}" id="copy-input">
+            {% endif %}
           {% endif %}
         {% endif %}
         <span class="input-group-btn">
