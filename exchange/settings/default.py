@@ -48,6 +48,7 @@ def isValid(v):
 
 
 SITENAME = os.getenv('SITENAME', 'exchange')
+EXCAHNGE_LOCAL_URL = os.getenv('EXCAHNGE_LOCAL_URL', 'http://localhost')
 WSGI_APPLICATION = "exchange.wsgi.application"
 ROOT_URLCONF = 'exchange.urls'
 SOCIAL_BUTTONS = str2bool(os.getenv('SOCIAL_BUTTONS', 'False'))
