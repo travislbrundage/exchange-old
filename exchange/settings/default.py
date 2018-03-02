@@ -176,10 +176,6 @@ if isinstance(ADDITIONAL_APPS, str):
 
 OSGEO_IMPORTER_ENABLED = str2bool(os.getenv('OSGEO_IMPORTER_ENABLED', 'True'))
 GEONODE_CLIENT_ENABLED = str2bool(os.getenv('GEONODE_CLIENT_ENABLED', 'True'))
-STORYSCAPES_ENABLED = str2bool(os.getenv('STORYSCAPES_ENABLED', 'False'))
-
-if STORYSCAPES_ENABLED:
-    RESOURCE_PUBLISHING = True
 
 # installed applications
 INSTALLED_APPS = (
@@ -194,8 +190,6 @@ INSTALLED_APPS = (
     'django_classification_banner',
     'exchange.maploom',
     'solo',
-    'exchange.storyscapes',
-    'composer',
     'social_django',
 ) + ADDITIONAL_APPS + INSTALLED_APPS
 

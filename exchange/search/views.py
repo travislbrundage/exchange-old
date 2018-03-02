@@ -114,7 +114,6 @@ def get_base_query(search):
 
     # only show documents, layers, stories, and maps
     q = Q({"match": {"type": "layer"}}) | Q(
-        {"match": {"type": "story"}}) | Q(
         {"match": {"type": "document"}}) | Q(
         {"match": {"type": "map"}})
 

@@ -55,7 +55,6 @@ def resource_variables(request):
         LOCKDOWN_EXCHANGE=getattr(settings, 'LOCKDOWN_GEONODE', False),
         LOGIN_WARNING=getattr(settings, 'LOGIN_WARNING_ENABLED', False),
         LOGIN_WARNING_TEXT=getattr(settings, 'LOGIN_WARNING_TEXT', "''"),
-        STORYSCAPES_ENABLED=getattr(settings, 'STORYSCAPES_ENABLED', False),
         NOMINATIM_ENABLED=getattr(settings, 'NOMINATIM_ENABLED', True),
         NOMINATIM_URL=getattr(
             settings, 'NOMINATIM_URL', '//nominatim.openstreetmap.org'),

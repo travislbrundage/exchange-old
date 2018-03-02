@@ -30,7 +30,6 @@ from django.conf import settings
 
 from geonode.layers.models import Layer
 from geonode.maps.models import Map
-from exchange.storyscapes.models.base import Story
 from geonode.documents.models import Document
 from geonode.groups.models import GroupProfile
 
@@ -104,12 +103,6 @@ def facets(context):
 
         facets['map'] = maps.count()
         facets['document'] = documents.count()
-
-        if settings.STORYSCAPES_ENABLED:
-            stories = Story.objects.filter(title__icontains=title_filter)
-            if not settings.SKIP_PERMS_FILTER:
-                stories = stories.filter(id__in=authorized)
-            facets['story'] = stories.count()
 
         if facet_type == 'home':
             facets['user'] = get_user_model().objects.exclude(

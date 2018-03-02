@@ -25,7 +25,6 @@ from django.contrib.auth.decorators import login_required
 from geonode.urls import urlpatterns as geonode_urls
 from exchange.maploom.urls import urlpatterns as maploom_urls
 from fileservice.urls import urlpatterns as fileservice_urls
-from storyscapes.urls import urlpatterns as story_urls
 from thumbnails.urls import urlpatterns as thumbnail_urls
 from castling.urls import urlpatterns as castling_urls
 from . import views
@@ -75,9 +74,6 @@ if 'osgeo_importer' in settings.INSTALLED_APPS:
     # Add django-osgeo-importer URLs
     from osgeo_importer.urls import urlpatterns as osgeo_importer_urls
     urlpatterns += osgeo_importer_urls
-
-if settings.STORYSCAPES_ENABLED:
-    urlpatterns += story_urls
 
 if 'nearsight' in settings.INSTALLED_APPS:
     from nearsight.urls import urlpatterns as nearsight_urls

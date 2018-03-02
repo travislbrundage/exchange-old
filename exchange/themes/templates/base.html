@@ -76,9 +76,6 @@
                   <ul class="dropdown-menu">
                     <li><a href="{% url "search" %}?type=map">{% trans "Explore Maps" %}</a></li>
                     <li> <a href="{% url "new_map" %}">{% trans "Create Map" %}</a></li>
-                    {% if STORYSCAPES_ENABLED %}
-                    <li><a href="/story/new">Compose Story</a></li>
-                    {% endif %}
                   </ul>
               </li>
               <li>

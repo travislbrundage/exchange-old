@@ -43,7 +43,6 @@ STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 GEOQUERY_ENABLED = True
 SOCIAL_BUTTONS = True
-STORYSCAPES_ENABLED = True
 ES_SEARCH = True
 ENABLE_SOCIAL_LOGIN = True
 GEOQUERY_URL = 'http://www.example.com'
