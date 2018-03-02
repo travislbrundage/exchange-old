@@ -125,6 +125,7 @@ node {
       // Success or failure, always send notifications
       echo currentBuild.result
       sh """
+        docker-compose logs
         docker-compose down
         docker system prune -f
         """
