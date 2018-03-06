@@ -38,8 +38,8 @@ from urllib3.util.retry import Retry
 from urlparse import urlparse, parse_qsl
 from urllib import urlencode
 
-from .utils import hostname_port, requests_base_url, normalize_hostname
-from .models import HostnamePortSslConfig, SslConfig
+from .utils import requests_base_url, normalize_hostname
+from .models import SslConfig, ssl_config_for_url
 
 
 logger = logging.getLogger(__name__)
@@ -64,6 +64,10 @@ def clear_https_adapters():
         if adptr.startswith('https://'):
             https_client.adapters[adptr].close()
             del https_client.adapters[adptr]
+
+
+class SslContextAdapterError(Exception):
+    pass
 
 
 class SslContextAdapter(HTTPAdapter):
@@ -284,43 +288,11 @@ def get_ssl_context_opts(url):
     :return: tuple of dicts that matches input for SslContextAdapter
     """
 
-    ssl_default_config = SslConfig.objects.get_create_default()
-    ssl_config = ssl_default_config
-    """:type: dict"""
+    ssl_config = ssl_config_for_url(url)
 
-    host_port = hostname_port(url)  # MUST to be lowercase
-
-    try:
-        host_port_map = HostnamePortSslConfig.objects.get(
-            hostname_port=host_port)
-        logger.debug("Found Hostname:Port record get for: {0}"
-                     .format(host_port))
-        config = host_port_map.ssl_config
-
-        if config and isinstance(config, SslConfig):
-            logger.debug("Found SslConfig related record: {0}"
-                         .format(config.to_ssl_config()
-                                 .get('name', '(name missing)')))
-            ssl_config = config
-        else:
-            logger.debug("Missing SslConfig related record, "
-                         "reverting to default")
-            host_port_map.ssl_config = ssl_default_config
-            host_port_map.save()
-    except HostnamePortSslConfig.DoesNotExist:
-        logger.debug("Hostname:Port record not found for: {0}"
-                     .format(host_port))
-        logger.debug("Hostname:Port objects:\n{0}"
-                     .format(HostnamePortSslConfig.objects.all()))
-        # TODO: Log for admin; communicate to user?
-        # TODO: Should routed URL be rewritten back to original URL,
-        #       i.e. no /pki path prefix?
-        #       If logic flow gets here, record should exist. Maybe have a
-        #       Default exposed in widget and revert to it?
-        pass
-    except HostnamePortSslConfig.MultipleObjectsReturned:
-        # Shouldn't happen...
-        pass
+    if ssl_config is None:
+        raise SslContextAdapterError(
+            'Could not retrieve SslConfig for URL: {0}'.format(url))
 
     return ssl_config_to_context_opts(ssl_config)
 

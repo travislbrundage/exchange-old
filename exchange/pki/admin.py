@@ -20,6 +20,7 @@
 
 from django.contrib import admin
 from django import forms
+from ordered_model.admin import OrderedModelAdmin
 
 from .models import SslConfig, HostnamePortSslConfig
 
@@ -36,8 +37,31 @@ class SslConfigAdminForm(forms.ModelForm):
 class SslConfigAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'ssl_version', 'ssl_verify_mode')
     list_display_links = ('id', 'name',)
-    list_filter = ('id', 'name',)
     form = SslConfigAdminForm
+    fieldsets = (
+        (None, {
+            'fields': (
+                'name',
+                'description',
+                'ca_custom_certs',
+                'ca_allow_invalid_certs',
+                'client_cert',
+                'client_key',
+                'client_key_pass',
+                'ssl_verify_mode',
+            )
+        }),
+        ('Advanced options', {
+            'classes': ('collapse',),
+            'fields': (
+                'ssl_version',
+                'ssl_options',
+                'ssl_ciphers',
+                'https_retries',
+                'https_redirects'
+            ),
+        }),
+    )
 
 
 class HostnamePortSslConfigAdminForm(forms.ModelForm):
@@ -46,11 +70,31 @@ class HostnamePortSslConfigAdminForm(forms.ModelForm):
         fields = '__all__'
 
 
-class HostnamePortSslConfigAdmin(admin.ModelAdmin):
-    list_display = ('hostname_port', 'ssl_config')
+class HostnamePortSslConfigAdmin(OrderedModelAdmin):
+    list_display = ('enabled', 'hostname_port',
+                    'ssl_config', 'move_up_down_links')
     list_display_links = ('hostname_port',)
-    list_filter = ('hostname_port',)
+    list_filter = ('enabled',)
+    # list_editable = ('enabled',)
     form = HostnamePortSslConfigAdminForm
+    actions = ['enable_mapping', 'disable_mapping']
+
+    def enable_mapping(self, request, queryset):
+        up = queryset.update(enabled=True)
+        self.message_user(
+            request,
+            "{0} mapping{1} enabled.".format(up, 's' if up > 1 else '')
+        )
+
+    def disable_mapping(self, request, queryset):
+        up = queryset.update(enabled=False)
+        self.message_user(
+            request,
+            "{0} mapping{1} disabled.".format(up, 's' if up > 1 else '')
+        )
+
+    enable_mapping.short_description = "Enable selected mappings"
+    disable_mapping.short_description = "Disable selected mappings"
 
 
 admin.site.register(SslConfig,

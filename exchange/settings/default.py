@@ -198,6 +198,7 @@ INSTALLED_APPS = (
     'exchange.storyscapes',
     'composer',
     'social_django',
+    'ordered_model',
     'exchange.pki',
 ) + ADDITIONAL_APPS + INSTALLED_APPS
 

@@ -42,7 +42,7 @@ description:
 
 ca_custom_certs:
     '' or file name from get_pki_dir(); default ''.
-    If None, urllib3 defaults to None, and OpenSSL system CA certs are used.
+    If None, urllib3 defaults to None, and system root CA certs are used.
 
 ca_allow_invalid_certs:
     bool; default False. Used during validation of SSL components in a config.

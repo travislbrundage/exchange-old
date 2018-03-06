@@ -19,9 +19,15 @@
 #########################################################################
 
 import ssl
+import re
 import logging
 
+from collections import OrderedDict
+from fnmatch import fnmatch
+
+from ordered_model.models import OrderedModel
 from django.db import models
+from django.db.utils import OperationalError
 from django.core.exceptions import ValidationError
 
 from .settings import get_pki_dir, CERT_MATCH, KEY_MATCH, SSL_DEFAULT_CONFIG
@@ -30,6 +36,75 @@ from .utils import file_readable, pki_file
 from .fields import EncryptedCharField, DynamicFilePathField
 
 logger = logging.getLogger(__name__)
+
+# Global mirror cache of mapping patterns for HostnamePortSslConfig records
+hostnameport_pattern_cache = list()
+hostnameport_pattern_cache_built = False
+
+
+def hostnameport_patterns():
+    """
+    :rtype: list
+    """
+    return HostnamePortSslConfig.objects.hostnameport_patterns()
+
+
+def rebuild_hostnameport_pattern_cache():
+    global hostnameport_pattern_cache_built
+    del hostnameport_pattern_cache[:]
+    try:
+        hostnameport_pattern_cache.extend(
+            hostnameport_patterns()
+        )
+        hostnameport_pattern_cache_built = True
+        logger.debug('hostnameport_pattern_cache rebuilt: {0}'
+                     .format(hostnameport_pattern_cache))
+    except OperationalError:
+        # skip if db isn't initialized yet
+        logger.debug('hostnameport_pattern_cache FAILED to rebuild')
+        pass
+
+
+def hostnameport_pattern_for_url(url, via_query=False):
+    if via_query or not hostnameport_pattern_cache_built:
+        rebuild_hostnameport_pattern_cache()
+    for ptn in hostnameport_pattern_cache:
+        if fnmatch(filter_hostname_port(url), ptn):
+            logger.debug(u"URL matches hostname:port pattern: {0} > '{1}'"
+                         .format(url, ptn))
+            return ptn
+
+    logger.debug(u'URL does not match any hostname:port patterns: {0}'
+                 .format(url))
+    logger.debug(u'Current hostnameport_pattern_cache: {0}'
+                 .format(hostnameport_pattern_cache))
+    return None
+
+
+def has_ssl_config(url, via_query=False):
+    ptn = hostnameport_pattern_for_url(url, via_query)
+    if ptn is not None:
+        return True
+    return False
+
+
+def ssl_config_for_url(url):
+    """
+    Find an SslConfig for a URL.
+    Fix any missing related SslConfig by reverting to default.
+    :param url:
+    :rtype: SslConfig | None
+    """
+    ssl_config = None
+
+    ptn = hostnameport_pattern_for_url(url, via_query=True)
+    if ptn is not None:
+        # this get should not fail or return duplicates
+        mp = HostnamePortSslConfig.objects.get(hostname_port=ptn)
+        HostnamePortSslConfig.objects.ensure_ssl_config(mp)
+        ssl_config = mp.ssl_config
+
+    return ssl_config
 
 
 class SslConfigManager(models.Manager):
@@ -313,14 +388,14 @@ class SslConfig(models.Model):
 
 
 class HostnamePortSslConfigManager(models.Manager):
-    def create_hostnameportsslconfig(self, url, ssl_config):
+
+    def create_hostnameportsslconfig(self, ptn, ssl_config):
         """
         Instantiates a new HostnamePortSslConfig.
-        Expected to be done in creation of new service via form validation.
         :param ssl_config: SslConfig instance, already saved in table
         :type ssl_config: SslConfig
-        :param url: The url of the service, not parsed
-        :type url: str
+        :param ptn: Pattern to match URLs
+        :type ptn: str | unicode
         :return: new HostnamePortSslConfig
         :rtype: HostnamePortSslConfig
         """
@@ -333,9 +408,7 @@ class HostnamePortSslConfigManager(models.Manager):
                 "SslConfig for hostname:port mapping is not saved in table.")
 
         try:
-            service_hostnameportsslconfig = self.get(
-                hostname_port=filter_hostname_port(url)
-            )
+            service_hostnameportsslconfig = self.get(hostname_port=ptn)
             if not service_hostnameportsslconfig.ssl_config:
                 # something went pear-shaped with record's SslConfig; nix it
                 service_hostnameportsslconfig.delete()
@@ -344,22 +417,82 @@ class HostnamePortSslConfigManager(models.Manager):
             service_hostnameportsslconfig.save()
         except HostnamePortSslConfig.DoesNotExist:
             service_hostnameportsslconfig = self.create(
-                hostname_port=filter_hostname_port(url),
+                hostname_port=ptn,
                 ssl_config=ssl_config
             )
 
         return service_hostnameportsslconfig
 
+    @staticmethod
+    def ensure_ssl_config(mp):
+        hnp = mp.hostname_port
+        logger.debug("Fetching SslConfig related record, "
+                     "for hostname:port pattern: {0}".format(hnp))
+        config = mp.ssl_config
+        if config and isinstance(config, SslConfig):
+            logger.debug("Found SslConfig related record: {0}"
+                         .format(config.to_ssl_config()
+                                 .get('name', '(name missing)')))
+        else:
+            logger.debug("Missing SslConfig related record, "
+                         "reverting to default")
+            mp.ssl_config = SslConfig.objects.get_create_default()
+            mp.save()
 
-class HostnamePortSslConfig(models.Model):
+    def hostnameport_patterns(self):
+        """
+        Return all hostname:port mapping patterns.
+        Ensures hostname:port matching is done in user-defined order.
+        :return:
+        :rtype: list
+        """
+        q_set = self.filter(enabled=True).order_by('order')\
+            .values_list('hostname_port', flat=True)
+        return list(q_set)
+
+    def mapped_ssl_configs(self):
+        """
+        Return all mappings as an ordered dictionary.
+        Ensures hostname:port matching is done in user-defined order.
+
+        Fix any missing related SslConfigs by reverting to default.
+        :return:
+        :rtype: OrderedDict
+        """
+        q_set = self.filter(enabled=True).order_by('order')
+        mapped_configs = OrderedDict()
+        for mp in q_set:
+            self.ensure_ssl_config(mp)
+            mapped_configs[mp.hostname_port] = mp.ssl_config
+        return mapped_configs
+
+
+class HostnamePortSslConfig(OrderedModel):
+    enabled = models.BooleanField(
+        "Enabled",
+        default=True,
+        blank=False,
+        help_text="Whether mapping is enabled",
+    )
     hostname_port = models.CharField(
         "Hostname:Port",
         max_length=255,
         blank=False,
         primary_key=True,
         unique=True,
-        help_text="Hostname and (optional) port, e.g. 'mydomain.com' or "
-                  "'mydomain.com:8000'. MUST be all lowercase."
+        help_text="(REQUIRED) Hostname and (optional) port. "
+                  "MUST be all lowercase.<br/><br/>"
+                  "Examples:<br/>"
+                  "<b>mydomain.com</b><br/><b>mydomain.com:8000</b><br/><br/>"
+                  "Wildcard '*' character matching is supported "
+                  "(use sparingly)."
+                  "<br/><br/>Examples:<br/>"
+                  "<b>*.mydomain.com</b> (matches subdomains)<br/>"
+                  "<b>*.mydomain.com*</b> (matches subdomains and all ports)"
+                  "<br/><b>*.*</b> "
+                  "(matches ALL https requests; avoid unless necessary)"
+                  "<br/><br/>"
+                  "<em>Use admin list view to sort patterns for matching.</em>"
     )
     ssl_config = models.ForeignKey(
         SslConfig,
@@ -380,11 +513,21 @@ class HostnamePortSslConfig(models.Model):
             msg = "Hostname must be all lowercase."
             val_mgs['hostname_port'] = msg
 
+        # Validate hostname:port with wildcard notation
+        # TODO: Matches unicode alphanumeric for international domain names,
+        #       but not symbol code points, which is probably an edge case.
+        #       Not sure how to do this in Py2 (maybe regex package?)
+        p_domain_char = re.compile('[-.\w:*]', re.IGNORECASE | re.UNICODE)
+        if not all([p_domain_char.match(c) for c in self.hostname_port]):
+            msg = u'Invalid characters in hostname:port definition: {0}' \
+                .format(self.hostname_port)
+            val_mgs['hostname_port'] = msg
+
         if val_mgs:
             raise ValidationError(val_mgs)
 
-    class Meta:
-        verbose_name = 'Hostname:Port to SSL Config Map'
-        verbose_name_plural = 'Hostname:Port to SSL Config Mappings'
-        ordering = ["hostname_port"]
+    class Meta(OrderedModel.Meta):
+        verbose_name = 'Hostname:Port >> SSL Config'
+        verbose_name_plural = 'Hostname:Port >> SSL Configs'
+        # ordering = ["hostname_port"]  # now handled by OrderedModel
         unique_together = (("hostname_port", "ssl_config"),)

@@ -44,4 +44,5 @@ requests==2.18.4
 # pyOpenSSL is not yet whitelisted (as of 2018-02-03)
 # pyOpenSSL==17.5.0
 cryptography==2.1.4
-
+# for user-ordering of wildcard hostname:port mappings
+git+https://github.com/bfirsh/django-ordered-model.git#ordered_model

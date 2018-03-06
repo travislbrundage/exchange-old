@@ -24,7 +24,7 @@ import logging
 
 # noinspection PyCompatibility
 from urlparse import urlparse
-from urllib import quote
+from urllib import quote, unquote
 
 from django.conf import settings
 
@@ -47,13 +47,18 @@ def normalize_hostname(url):
 def hostname_port(url):
     parts = urlparse(url)
     port = parts.port
-    return '{0}{1}'.format(parts.hostname,
-                           ":{0}".format(port) if port else '')
+    return u"{0}{1}".format(parts.hostname,
+                            u":{0}".format(port) if port else '')
 
 
 def requests_base_url(url):
     parts = urlparse(url)
-    return '{0}://{1}'.format(parts.scheme, hostname_port(url))
+    return u"{0}://{1}".format(parts.scheme, hostname_port(url))
+
+
+def pki_prefix():
+    exchange_local = settings.EXCHANGE_LOCAL_URL.rstrip('/')
+    return "{0}/pki/".format(exchange_local)
 
 
 def pki_route(url):
@@ -70,9 +75,24 @@ def pki_route(url):
     url = re.sub(parts.scheme, '', url, count=1, flags=re.I)
     url = url.replace('://', '', 1)
 
-    pki_base_url = settings.SITEURL.rstrip('/')
+    return "{0}{1}".format(pki_prefix(), quote(url))
 
-    return '{0}/pki/{1}'.format(pki_base_url, quote(url))
+
+def pki_route_reverse(url):
+    """
+    Revert possibly rewritten /pki-proxied URL back to original value
+
+    NOTE: Since no origin scheme is recorded (could be, in rewritten pki
+    proxy path), https is assumed.
+
+    :param url: A possibly rewritten /pki-proxied URL
+    :type url: str | unicode
+    :return: URL reverted back to value prior to rewriting
+    """
+    if url.startswith(pki_prefix()):
+        url = "https://{0}".format(
+            unquote(url.replace(pki_prefix(), '')))
+    return url
 
 
 def file_readable(a_file):

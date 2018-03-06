@@ -20,73 +20,108 @@
 
 import logging
 
-from requests.exceptions import InvalidSchema
+from fnmatch import fnmatch
+
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
-from .ssl_adapter import https_client, SslContextAdapter, get_ssl_context_opts
+from .models import (
+    rebuild_hostnameport_pattern_cache,
+    HostnamePortSslConfig
+)
+from .ssl_adapter import (
+    https_client,
+    SslContextAdapter,
+    get_ssl_context_opts,
+    ssl_config_to_context_opts
+)
+from .utils import hostname_port
 
 logger = logging.getLogger(__name__)
+
+
+def sync_https_adapters():
+    """
+    Sync any https_client session SslContextAdapters when changes occur to the
+    HostnamePortSslConfig mappings, including reordering.
+
+    Update any adapters that have newly mapped SslConfigs; remove any that no
+    longer map to an SslConfig.
+
+    Note: Can not ADD a session adapter here, as the adapter's key is based
+    upon the base url of a connection's URL. This function merely performs
+    housekeeping tasks on existing adapters.
+    """
+    adapters = https_client.adapters
+    """:type: dict[str, SslContextAdapter]"""
+    ssl_configs = HostnamePortSslConfig.objects.mapped_ssl_configs()
+    """:type: dict[str, SslConfig]"""
+
+    for base_url, adpter in adapters.items():
+        if base_url.startswith('http://'):
+            continue  # only work with https
+        if not isinstance(adpter, SslContextAdapter):
+            continue  # just in case; this shouldn't happen
+        ptn = None
+        for p in ssl_configs.keys():
+            if fnmatch(hostname_port(base_url), p):
+                ptn = p
+                break
+        if ptn is not None:
+            logger.debug('Adapter URL matched hostname:port pattern: '
+                         '{0} > {1}'.format(base_url, ptn))
+            config = ssl_configs[ptn]
+            if adpter.context_options() != ssl_config_to_context_opts(config):
+                # SslConfig differs, replace
+                adpter.close()  # clean up session pool manager
+                # The mount() call wraps a dictionary[key] = value assignment,
+                # so works for either creation or update.
+                https_client.mount(
+                    base_url,
+                    SslContextAdapter(*get_ssl_context_opts(base_url))
+                )
+                logger.debug('Updated session adapter: {0}'.format(base_url))
+            else:
+                logger.debug('Session adapter unchanged: {0}'.format(base_url))
+        else:
+            logger.debug('Adapter URL does not match any hostname:port '
+                         '(deleting): {0}'.format(base_url))
+            del https_client.adapters[base_url]
+
+
+def sync_map_layers():
+    """
+    Sync/add saved map layer's flag that indicates it be requested through
+    /pki route (via GeoNode's /proxy route) when changes occur to the
+    HostnamePortSslConfig mappings, including reordering.
+
+    Note: The flag can be added if the map layer's URL now maps to an
+    SslConfig, even if it may not have mapped upon initial saving.
+    """
+    # TODO: Like, the actual code and everything
+    pass
 
 
 # noinspection PyUnusedLocal
 @receiver(post_save, sender='pki.HostnamePortSslConfig',
           dispatch_uid='pki_signals_post_save')
-def add_update_adapter(sender, instance, created, raw,
+def add_update_mapping(sender, instance, created, raw,
                        using, update_fields, **kwargs):
     """
-    Respond to HostnamePortSslConfig edits and update https_client cache
+    Respond to HostnamePortSslConfig adds/updates
     """
-    hostname_port = instance.hostname_port
-    if not hostname_port:
-        logger.error('No hostname:port saved with mapping model, '
-                     'can\'t update SSL cache.')
-        return
-
-    ssl_config = instance.ssl_config
-    if not ssl_config:
-        logger.error('No SSL config saved with mapping model, '
-                     'updating SSL cache not attempted.')
-        return
-
-    # Seed https_client (requests.Session) mounted adapters.
-    # The mount() call wraps a dictionary[key] = value assignment, so works
-    # for either creation or update.
-    base_url = 'https://' + hostname_port.lower()
-    try:
-        _https_adapter = https_client.get_adapter(base_url)
-        _https_adapter.close()  # clean up session pool manager
-        # del https_client.adapters[base_url]
-        act = 'update'
-    except InvalidSchema:
-        act = 'add'
-        pass
-
-    https_client.mount(base_url,
-                       SslContextAdapter(*get_ssl_context_opts(base_url)))
-    logger.debug('Signaled session adapter {0} for {1}'.format(act, base_url))
+    rebuild_hostnameport_pattern_cache()
+    sync_https_adapters()
+    sync_map_layers()
 
 
 # noinspection PyUnusedLocal
 @receiver(post_delete, sender='pki.HostnamePortSslConfig',
           dispatch_uid='pki_signals_post_delete')
-def remove_adapter(sender, instance, using, **kwargs):
+def remove_mapping(sender, instance, using, **kwargs):
     """
-    Respond to HostnamePortSslConfig deletions and update https_client cache
+    Respond to HostnamePortSslConfig deletions
     """
-    hostname_port = instance.hostname_port
-    if not hostname_port:
-        logger.error('Tried empty hostname:port removal from mapping model, '
-                     'removal from SSL cache not attempted.')
-        return
-
-    # Remove any matching https_client (requests.Session) mounted adapter
-    base_url = 'https://' + hostname_port.lower()
-    try:
-        _https_adapter = https_client.get_adapter(base_url)
-        _https_adapter.close()  # clean up session pool manager
-        del https_client.adapters[base_url]
-        logger.debug(
-            'Signaled session adapter clear for {0}'.format(base_url))
-    except InvalidSchema:
-        pass
+    rebuild_hostnameport_pattern_cache()
+    sync_https_adapters()
+    sync_map_layers()

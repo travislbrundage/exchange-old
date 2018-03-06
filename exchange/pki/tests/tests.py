@@ -36,7 +36,14 @@ from django.test import TestCase
 TESTDIR = os.path.dirname(os.path.realpath(__file__))
 
 if __name__ != '__main__':
-    from ..models import SslConfig, HostnamePortSslConfig
+    from ..models import (
+        SslConfig,
+        HostnamePortSslConfig,
+        hostnameport_pattern_cache,
+        ssl_config_for_url,
+        has_ssl_config,
+        hostnameport_pattern_for_url
+    )
     from ..utils import hostname_port, requests_base_url
     from ..crypto import Crypto
     from ..ssl_adapter import (
@@ -44,6 +51,7 @@ if __name__ != '__main__':
         https_request,
         clear_https_adapters,
         ssl_config_to_context_opts,
+        get_ssl_context_opts,
         SslContextAdapter
     )
 
@@ -60,7 +68,7 @@ def skip_unless_has_mapproxy():
             'Test requires mapproxy docker-compose container running')
 
 
-class TestSslConfig(TestCase):
+class TestHostnamePortSslConfig(TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -94,50 +102,100 @@ class TestSslConfig(TestCase):
         self.assertEqual(len(https_client.adapters), 1)  # for http://
 
         ssl_config_1 = SslConfig.objects.get(pk=1)
-
-        HostnamePortSslConfig.objects.create_hostnameportsslconfig(
-            self.mp_root, ssl_config_1)
-
-        self.assertEqual(HostnamePortSslConfig.objects.count(), 1)
-        self.assertEqual(len(https_client.adapters), 2)
-
-        adptr_1 = https_client.adapters[requests_base_url(self.mp_root)]
-        """:type: SslContextAdapter"""
-
-        self.assertIsInstance(adptr_1, SslContextAdapter)
-
-        self.assertEqual(ssl_config_to_context_opts(
-            ssl_config_1), adptr_1.context_options())
-
-        # Update ssl_config
         ssl_config_2 = SslConfig.objects.get(pk=2)
+        ssl_config_3 = SslConfig.objects.get(pk=3)
+        ssl_configs = [ssl_config_1, ssl_config_2, ssl_config_3]
+
+        p1 = u'*.arcgisonline.com*'
+        p2 = u'*.boundless.test*'
+        p3 = u'*.*'
+        ptrns = [p1, p2, p3]
 
         HostnamePortSslConfig.objects.create_hostnameportsslconfig(
-            self.mp_root, ssl_config_2)
+            p1, ssl_config_1)
+        self.assertEqual(hostnameport_pattern_cache, [p1])
+        hnp_sslconfig_1 = HostnamePortSslConfig.objects.get(hostname_port=p1)
+        HostnamePortSslConfig.objects.create_hostnameportsslconfig(
+            p2, ssl_config_2)
+        self.assertEqual(hostnameport_pattern_cache, [p1, p2])
+        hnp_sslconfig_2 = HostnamePortSslConfig.objects.get(hostname_port=p2)
+        HostnamePortSslConfig.objects.create_hostnameportsslconfig(
+            p3, ssl_config_3)
+        self.assertEqual(hostnameport_pattern_cache, [p1, p2, p3])
+        hnp_sslconfig_3 = HostnamePortSslConfig.objects.get(hostname_port=p3)
+        hnp_sslconfigs = [hnp_sslconfig_1, hnp_sslconfig_2, hnp_sslconfig_3]
+        self.assertTrue(all(hnp_sslconfigs))
 
-        self.assertEqual(HostnamePortSslConfig.objects.count(), 1)
-        self.assertEqual(len(https_client.adapters), 2)
+        url1 = u'https://services.arcgisonline.com/arcgis/rest/' \
+               u'services/topic/layer/?f=pjson'
+        url2 = u'https://maPproxy.Boundless.test:8344/service?' \
+               u'service=WMS&request=GetCapabilities&version=1.1.1'
+        url3 = u'https://привет.你好.çéàè.example.com/some/path?key=value#frag'
+        urls = [url1, url2, url3]
 
-        adptr_2 = https_client.adapters[requests_base_url(self.mp_root)]
-        """:type: SslContextAdapter"""
+        for p, config, url in zip(ptrns, ssl_configs, urls):
+            self.assertTrue(has_ssl_config(url))
+            ssl_config = ssl_config_for_url(url)
+            self.assertIsNotNone(ssl_config)
+            self.assertEqual(ssl_config, config)
+            self.assertEqual(
+                ssl_config_to_context_opts(ssl_config),
+                ssl_config_to_context_opts(config)
+            )
+            self.assertEqual(hostnameport_pattern_for_url(url), p)
 
-        self.assertIsInstance(adptr_2, SslContextAdapter)
+        for url, ssl_config in zip(urls, ssl_configs):
+            base_url = requests_base_url(url)
+            https_client.mount(
+                base_url,
+                SslContextAdapter(*get_ssl_context_opts(base_url))
+            )
+            adptr = https_client.adapters[base_url]
+            """:type: SslContextAdapter"""
+            self.assertEqual(adptr.context_options(),
+                             ssl_config_to_context_opts(ssl_config))
 
-        self.assertEqual(ssl_config_to_context_opts(
-            ssl_config_2), adptr_2.context_options())
-
-        # Delete first, unreferenced config
-        SslConfig.objects.get(pk=1).delete()
-        # nothing should have changed
-        self.assertEqual(HostnamePortSslConfig.objects.count(), 1)
-        self.assertEqual(len(https_client.adapters), 2)
-
-        # Delete second, referenced config
-        SslConfig.objects.get(pk=2).delete()
-        # Should automatically remove mapping (related record) and
-        # adapter (via signal)
-        self.assertEqual(HostnamePortSslConfig.objects.count(), 0)
-        self.assertEqual(len(https_client.adapters), 1)
+        # return
+        #
+        # self.assertEqual(HostnamePortSslConfig.objects.count(), 1)
+        # self.assertEqual(len(https_client.adapters), 2)
+        #
+        # adptr_1 = https_client.adapters[requests_base_url(self.mp_root)]
+        # """:type: SslContextAdapter"""
+        #
+        # self.assertIsInstance(adptr_1, SslContextAdapter)
+        #
+        # self.assertEqual(ssl_config_to_context_opts(
+        #     ssl_config_1), adptr_1.context_options())
+        #
+        # # Update ssl_config
+        #
+        # HostnamePortSslConfig.objects.create_hostnameportsslconfig(
+        #     self.mp_root, ssl_config_2)
+        #
+        # self.assertEqual(HostnamePortSslConfig.objects.count(), 1)
+        # self.assertEqual(len(https_client.adapters), 2)
+        #
+        # adptr_2 = https_client.adapters[requests_base_url(self.mp_root)]
+        # """:type: SslContextAdapter"""
+        #
+        # self.assertIsInstance(adptr_2, SslContextAdapter)
+        #
+        # self.assertEqual(ssl_config_to_context_opts(
+        #     ssl_config_2), adptr_2.context_options())
+        #
+        # # Delete first, unreferenced config
+        # SslConfig.objects.get(pk=1).delete()
+        # # nothing should have changed
+        # self.assertEqual(HostnamePortSslConfig.objects.count(), 1)
+        # self.assertEqual(len(https_client.adapters), 2)
+        #
+        # # Delete second, referenced config
+        # SslConfig.objects.get(pk=2).delete()
+        # # Should automatically remove mapping (related record) and
+        # # adapter (via signal)
+        # self.assertEqual(HostnamePortSslConfig.objects.count(), 0)
+        # self.assertEqual(len(https_client.adapters), 1)
 
 
 @skip_unless_has_mapproxy()
@@ -169,14 +227,14 @@ class TestPkiRequest(TestCase):
         # HostnamePortSslConfig.objects.all().delete()
         pass
 
-    def _set_hostname_port_mapping(self, pk, url=None):
-        if url is None:
-            url = self.mp_root
+    def _set_hostname_port_mapping(self, pk, ptn=None):
+        if ptn is None:
+            ptn = self.mp_host_port
         logger.debug("Attempt Hostname:Port mapping for SslConfig pk: {0}"
                      .format(pk))
         ssl_config = SslConfig.objects.get(pk=pk)
         HostnamePortSslConfig.objects.create_hostnameportsslconfig(
-            url, ssl_config)
+            ptn, ssl_config)
         logger.debug("Hostname:Port mappings:\n{0}"
                      .format(HostnamePortSslConfig.objects.all()))
 

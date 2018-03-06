@@ -43,12 +43,12 @@ def pki_request(request, resource_url=None):
     :rtype: HttpResponse
     """
 
-    # TODO: Currently, this is only used for calling remotes services URLs, or
-    #       ones about to be registered, i.e. referrer /services/register/; so,
-    #       we could possibly limit access to trusted referrers and pki-proxied
-    #       URLs as culled from Services. In this way, it is not a general
-    #       proxy, which could be abused. See docs for reason behind the
-    #       PROXY_ALLOWED_HOSTS settings for geonode.proxy app.
+    if resource_url is None:
+        return HttpResponse('Resource URL missing for PKI request',
+                            status=400,
+                            content_type='text/plain')
+
+    # TODO: Limit to localhost calls, e.g. when coming from local Py packages
 
     # Manually copy over headers, skipping unwanted ones
     # IMPORTANT: Don't pass any cookies or OAuth2 headers to remote resource
@@ -77,14 +77,15 @@ def pki_request(request, resource_url=None):
     url = 'https://' + r_url + (('?' + query) if query else '')
 
     # Do remote request
-    # TODO: add option to pass a bearer token (but not ours for OAuth2!)
+    # TODO: Add option to pass a bearer token (but not ours for OAuth2!)
     req_res = https_request(url, data=request.body,
                             method=request.method, headers=headers)
     """:type: requests.Response"""
 
     if not req_res:
-        return HttpResponse(status=400,
-                            content='Remote service did not return content.')
+        return HttpResponse('Remote service did not return content.',
+                            status=400,
+                            content_type='text/plain')
 
     # TODO: Capture errors and signal to web UI for reporting to user.
     #       Don't let errors just raise exceptions

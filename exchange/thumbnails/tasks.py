@@ -3,7 +3,6 @@ import time
 from celery.task import task
 
 from django.db.models.signals import post_save
-from exchange.settings import SITEURL
 from geonode.utils import get_bearer_token
 from geonode.layers.models import Layer
 from geonode.maps.models import Map
@@ -16,6 +15,9 @@ from .models import save_thumbnail
 from PIL import Image
 import io
 from urlparse import urlparse
+
+from exchange.pki.models import has_ssl_config
+from exchange.pki.ssl_adapter import https_request
 
 
 try:
@@ -94,21 +96,25 @@ def make_thumb_request(remote, baseurl, params=None):
             thumbnail_create_url
         )
 
-        if (remote):
-            # Check for PKI Proxied Remote Services
-            headers = None
-            if SITEURL in baseurl:
-                logger.debug('fetching %s with token' % thumbnail_create_url)
-                headers = {'Authorization': "Bearer {0}".format(
-                    get_bearer_token(valid_time=30))}
-            resp = http_client.get(thumbnail_create_url, headers=headers)
+        if remote:
+            # Check for SSL configs; use https_client
+            if thumbnail_create_url.startswith('https') \
+                    and has_ssl_config(thumbnail_create_url, via_query=True):
+                # has_ssl_config needs to query db, as call may be from task
+                # worker, whose hostnameport_pattern_cache may be out of sync
+                logger.debug('fetching %s with https_client'
+                             % thumbnail_create_url)
+                resp = https_request(thumbnail_create_url)
+            else:
+                logger.debug('fetching %s with no auth' % thumbnail_create_url)
+                resp = http_client.get(thumbnail_create_url)
         else:
             # Log in to geoserver with token
             token = get_bearer_token()
             thumbnail_create_url = '%s&access_token=%s' % (
                 thumbnail_create_url,
                 token)
-            logger.debug('fetching %s with token' % (thumbnail_create_url))
+            logger.debug('fetching %s with token' % thumbnail_create_url)
             resp = http_client.get(thumbnail_create_url)
 
         if 200 <= resp.status_code <= 299:
