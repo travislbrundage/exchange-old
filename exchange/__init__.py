@@ -24,3 +24,8 @@ __version__ = '1.5.dev'
 def get_version():
     import exchange.version
     return exchange.version.get_version(__version__)
+
+
+def semantic_version():
+    import exchange.version
+    return exchange.version.get_version(__version__, with_commit=False)

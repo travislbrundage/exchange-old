@@ -86,8 +86,13 @@ the pipeline, it consists of multiple stages.
    This stage runs runs static code analysis using SonarQube. It will run scans for both exchange and 
    geonode source code. Due to limited features on the community SonarQube, this stage only runs on the 
    master branch.
+
+9. **Update Connect Docs**
+
+   This stage uploads the documentation to Boundless Connect. This stage only runs on the master branch 
+   and if the commit was a tag.
    
-9. **Deploy**
+10. **Deploy**
 
    **TODO**: this stage should trigger a chef update of the new code if the branch is master.
 
@@ -96,6 +101,7 @@ the pipeline, it consists of multiple stages.
 The Exchange pipeline uses a [global shared library](https://github.com/boundlessgeo/bex-pipelib) 
 for a few global variables:
 + bashDocker
++ gitTagCheck
 + katalonDocker
 
 
