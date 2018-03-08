@@ -426,8 +426,8 @@ class HostnamePortSslConfigManager(models.Manager):
     @staticmethod
     def ensure_ssl_config(mp):
         hnp = mp.hostname_port
-        logger.debug("Fetching SslConfig related record, "
-                     "for hostname:port pattern: {0}".format(hnp))
+        logger.debug(u"Fetching SslConfig related record, "
+                     u"for hostname:port pattern: {0}".format(hnp))
         config = mp.ssl_config
         if config and isinstance(config, SslConfig):
             logger.debug("Found SslConfig related record: {0}"

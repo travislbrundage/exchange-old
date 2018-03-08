@@ -68,8 +68,8 @@ def sync_https_adapters():
                 ptn = p
                 break
         if ptn is not None:
-            logger.debug('Adapter URL matched hostname:port pattern: '
-                         '{0} > {1}'.format(base_url, ptn))
+            logger.debug(u'Adapter URL matched hostname:port pattern: '
+                         u'{0} > {1}'.format(base_url, ptn))
             config = ssl_configs[ptn]
             if adpter.context_options() != ssl_config_to_context_opts(config):
                 # SslConfig differs, replace
@@ -80,12 +80,12 @@ def sync_https_adapters():
                     base_url,
                     SslContextAdapter(*get_ssl_context_opts(base_url))
                 )
-                logger.debug('Updated session adapter: {0}'.format(base_url))
+                logger.debug(u'Updated session adapter: {0}'.format(base_url))
             else:
-                logger.debug('Session adapter unchanged: {0}'.format(base_url))
+                logger.debug(u'Session adapter unchanged: {0}'.format(base_url))
         else:
-            logger.debug('Adapter URL does not match any hostname:port '
-                         '(deleting): {0}'.format(base_url))
+            logger.debug(u'Adapter URL does not match any hostname:port '
+                         u'(deleting): {0}'.format(base_url))
             del https_client.adapters[base_url]
 
 

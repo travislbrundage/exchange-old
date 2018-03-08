@@ -326,14 +326,13 @@ def https_request(url, data=None, method='GET', headers=None,
 
     try:
         adapter = https_client.get_adapter(base_url)
-        # logger.debug('Using session adapter for {0}'.format(base_url))
+        # Use of this debug text will flood log; enable temporarily during dev
+        # logger.debug(u'Using session adapter for {0}'.format(base_url))
     except InvalidSchema:
         https_client.mount(base_url,
                            SslContextAdapter(*get_ssl_context_opts(base_url)))
-        logger.debug('Session adapter add {0}'.format(base_url))
+        logger.debug(u'Session adapter add {0}'.format(base_url))
         adapter = https_client.get_adapter(base_url)
-
-    # req_method = getattr(https_client, method.lower())
 
     if access_token:
         headers['Authorization'] = "Bearer {}".format(access_token)
