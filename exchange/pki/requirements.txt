@@ -7,4 +7,4 @@ urllib3==1.22
 requests==2.18.4
 cryptography==2.1.4
 # for user-ordering of wildcard hostname:port mappings
-git+https://github.com/bfirsh/django-ordered-model.git#ordered_model
+django-ordered-model==1.4.3
