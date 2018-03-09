@@ -115,7 +115,8 @@ def get_base_query(search):
     # only show documents, layers, stories, and maps
     q = Q({"match": {"type": "layer"}}) | Q(
         {"match": {"type": "document"}}) | Q(
-        {"match": {"type": "map"}})
+        {"match": {"type": "map"}}) | Q(
+        {"match": {"type": "user"}})
 
     return search.query(q)
 
@@ -223,6 +224,10 @@ def get_facet_results(aggregations, parameters):
 def get_main_query(search, query):
     # Set base fields to search
     fields = [
+        'username',
+        'first_name',
+        'last_name',
+        'organization',
         'abstract',
         'abstract.english',
         'abstract.pattern',
@@ -411,6 +416,15 @@ def filter_by_resource_type(search, resource_type):
         search = search.query("match", type="layer")
     elif resource_type == 'maps':
         search = search.query("match", type="map")
+    elif resource_type == 'profiles':
+        search = search.query("match", type="user")
+    else:
+        # Always include filter for types to show up in
+        # global search
+        q = Q({"match": {"type": "layer"}}) | Q(
+            {"match": {"type": "document"}}) | Q(
+            {"match": {"type": "map"}})
+        search = search.query(q)
 
     return search
 
@@ -449,7 +463,7 @@ def elastic_search(request, resourcetype='base'):
     # exclude the profile and group indexes.
     # They aren't being used, and cause issues with faceting
     indices = es.indices.get_alias("*").keys()
-    exclude_indexes = ['profile-index', 'group-index']
+    exclude_indexes = ['group-index']
     [indices.remove(i) for i in exclude_indexes if i in indices]
 
     search = elasticsearch_dsl.Search(using=es, index=indices)

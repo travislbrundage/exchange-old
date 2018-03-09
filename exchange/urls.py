@@ -93,6 +93,9 @@ if settings.ES_SEARCH:
     urlpatterns += [url(r'^api/(?P<resourcetype>maps)/search/$',
                         'exchange.search.views.elastic_search',
                         name='elastic_search')]
+    urlpatterns += [url(r'^api/(?P<resourcetype>profiles)/search/$',
+                        'exchange.search.views.elastic_search',
+                        name='elastic_search')]
     urlpatterns += [url(r'^autocomplete',
                         views.empty_page,
                         name='autocomplete_override')]

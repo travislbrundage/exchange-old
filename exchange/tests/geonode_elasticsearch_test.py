@@ -55,6 +55,12 @@ class GeonodeElasticsearchTest(ExchangeTest):
         profile_mappings = mappings[
             'profile-index']['mappings']['doc']['properties']
         profile_properties = {
+            "avatar_100": {
+                "type": "text"
+            },
+            "documents_count": {
+                "type": "integer"
+            },
             "first_name": {
                 "type": "text"
             },
@@ -63,6 +69,12 @@ class GeonodeElasticsearchTest(ExchangeTest):
             },
             "last_name": {
                 "type": "text"
+            },
+            "layers_count": {
+                "type": "integer"
+            },
+            "maps_count": {
+                "type": "integer"
             },
             "organization": {
                 "type": "text"
@@ -74,21 +86,22 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "keyword"
             },
             "type": {
+                "type": "keyword",
                 "fields": {
                     "english": {
-                        "analyzer": "english",
-                        "type": "text"
+                        "type": "text",
+                        "analyzer": "english"
                     },
                     "text": {
                         "type": "text"
                     }
-                },
-                "type": "keyword"
+                }
             },
             "username": {
                 "type": "text"
             }
         }
+
         self.assertDictEqual(profile_mappings, profile_properties)
 
         group_mappings = mappings[
