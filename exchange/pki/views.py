@@ -62,9 +62,12 @@ def pki_request(request, resource_url=None):
         del request.META['HTTP_AUTHORIZATION']
 
     # Strip any OAuth2 token from query params!
+    # TODO: Migrate to request.GET QueryDict parsing?
+    #       Unsure if keep_blank_values and doseq are supported
     query_str = request.META['QUERY_STRING']
     query = None
     if query_str != '':
+        # TODO: Use parse_qsl, to preserve sequence
         params = parse_qs(query_str.strip(), keep_blank_values=True)
         if 'access_token' in params:
             del params['access_token']

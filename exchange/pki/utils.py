@@ -61,6 +61,11 @@ def pki_prefix():
     return "{0}/pki/".format(exchange_local)
 
 
+def pki_site_prefix():
+    exchange_site = settings.SITEURL.rstrip('/')
+    return "{0}/pki/".format(exchange_site)
+
+
 def pki_route(url):
     """
     Reroutes a service url through the 'pki' internal proxy
