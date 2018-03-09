@@ -23,6 +23,9 @@ TESTDIR = os.path.dirname(os.path.realpath(__file__))
 
 SECRET_KEY = 'fake-key'
 
+ROOT_URLCONF = 'pki.urls'
+EXTRA_LANG_INFO = {}
+
 INSTALLED_APPS = [
     'pki.apps.PkiTestAppConfig',
     'pki.tests',
