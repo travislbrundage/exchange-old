@@ -306,6 +306,11 @@ GEOFENCE = {
 
 MAP_BASELAYERS[0]['source']['url'] = (OGC_SERVER['default']
                                       ['PUBLIC_LOCATION'] + 'wms')
+# Test setting use_proxy manually
+# This makes all local geoserver calls use proxy
+MAP_BASELAYERS[0]['source']['use_proxy'] = True
+
+PROXY_BASEMAP = True
 
 POSTGIS_URL = os.getenv(
     'POSTGIS_URL',
