@@ -307,6 +307,8 @@ GEOFENCE = {
 MAP_BASELAYERS[0]['source']['url'] = (OGC_SERVER['default']
                                       ['PUBLIC_LOCATION'] + 'wms')
 
+PROXY_BASEMAP = True
+
 POSTGIS_URL = os.getenv(
     'POSTGIS_URL',
     'postgis://exchange:boundless@localhost:5432/exchange_data'
@@ -609,4 +611,4 @@ MAP_CLIENT_USE_CROSS_ORIGIN_CREDENTIALS = str2bool(os.getenv(
     'False'
 ))
 
-PROXY_URL = ''
+PROXY_URL = '/proxy/?url='
