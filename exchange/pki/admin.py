@@ -80,14 +80,20 @@ class HostnamePortSslConfigAdmin(OrderedModelAdmin):
     actions = ['enable_mapping', 'disable_mapping']
 
     def enable_mapping(self, request, queryset):
-        up = queryset.update(enabled=True)
+        up = queryset.count()
+        for m in queryset:
+            m.enabled = True
+            m.save(update_fields=['enabled'])
         self.message_user(
             request,
             "{0} mapping{1} enabled.".format(up, 's' if up > 1 else '')
         )
 
     def disable_mapping(self, request, queryset):
-        up = queryset.update(enabled=False)
+        up = queryset.count()
+        for m in queryset:
+            m.enabled = False
+            m.save(update_fields=['enabled'])
         self.message_user(
             request,
             "{0} mapping{1} disabled.".format(up, 's' if up > 1 else '')
