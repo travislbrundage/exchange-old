@@ -19,6 +19,14 @@
 
 import os
 
+
+def str2bool(v):
+    if v and len(v) > 0:
+        return v.lower() in ("yes", "true", "t", "1")
+    else:
+        return False
+
+
 TESTDIR = os.path.dirname(os.path.realpath(__file__))
 
 SECRET_KEY = 'fake-key'
@@ -44,6 +52,69 @@ DATABASES = {
         }
     }
 }
+
+SITEURL = os.getenv('SITEURL', "http://nginx.boundless.test/")
+EXCHANGE_LOCAL_URL = os.getenv('EXCHANGE_LOCAL_URL',
+                               'http://exchange.boundless.test:8000')
+
+# geoserver settings
+GEOSERVER_URL = os.getenv(
+    'GEOSERVER_URL',
+    'http://127.0.0.1:8080/geoserver/'
+)
+GEOSERVER_LOCAL_URL = os.getenv(
+    'GEOSERVER_LOCAL_URL',
+    GEOSERVER_URL
+)
+GEOSERVER_USER = os.getenv(
+    'GEOSERVER_USER',
+    'admin'
+)
+GEOSERVER_PASSWORD = os.getenv(
+    'GEOSERVER_PASSWORD',
+    'geoserver'
+)
+GEOSERVER_LOG = os.getenv(
+    'GEOSERVER_LOG',
+    '/opt/geonode/geoserver_data/logs/geoserver.log'
+)
+GEOSERVER_DATA_DIR = os.getenv(
+    'GEOSERVER_DATA_DIR',
+    '/opt/geonode/geoserver_data'
+)
+GEOGIG_DATASTORE_DIR = os.getenv(
+    'GEOSERVER_DATA_DIR',
+    '/opt/geonode/geoserver_data/geogig'
+)
+PG_DATASTORE = os.getenv('PG_DATASTORE', 'exchange_imports')
+PG_GEOGIG = str2bool(os.getenv('PG_GEOGIG', 'True'))
+
+OGC_SERVER = {
+    'default': {
+        'BACKEND': 'geonode.geoserver',
+        'LOCATION': GEOSERVER_LOCAL_URL,
+        'LOGIN_ENDPOINT': 'j_spring_oauth2_geonode_login',
+        'LOGOUT_ENDPOINT': 'j_spring_oauth2_geonode_logout',
+        'PUBLIC_LOCATION': GEOSERVER_URL,
+        'USER': GEOSERVER_USER,
+        'PASSWORD': GEOSERVER_PASSWORD,
+        'MAPFISH_PRINT_ENABLED': True,
+        'PRINT_NG_ENABLED': True,
+        'GEONODE_SECURITY_ENABLED': True,
+        'GEOGIG_ENABLED': True,
+        'WMST_ENABLED': False,
+        'BACKEND_WRITE_ENABLED': True,
+        'WPS_ENABLED': True,
+        'LOG_FILE': GEOSERVER_LOG,
+        'GEOSERVER_DATA_DIR': GEOSERVER_DATA_DIR,
+        'GEOGIG_DATASTORE_DIR': GEOGIG_DATASTORE_DIR,
+        'DATASTORE': PG_DATASTORE,
+        'PG_GEOGIG': PG_GEOGIG,
+        'TIMEOUT': 10
+    }
+}
+
+GEOSERVER_BASE_URL = OGC_SERVER['default']['PUBLIC_LOCATION'] + 'wms'
 
 # Force max length validation on encrypted password fields
 ENFORCE_MAX_LENGTH = 1
