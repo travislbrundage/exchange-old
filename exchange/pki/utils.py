@@ -66,10 +66,11 @@ def pki_site_prefix():
     return "{0}/pki/".format(exchange_site)
 
 
-def pki_route(url):
+def pki_route(url, site=False):
     """
     Reroutes a service url through the 'pki' internal proxy
     :param url: Original service url
+    :param site: Whether to build with pki_site_prefix instead
     :return: Modified url prepended with internal proxy route
     Ex: url = https://myserver.com:port/geoserver/wms
     return <site:scheme>://<site>/pki/myserver.com%3Aport/geoserver/wms
@@ -80,12 +81,20 @@ def pki_route(url):
     url = re.sub(parts.scheme, '', url, count=1, flags=re.I)
     url = url.replace('://', '', 1)
 
-    return "{0}{1}".format(pki_prefix(), quote(url))
+    return "{0}{1}".format(
+        pki_site_prefix() if site else pki_prefix(), quote(url))
+
+
+def has_pki_prefix(url):
+    for prefix in [pki_prefix(), pki_site_prefix()]:
+        if url.startswith(prefix):
+            return True
+    return False
 
 
 def pki_route_reverse(url):
     """
-    Revert possibly rewritten /pki-proxied URL back to original value
+    Revert possibly rewritten /pki-proxied URL back to original value.
 
     NOTE: Since no origin scheme is recorded (could be, in rewritten pki
     proxy path), https is assumed.
@@ -94,9 +103,9 @@ def pki_route_reverse(url):
     :type url: str | unicode
     :return: URL reverted back to value prior to rewriting
     """
-    if url.startswith(pki_prefix()):
-        url = "https://{0}".format(
-            unquote(url.replace(pki_prefix(), '')))
+    for prefix in [pki_prefix(), pki_site_prefix()]:
+        if url.startswith(prefix):
+            return "https://{0}".format(unquote(url.replace(prefix, '')))
     return url
 
 
