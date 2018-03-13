@@ -1,17 +1,34 @@
-node {
-  withCredentials(
-    [string(credentialsId: 'boundlessgeoadmin-token', variable: 'GITHUB_TOKEN'),
-     string(credentialsId: 'connect-ftp-combo', variable: 'CONNECT_FTP'),
-     string(credentialsId: 'sonar-jenkins-pipeline-token', variable: 'SONAR_TOKEN')]) {
+/*
+About
+-----
+Boundless Exchange uses the Jenkins Multibranch Pipeline, which creates a set of Pipeline projects according to
+detected branches in one SCM repository. The Jenkins master instance does not run any jobs, instead, it spins up
+temporary instances based on an Amazon Machine Image (AMI). The AMI includes docker, docker-compose and git cli
+(with ssh credentials). This method was used to save money and also to allow for all stages to easily be run on a
+new Jenkins server.
 
+Shared Libraries Required
+-------------------------
+https://github.com/boundlessgeo/bex-pipelib
+*/
+
+node {
+  withCredentials([
+    string(credentialsId: 'boundlessgeoadmin-token', variable: 'GITHUB_TOKEN'),
+    string(credentialsId: 'connect-ftp-combo', variable: 'CONNECT_FTP'),
+    string(credentialsId: 'sq-boundlessgeo-token', variable: 'SONAR_TOKEN'),
+    string(credentialsId: 'sonarqube-github-token', variable: 'SONAR_GITHUB_TOKEN'),
+  ]) {
 
     try {
+      /*
+      This stage consists of git checkout of the exchange repository (private),
+      https://github.com/boundlessgeo/exchange/blob/master/.gitmodules and
+      https://github.com/boundlessgeo/exchange-mobile-extension.
+      */
       stage('Checkout'){
         checkout scm
-        sh """
-          git submodule update --init
-          echo "Running ${env.BUILD_ID} on ${env.JENKINS_URL}"
-        """
+        echo "Running ${env.BUILD_ID} on ${env.JENKINS_URL}"
         checkout([$class: 'GitSCM',
                   branches: [[name: '*/master']],
                   doGenerateSubmoduleConfigurations: false,
@@ -26,6 +43,10 @@ node {
         """
       }
 
+      /*
+      This stage sets up the temporary host by pulling a key image, ensuring docker-compose environment
+      is cleaned up by shutting down any existing networks, clearing images and volumes.
+      */
       stage('Setup'){
         sh """
           docker pull 'quay.io/boundlessgeo/sonar-maven-py3-alpine'
@@ -34,14 +55,11 @@ node {
         """
       }
 
+      /*
+      This stage runs parallel jobs for various style checks.
+      */
       stage('Style Checks'){
         parallel (
-            "pycodestyle" : {
-              bashDocker(
-                'quay.io/boundlessgeo/sonar-maven-py3-alpine',
-                'pycodestyle exchange --ignore=E722,E731'
-              )
-            },
             "yamllint" : {
               bashDocker(
                 'quay.io/boundlessgeo/sonar-maven-py3-alpine',
@@ -57,69 +75,152 @@ node {
         )
       }
 
-      stage('Build'){
-        parallel (
-          "maploom" : {
-            bashDocker(
-              'quay.io/boundlessgeo/bex-nodejs-bower-grunt',
-              '. docker/devops/helper.sh && build-maploom'
-            )
-          },
-          "bex" : {
-            sh """
-              docker rm -f \$(docker ps -aq) || echo "no containers to remove"
-              docker-compose up --build --force-recreate -d
-            """
-            timeout(time: 10, unit: 'MINUTES')  {
-              waitUntil {
-                script {
-                  def r = sh script: 'wget -q http://localhost -O /dev/null', returnStatus: true
-                  return (r == 0);
-                }
-              }
+      /*
+      This stage builds maploom form the source submodule and adds key files to exchange static.
+      */
+      stage('Build Maploom'){
+        bashDocker(
+          'quay.io/boundlessgeo/bex-nodejs-bower-grunt',
+          '. docker/devops/helper.sh && build-maploom && rm -fr vendor/maploom/node_modules'
+        )
+      }
+
+      /*
+      This stage builds the required docker images.
+      */
+      stage('Build Images'){
+        sh """
+          docker rm -f \$(docker ps -aq) || echo "no containers to remove"
+          docker-compose build --force-rm --no-cache --pull
+        """
+      }
+
+      /*
+      This stage starts the containers and verifies exchange container is healthy.
+      */
+      stage('Start Containers'){
+        sh """
+          docker-compose up -d
+        """
+        timeout(time: 10, unit: 'MINUTES')  {
+          waitUntil {
+            script {
+              def r = sh script: 'wget -q http://localhost -O /dev/null', returnStatus: true
+              return (r == 0);
             }
-            sh """
-              docker-compose logs
-            """
           }
-        )
-      }
-
-      stage('Verify Migrations'){
+        }
         sh """
-          docker-compose exec -T exchange /bin/bash -c '. docker/devops/helper.sh && makemigrations-check'
+          docker-compose logs
         """
       }
 
-      stage('py.test'){
-        sh """
-          docker-compose exec -T exchange /bin/bash -c '/code/docker/exchange/run_tests.sh'
-        """
-      }
-
-      stage('Regression Tests'){
+      /*
+      This stage runs safety and OWASP dependency check on source.
+      */
+      stage('Dependency Checks'){
         parallel (
-          "Mozilla Firefox" : {
-            katalonDocker([browser: 'Firefox', rpath: 'docker/qa'], 'Test Suites/regression')
+          // "Migration Check" : {
+          //  sh """
+          //    docker-compose exec -T exchange /bin/bash -c '. docker/devops/helper.sh && makemigrations-check'
+          //  """
+          // },
+          "Safety Check" : {
+            sh """
+              docker-compose exec -T exchange /bin/bash -c 'pip install safety && pip freeze | safety check --stdin --full-report'
+            """
           },
-          "Google Chrome" : {
-            katalonDocker([browser: 'Chrome', rpath: 'docker/qa'], 'Test Suites/regression')
+          "Dependency Check" : {
+            bashDocker(
+              'quay.io/boundlessgeo/b7s-sonarqube-scanner',
+              'dependency-check --project exchange --disableBundleAudit --disableAssembly --out . --scan . -f ALL \
+               && cat dependency-check-report.json'
+            )
           }
         )
       }
 
-      if (env.BRANCH_NAME == 'master') {
-        stage('SonarQube Analysis') {
+      /*
+      This stage runs py.test against all tests in exchange, coverage is also provided during this step.
+      */
+      stage('Functional Tests'){
+        sh """
+          docker-compose exec -T exchange /bin/bash \
+                              -c 'pip install pytest-cov \
+                                  && export DJANGO_SETTINGS_MODULE="exchange.settings" \
+                                  && export PYTEST=1 \
+                                  && py.test --cov-report term \
+                                             --cov-report xml \
+                                             --cov=exchange exchange/tests/ \
+                                             --disable-pytest-warnings'
+        """
+      }
+
+      /*
+      This stage runs regression tests for Mozilla Firefox using katalon.
+      */
+      stage('Firefox Tests'){
+        katalonDocker([browser: 'Firefox', rpath: 'docker/qa'], 'Test Suites/regression')
+      }
+
+      /*
+      This stage runs regression tests for Google Chrome using katalon.
+      */
+      stage('Chrome Tests'){
+        katalonDocker([browser: 'Chrome', rpath: 'docker/qa'], 'Test Suites/regression')
+      }
+
+      /*
+      This stage runs runs static code analysis using SonarQube.
+      */
+      stage('SonarQube Analysis') {
+        // Format: Jenkins Build Number.Github PR number if PR
+        def projectVersion = (env.CHANGE_ID != null) ? "${env.BUILD_NUMBER}.${env.CHANGE_ID}" : "${env.BUILD_NUMBER}"
+
+        if (env.BRANCH_NAME == 'master') {
+          // Publish to SonarQube
           sh """
-            docker run -e SONAR_HOST_URL='https://sonar-ciapi.boundlessgeo.io' \
-                       -e SONAR_TOKEN=$SONAR_TOKEN \
-                       -v \$(pwd -P):/code \
-                       -w /code quay.io/boundlessgeo/sonar-maven-py3-alpine bash \
-                       -c '. docker/devops/helper.sh && sonar-scan'
-            """
+            docker run -v \$(pwd -P):/code \
+                       -w /code quay.io/boundlessgeo/b7s-sonarqube-scanner bash \
+                       -c 'sonar-scanner -Dsonar.host.url=https://sq.boundlessgeo.io \
+                                         -Dsonar.login=$SONAR_TOKEN \
+                                         -Dsonar.projectKey=exchange \
+                                         -Dsonar.projectVersion=${projectVersion} \
+                                         -Dsonar.projectName=exchange \
+                                         -Dsonar.dependencyCheck.reportPath=dependency-check-report.xml \
+                                         -Dsonar.dependencyCheck.htmlReportPath=dependency-check-report.html \
+                                         -Dsonar.sources=exchange \
+                                         -Dsonar.language=py \
+                                         -Dsonar.python.pylint=/usr/bin/pylint \
+                                         -Dsonar.python.coverage.reportPath=coverage.xml'
+          """
+        } else if (env.CHANGE_ID != null) {
+          // Preview and publish to GitHub
+          sh """
+            docker run -v \$(pwd -P):/code \
+                       -w /code quay.io/boundlessgeo/b7s-sonarqube-scanner bash \
+                       -c 'sonar-scanner -Dsonar.analysis.mode=preview \
+                                         -Dsonar.host.url=https://sq.boundlessgeo.io \
+                                         -Dsonar.login=$SONAR_TOKEN \
+                                         -Dsonar.github.oauth=${SONAR_GITHUB_TOKEN} \
+                                         -Dsonar.projectKey=exchange \
+                                         -Dsonar.projectVersion=${projectVersion} \
+                                         -Dsonar.projectName=exchange \
+                                         -Dsonar.dependencyCheck.reportPath=dependency-check-report.xml \
+                                         -Dsonar.dependencyCheck.htmlReportPath=dependency-check-report.html \
+                                         -Dsonar.sources=exchange \
+                                         -Dsonar.language=py \
+                                         -Dsonar.python.pylint=/usr/bin/pylint \
+                                         -Dsonar.python.coverage.reportPath=coverage.xml'
+          """
+        } else {
+          // No reporting if not master or a PR
+          echo "SonarQube Analysis was not performed, please submit a PR for analysis"
         }
       }
-
+      /*
+      This stage uploads the documentation to Boundless Connect if the commit was tagged.
+      */
       if (env.BRANCH_NAME == 'master' && gitTagCheck()) {
         stage('Update Connect Docs') {
           sh """
@@ -145,7 +246,7 @@ node {
       currentBuild.result = "FAILURE"
         throw err
     } finally {
-      // Success or failure, always send notifications
+      // Success or failure, always send notifications and clean up docker env
       echo currentBuild.result
       sh """
         docker-compose logs

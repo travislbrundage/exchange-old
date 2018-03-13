@@ -14,7 +14,7 @@
 	branch = angular-1.6
 [submodule "vendor/castling"]
 	path = vendor/castling
-	url = git@github.com:boundlessgeo/castling.git
+	url = https://github.com/boundlessgeo/castling.git
 [submodule "vendor/geonode-elasticsearch"]
 	path = vendor/geonode-elasticsearch
 	url = https://github.com/boundlessgeo/geonode-elasticsearch
