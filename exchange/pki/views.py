@@ -27,6 +27,7 @@ from urlparse import parse_qs
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from wsgiref import util as wsgiref_util
+from django.core.exceptions import ValidationError
 
 from .ssl_adapter import https_request
 
@@ -42,6 +43,7 @@ def pki_request(request, resource_url=None):
     :param resource_url: Remainder of parsed path, e.g. '/pki/<resource_url>'
     :rtype: HttpResponse
     """
+    raise ValidationError
 
     if resource_url is None:
         return HttpResponse('Resource URL missing for PKI request',
