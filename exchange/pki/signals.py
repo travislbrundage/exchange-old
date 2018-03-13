@@ -25,8 +25,11 @@ from fnmatch import fnmatch
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
+from geonode.base.models import Link
+
 from .models import (
     rebuild_hostnameport_pattern_cache,
+    hostnameport_pattern_for_url,
     HostnamePortSslConfig
 )
 from .ssl_adapter import (
@@ -35,7 +38,12 @@ from .ssl_adapter import (
     get_ssl_context_opts,
     ssl_config_to_context_opts
 )
-from .utils import hostname_port
+from .utils import (
+    hostname_port,
+    has_pki_prefix,
+    pki_route,
+    pki_route_reverse
+)
 
 logger = logging.getLogger(__name__)
 
@@ -82,11 +90,40 @@ def sync_https_adapters():
                 )
                 logger.debug(u'Updated session adapter: {0}'.format(base_url))
             else:
-                logger.debug(u'Session adapter unchanged: {0}'.format(base_url))
+                logger.debug(u'Session adapter unchanged: {0}'
+                             .format(base_url))
         else:
             logger.debug(u'Adapter URL does not match any hostname:port '
                          u'(deleting): {0}'.format(base_url))
             del https_client.adapters[base_url]
+
+
+def sync_layer_legend_urls():
+    links = list(Link.objects.filter(name='Legend').order_by('url'))
+    """:type: list[geonode.base.models.Link]"""
+
+    for link in links:
+        if not link.url.lower().startswith('https') \
+                and not has_pki_prefix(link.url):
+            # logger.debug(u'Skipping URL hostname:port pattern matching: '
+            #              u'{0} > {1}'.format(link.link_type, link.url))
+            continue
+
+        orig_url = pki_route_reverse(link.url)
+        ptn = hostnameport_pattern_for_url(orig_url)
+        if ptn is not None:
+            logger.debug(u'Original link URL matched hostname:port pattern: '
+                         u'{0} > {1}'.format(orig_url, ptn))
+            # Legend graphic URLs should be prefixed with browser site prefix
+            new_url = pki_route(orig_url, site=True)
+        else:
+            logger.debug(u'Original link URL does not match any hostname:port:'
+                         u' {0}'.format(orig_url))
+            new_url = orig_url
+
+        if new_url != link.url:
+            link.url = new_url
+            link.save(update_fields=['url'])
 
 
 def sync_map_layers():
@@ -113,6 +150,7 @@ def add_update_mapping(sender, instance, created, raw,
     rebuild_hostnameport_pattern_cache()
     sync_https_adapters()
     sync_map_layers()
+    sync_layer_legend_urls()
 
 
 # noinspection PyUnusedLocal
@@ -125,3 +163,4 @@ def remove_mapping(sender, instance, using, **kwargs):
     rebuild_hostnameport_pattern_cache()
     sync_https_adapters()
     sync_map_layers()
+    sync_layer_legend_urls()
