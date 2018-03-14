@@ -1,0 +1,135 @@
+[
+{
+  "fields": {
+    "ssl_verify_mode": "CERT_REQUIRED",
+    "name": "Just custom CAs",
+    "ssl_ciphers": "",
+    "client_key_pass": "",
+    "description": "",
+    "ssl_version": "PROTOCOL_SSLv23",
+    "https_retries": "3",
+    "ca_custom_certs": "root-root2-chains.pem",
+    "https_redirects": "3",
+    "ca_allow_invalid_certs": false,
+    "client_cert": "",
+    "ssl_options": "",
+    "client_key": ""
+  },
+  "model": "pki.sslconfig",
+  "pk": 2
+},
+{
+  "fields": {
+    "ssl_verify_mode": "CERT_REQUIRED",
+    "name": "PKI: key with no password",
+    "ssl_ciphers": "",
+    "client_key_pass": "",
+    "description": "",
+    "ssl_version": "PROTOCOL_SSLv23",
+    "https_retries": "3",
+    "ca_custom_certs": "root-root2-chains.pem",
+    "https_redirects": "3",
+    "ca_allow_invalid_certs": false,
+    "client_cert": "alice-cert.pem",
+    "ssl_options": "",
+    "client_key": "alice-key.pem"
+  },
+  "model": "pki.sslconfig",
+  "pk": 3
+},
+{
+  "fields": {
+    "ssl_verify_mode": "CERT_REQUIRED",
+    "name": "PKI: key with password",
+    "ssl_ciphers": "",
+    "client_key_pass": "password",
+    "description": "",
+    "ssl_version": "PROTOCOL_SSLv23",
+    "https_retries": "3",
+    "ca_custom_certs": "root-root2-chains.pem",
+    "https_redirects": "3",
+    "ca_allow_invalid_certs": false,
+    "client_cert": "alice-cert.pem",
+    "ssl_options": "",
+    "client_key": "alice-key_w-pass.pem"
+  },
+  "model": "pki.sslconfig",
+  "pk": 4
+},
+{
+  "fields": {
+    "ssl_verify_mode": "CERT_REQUIRED",
+    "name": "PKI: key with password; TLSv1_2-only; alt root CA chain",
+    "ssl_ciphers": "",
+    "client_key_pass": "password",
+    "description": "",
+    "ssl_version": "PROTOCOL_SSLv23",
+    "https_retries": "3",
+    "ca_custom_certs": "root-root2-chains.pem",
+    "https_redirects": "3",
+    "ca_allow_invalid_certs": false,
+    "client_cert": "jane-cert.pem",
+    "ssl_options": "",
+    "client_key": "jane-key_w-pass.pem"
+  },
+  "model": "pki.sslconfig",
+  "pk": 5
+},
+{
+  "fields": {
+    "ssl_verify_mode": "CERT_REQUIRED",
+    "name": "PKI: key with password; TLSv1_2-only",
+    "ssl_ciphers": "",
+    "client_key_pass": "password",
+    "description": "",
+    "ssl_version": "PROTOCOL_TLSv1_2",
+    "https_retries": "3",
+    "ca_custom_certs": "root-root2-chains.pem",
+    "https_redirects": "3",
+    "ca_allow_invalid_certs": false,
+    "client_cert": "alice-cert.pem",
+    "ssl_options": "",
+    "client_key": "alice-key_w-pass.pem"
+  },
+  "model": "pki.sslconfig",
+  "pk": 6
+},
+{
+  "fields": {
+    "ssl_verify_mode": "CERT_NONE",
+    "name": "PKI: key with no password; custom CAs with no validation",
+    "ssl_ciphers": "",
+    "client_key_pass": "",
+    "description": "",
+    "ssl_version": "PROTOCOL_TLSv1_2",
+    "https_retries": "3",
+    "ca_custom_certs": "root-root2-chains.pem",
+    "https_redirects": "3",
+    "ca_allow_invalid_certs": false,
+    "client_cert": "alice-cert.pem",
+    "ssl_options": "",
+    "client_key": "alice-key.pem"
+  },
+  "model": "pki.sslconfig",
+  "pk": 7
+},
+{
+  "fields": {
+    "ssl_verify_mode": "CERT_REQUIRED",
+    "name": "PKI: key with no password; TLSv1_2-only (via ssl_options)",
+    "ssl_ciphers": "",
+    "client_key_pass": "",
+    "description": "",
+    "ssl_version": "PROTOCOL_SSLv23",
+    "https_retries": "3",
+    "ca_custom_certs": "root-root2-chains.pem",
+    "https_redirects": "3",
+    "ca_allow_invalid_certs": false,
+    "client_cert": "alice-cert.pem",
+    "ssl_options": "OP_NO_SSLv2, OP_NO_SSLv3, OP_NO_TLSv1, OP_NO_TLSv1_1, OP_NO_COMPRESSION",
+    "client_key": "alice-key.pem"
+  },
+  "model": "pki.sslconfig",
+  "pk": 8
+}
+]

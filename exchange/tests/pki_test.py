@@ -19,43 +19,59 @@
 #
 #########################################################################
 
-import os
-import sys
 import unittest
 import logging
+# noinspection PyPackageRequirements
+import pytest
 import django
 
 from requests import get
 from requests.exceptions import ConnectionError
 
-# from django.http import HttpRequest, HttpResponse
-from django.conf import settings
-from django.test.utils import get_runner
-from django.test import TestCase
+from django.core import management
+from django.core.exceptions import ImproperlyConfigured, AppRegistryNotReady
 
-TESTDIR = os.path.dirname(os.path.realpath(__file__))
+try:
+    # Do this before geonode.services.serviceprocessors, so that apps are ready
+    django.setup()
+except (RuntimeError, ImproperlyConfigured,
+        AppRegistryNotReady, LookupError, ValueError):
+    raise
 
-if __name__ != '__main__':
-    from ..models import (
-        SslConfig,
-        HostnamePortSslConfig,
-        hostnameport_pattern_cache,
-        ssl_config_for_url,
-        has_ssl_config,
-        hostnameport_pattern_for_url
-    )
-    from ..utils import hostname_port, requests_base_url
-    from ..crypto import Crypto
-    from ..ssl_adapter import (
-        https_client,
-        https_request,
-        clear_https_adapters,
-        ssl_config_to_context_opts,
-        get_ssl_context_opts,
-        SslContextAdapter
-    )
+from geonode.services import enumerations
+from geonode.services.serviceprocessors import get_service_handler
+
+from . import ExchangeTest
+
+from exchange.pki.models import (
+    SslConfig,
+    HostnamePortSslConfig,
+    hostnameport_pattern_cache,
+    ssl_config_for_url,
+    has_ssl_config,
+    hostnameport_pattern_for_url,
+)
+from exchange.pki.utils import (
+    hostname_port,
+    requests_base_url,
+    get_pki_dir,
+)
+from exchange.pki.crypto import Crypto
+from exchange.pki.ssl_adapter import (
+    https_client,
+    https_request,
+    clear_https_adapters,
+    ssl_config_to_context_opts,
+    get_ssl_context_opts,
+    SslContextAdapter,
+)
 
 logger = logging.getLogger(__name__)
+
+
+# bury these warnings for testing
+class RemovedInDjango19Warning(Exception):
+    pass
 
 
 def skip_unless_has_mapproxy():
@@ -68,10 +84,33 @@ def skip_unless_has_mapproxy():
             'Test requires mapproxy docker-compose container running')
 
 
-class TestHostnamePortSslConfig(TestCase):
+def has_mapproxy():
+    try:
+        mp_http = get('http://mapproxy.boundless.test:8088')
+        assert mp_http.status_code == 200
+        return True
+    except (ConnectionError, AssertionError):
+        return False
+
+
+class PkiTestCase(ExchangeTest):
+
+    # fixtures = ['test_ssl_configs.json']
+    fixtures = ['test_ssl_configs_no_default.json']
 
     @classmethod
     def setUpClass(cls):
+        # django.setup()
+        management.call_command('rebuild_index')
+        super(PkiTestCase, cls).setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        super(PkiTestCase, cls).tearDownClass()
+
+    @classmethod
+    def setUpTestData(cls):
+        """Load initial data for the TestCase"""
         # This needs to be mixed case, to ensure SslContextAdapter handles
         # server cert matching always via lowercase hostname (bug in urllib3)
         cls.mp_root = u'https://maPproxy.Boundless.test:8344/'
@@ -81,50 +120,68 @@ class TestHostnamePortSslConfig(TestCase):
 
         cls.mp_txt = 'Welcome to MapProxy'
 
-    @classmethod
-    def tearDownClass(cls):
-        pass
+        logger.debug("PKI_DIRECTORY: {0}".format(get_pki_dir()))
+
+        logger.debug("SslConfig.objects:\n{0}"
+                     .format(repr(SslConfig.objects.all())))
+
+    def create_hostname_port_mapping(self, ssl_config, ptn=None):
+        if ptn is None:
+            ptn = self.mp_host_port
+        logger.debug("Attempt Hostname:Port mapping for SslConfig: {0}"
+                     .format(ssl_config))
+        if isinstance(ssl_config, int):
+            ssl_config = SslConfig.objects.get(pk=ssl_config)
+        if not isinstance(ssl_config, SslConfig):
+            raise Exception('ssl_config not an instance of SslConfig')
+        HostnamePortSslConfig.objects.create_hostnameportsslconfig(
+            ptn, ssl_config)
+        logger.debug("Hostname:Port mappings:\n{0}"
+                     .format(HostnamePortSslConfig.objects.all()))
+
+
+class TestHostnamePortSslConfig(PkiTestCase):
 
     def setUp(self):
-        testheader = '\n\n#####_____ {0} _____#####' \
-            .format(str(self).replace('pki.tests.tests.', ''))
-        logger.debug(testheader)
-        pass
+        HostnamePortSslConfig.objects.all().delete()
+        self.assertEqual(HostnamePortSslConfig.objects.count(), 0)
+
+        self.ssl_config_1 = SslConfig.objects.get(pk=1)
+        self.ssl_config_2 = SslConfig.objects.get(pk=2)
+        self.ssl_config_3 = SslConfig.objects.get(pk=3)
+        self.ssl_config_4 = SslConfig.objects.get(pk=4)
+        self.ssl_config_5 = SslConfig.objects.get(pk=5)
+        self.ssl_config_6 = SslConfig.objects.get(pk=6)
+        self.ssl_config_7 = SslConfig.objects.get(pk=7)
+        self.ssl_config_8 = SslConfig.objects.get(pk=8)
+        self.ssl_configs = [
+            self.ssl_config_1,  # Default: TLS-only
+            self.ssl_config_4,  # PKI: key with password
+            self.ssl_config_2   # Just custom CAs
+        ]
+
+        self.p1 = u'*.arcgisonline.com*'
+        self.p2 = u'*.boundless.test*'
+        self.p3 = u'*.*'
+        self.ptrns = [self.p1, self.p2, self.p3]
+
+        ptrns_l = []
+        self.hnp_sslconfigs = []
+        for config, p in zip(self.ssl_configs, self.ptrns):
+            self.create_hostname_port_mapping(config, p)
+            ptrns_l.append(p)
+            self.assertEqual(hostnameport_pattern_cache, ptrns_l)
+
+            self.hnp_sslconfigs.append(HostnamePortSslConfig.objects.get(
+                hostname_port=p))
+        self.assertTrue(all(self.hnp_sslconfigs))
 
     def tearDown(self):
         pass
 
     def testHostnamePortSslConfigSignals(self):
         clear_https_adapters()
-        HostnamePortSslConfig.objects.all().delete()
-
-        self.assertEqual(HostnamePortSslConfig.objects.count(), 0)
         self.assertEqual(len(https_client.adapters), 1)  # for http://
-
-        ssl_config_1 = SslConfig.objects.get(pk=1)
-        ssl_config_2 = SslConfig.objects.get(pk=2)
-        ssl_config_3 = SslConfig.objects.get(pk=3)
-        ssl_configs = [ssl_config_1, ssl_config_2, ssl_config_3]
-
-        p1 = u'*.arcgisonline.com*'
-        p2 = u'*.boundless.test*'
-        p3 = u'*.*'
-        ptrns = [p1, p2, p3]
-
-        HostnamePortSslConfig.objects.create_hostnameportsslconfig(
-            p1, ssl_config_1)
-        self.assertEqual(hostnameport_pattern_cache, [p1])
-        hnp_sslconfig_1 = HostnamePortSslConfig.objects.get(hostname_port=p1)
-        HostnamePortSslConfig.objects.create_hostnameportsslconfig(
-            p2, ssl_config_2)
-        self.assertEqual(hostnameport_pattern_cache, [p1, p2])
-        hnp_sslconfig_2 = HostnamePortSslConfig.objects.get(hostname_port=p2)
-        HostnamePortSslConfig.objects.create_hostnameportsslconfig(
-            p3, ssl_config_3)
-        self.assertEqual(hostnameport_pattern_cache, [p1, p2, p3])
-        hnp_sslconfig_3 = HostnamePortSslConfig.objects.get(hostname_port=p3)
-        hnp_sslconfigs = [hnp_sslconfig_1, hnp_sslconfig_2, hnp_sslconfig_3]
-        self.assertTrue(all(hnp_sslconfigs))
 
         url1 = u'https://services.arcgisonline.com/arcgis/rest/' \
                u'services/topic/layer/?f=pjson'
@@ -133,7 +190,7 @@ class TestHostnamePortSslConfig(TestCase):
         url3 = u'https://привет.你好.çéàè.example.com/some/path?key=value#frag'
         urls = [url1, url2, url3]
 
-        for p, config, url in zip(ptrns, ssl_configs, urls):
+        for p, config, url in zip(self.ptrns, self.ssl_configs, urls):
             self.assertTrue(has_ssl_config(url))
             ssl_config = ssl_config_for_url(url)
             self.assertIsNotNone(ssl_config)
@@ -144,7 +201,7 @@ class TestHostnamePortSslConfig(TestCase):
             )
             self.assertEqual(hostnameport_pattern_for_url(url), p)
 
-        for url, ssl_config in zip(urls, ssl_configs):
+        for url, ssl_config in zip(urls, self.ssl_configs):
             base_url = requests_base_url(url)
             https_client.mount(
                 base_url,
@@ -197,46 +254,30 @@ class TestHostnamePortSslConfig(TestCase):
         # self.assertEqual(HostnamePortSslConfig.objects.count(), 0)
         # self.assertEqual(len(https_client.adapters), 1)
 
+    @pytest.mark.skip(reason="Just cause")
+    def testMapProxyRegistration(self):
+        mp_service = self.mp_root + 'service'
 
-@skip_unless_has_mapproxy()
-class TestPkiRequest(TestCase):
+        handler = get_service_handler(
+            base_url=mp_service, service_type=enumerations.WMS)
+        result = handler.create_geonode_service(self.test_user)
+        self.assertEqual(result.base_url, mp_service.lower())
+        self.assertEqual(result.type, handler.service_type)
+        self.assertEqual(result.method, handler.indexing_method)
+        self.assertEqual(result.owner, self.test_user)
+        self.assertEqual(result.name, handler.name)
 
-    @classmethod
-    def setUpClass(cls):
-        # This needs to be mixed case, to ensure SslContextAdapter handles
-        # server cert matching always via lowercase hostname (bug in urllib3)
-        cls.mp_root = u'https://maPproxy.Boundless.test:8344/'
 
-        # Already know what the lookup table key should be like
-        cls.mp_host_port = hostname_port(cls.mp_root)
-
-        cls.mp_txt = 'Welcome to MapProxy'
-
-    @classmethod
-    def tearDownClass(cls):
-        pass
+@pytest.mark.skipif(
+    not has_mapproxy(),
+    reason='Test requires mapproxy docker-compose container running')
+class TestPkiRequest(PkiTestCase):
 
     def setUp(self):
-        # HostnamePortSslConfig.objects.all().delete()
-        testheader = '\n\n#####_____ {0} _____#####'\
-            .format(str(self).replace('pki.tests.tests.', ''))
-        logger.debug(testheader)
-        pass
+        HostnamePortSslConfig.objects.all().delete()
 
     def tearDown(self):
-        # HostnamePortSslConfig.objects.all().delete()
-        pass
-
-    def _set_hostname_port_mapping(self, pk, ptn=None):
-        if ptn is None:
-            ptn = self.mp_host_port
-        logger.debug("Attempt Hostname:Port mapping for SslConfig pk: {0}"
-                     .format(pk))
-        ssl_config = SslConfig.objects.get(pk=pk)
-        HostnamePortSslConfig.objects.create_hostnameportsslconfig(
-            ptn, ssl_config)
-        logger.debug("Hostname:Port mappings:\n{0}"
-                     .format(HostnamePortSslConfig.objects.all()))
+        HostnamePortSslConfig.objects.all().delete()
 
     def test_crypto(self):
         c = Crypto()
@@ -283,71 +324,41 @@ class TestPkiRequest(TestCase):
         self.assertEqual(res.status_code, 200)
 
     def test_no_client(self):
-        self._set_hostname_port_mapping(2)
+        self.create_hostname_port_mapping(2)
         res = https_request(self.mp_root)
         # Nginx non-standard status code 400 is for no client cert supplied
         self.assertEqual(res.status_code, 400)
 
     def test_client_no_password(self):
-        self._set_hostname_port_mapping(3)
+        self.create_hostname_port_mapping(3)
         res = https_request(self.mp_root)
         self.assertEqual(res.status_code, 200)
         self.assertIn(self.mp_txt, res.content.decode("utf-8"))
 
     def test_client_and_password(self):
-        self._set_hostname_port_mapping(4)
+        self.create_hostname_port_mapping(4)
         res = https_request(self.mp_root)
         self.assertEqual(res.status_code, 200)
         self.assertIn(self.mp_txt, res.content.decode("utf-8"))
 
     def test_client_and_password_alt_root(self):
-        self._set_hostname_port_mapping(5)
+        self.create_hostname_port_mapping(5)
         res = https_request(self.mp_root)
         self.assertEqual(res.status_code, 200)
         self.assertIn(self.mp_txt, res.content.decode("utf-8"))
 
     def test_client_and_password_tls12_only(self):
-        self._set_hostname_port_mapping(6)
+        self.create_hostname_port_mapping(6)
         res = https_request(self.mp_root)
         self.assertEqual(res.status_code, 200)
         self.assertIn(self.mp_txt, res.content.decode("utf-8"))
 
     def test_no_client_no_validation(self):
-        self._set_hostname_port_mapping(7)
+        self.create_hostname_port_mapping(7)
         res = https_request(self.mp_root)
         self.assertEqual(res.status_code, 200)
 
     def test_client_no_password_tls12_only_ssl_opts(self):
-        self._set_hostname_port_mapping(8)
+        self.create_hostname_port_mapping(8)
         res = https_request(self.mp_root)
         self.assertEqual(res.status_code, 200)
-
-
-if __name__ == '__main__':
-    sys.path.insert(0, os.path.dirname(os.path.dirname(TESTDIR)))
-    # print(sys.path)
-    os.chdir(os.path.dirname(os.path.dirname(TESTDIR)))
-    # print(os.getcwd())
-
-    # Use standard Django test runner to test reusable applications
-    # https://docs.djangoproject.com/en/2.0/topics/testing/advanced/
-    #         #using-the-django-test-runner-to-test-reusable-applications
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'test_settings'
-    django.setup()
-
-    # These imports need to come after loading settings, since settings is
-    # imported in crypto.Crypto class, for SECRET_KEY use
-    from pki.models import SslConfig, HostnamePortSslConfig  # noqa
-    from pki.utils import hostname_port, requests_base_url  # noqa
-    from pki.crypto import Crypto  # noqa
-    from pki.ssl_adapter import https_client  # noqa
-    from pki.ssl_adapter import https_request  # noqa
-    from pki.ssl_adapter import clear_https_adapters  # noqa
-    from pki.ssl_adapter import ssl_config_to_context_opts  # noqa
-    from pki.ssl_adapter import SslContextAdapter  # noqa
-
-    TestRunner = get_runner(settings)
-    """:type: django.test.runner.DiscoverRunner"""
-    test_runner = TestRunner(keepdb=False)
-    failures = test_runner.run_tests(['pki.tests'])
-    sys.exit(bool(failures))
