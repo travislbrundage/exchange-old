@@ -4,6 +4,12 @@
    <name>a_Logout</name>
    <tag></tag>
    <elementGuidId>d1907cf5-7700-4bc3-874d-ac68e81983aa</elementGuidId>
+   <selectorCollection>
+      <entry>
+         <key>BASIC</key>
+         <value>//a[@href = '/account/logout' and (text() = 'Logout' or . = 'Logout')]</value>
+      </entry>
+   </selectorCollection>
    <selectorMethod>BASIC</selectorMethod>
    <useRalativeImagePath>false</useRalativeImagePath>
    <webElementProperties>
@@ -18,7 +24,7 @@
       <matchCondition>equals</matchCondition>
       <name>href</name>
       <type>Main</type>
-      <value>/account/logout/</value>
+      <value>/account/logout</value>
    </webElementProperties>
    <webElementProperties>
       <isSelected>true</isSelected>

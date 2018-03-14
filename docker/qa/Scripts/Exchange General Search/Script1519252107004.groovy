@@ -58,9 +58,7 @@ WebUI.click(findTestObject('Page_Welcome - example.com (2)/i_fa fa-users fa-4x')
 
 WebUI.click(findTestObject('Page_Search - example.com/i_fa fa-caret-down_1'))
 
-WebUI.click(findTestObject('Page_Search - example.com/a_Logout'))
-
-WebUI.click(findTestObject('Page_example.com (2)/button_Log out'))
+WebUI.click(findTestObject('Page_Welcome - example.com/a_Logout'))
 
 WebUI.closeBrowser()
 
