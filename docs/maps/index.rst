@@ -277,36 +277,6 @@ All associated layers and documents will be listed, with links to their respecti
 
   .. figure:: img/associated.png
 
-Download data layers
-^^^^^^^^^^^^^^^^^^^^
-
-Here you can download the contents of a map that is stored in Exchange. It does not download data from other servers, however.
-
-#. Click the :guilabel:`Download Map` button.
-
-#. Select **Download Data Layers**.
-
-  .. figure:: img/download-map.png
-
-If multiple layers exist, you will be able to select one or more of the available layers.
-
-  .. figure:: img/download-map-layers.png
-
-3. Select the layer(s) you want to download individually, or the :guilabel:`Start downloading this map` button to begin downloading.
-
-Download Web Map Context
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-The Web Map Context (WMC) is an open geospatial consortium (OGC) standard for metadata describing a map service.
-
-#. Click the :guilabel:`Download Map` button.
-
-#. Select **Download Web Map Context** from the menu.
-
-   .. figure:: img/download-map.png
-
-A new tab will open with the XML for the web map context.
-
 Edit map metadata
 ^^^^^^^^^^^^^^^^^
 
