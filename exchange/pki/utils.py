@@ -117,6 +117,10 @@ def proxy_prefix():
     return "{0}{1}".format(settings.SITEURL.rstrip('/'), settings.PROXY_URL)
 
 
+def has_proxy_prefix(url):
+    return True if url.startswith(proxy_prefix()) else False
+
+
 def proxy_route(url):
     return "{0}{1}".format(proxy_prefix(), quote_plus(url))
 

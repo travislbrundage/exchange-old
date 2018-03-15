@@ -40,7 +40,7 @@ from .ssl_adapter import (
 )
 from .utils import (
     hostname_port,
-    has_pki_prefix,
+    has_proxy_prefix,
     proxy_route,
     proxy_route_reverse
 )
@@ -104,7 +104,7 @@ def sync_layer_legend_urls():
 
     for link in links:
         if not link.url.lower().startswith('https') \
-                and not has_pki_prefix(link.url):
+                and not has_proxy_prefix(link.url):
             # logger.debug(u'Skipping URL hostname:port pattern matching: '
             #              u'{0} > {1}'.format(link.link_type, link.url))
             continue
