@@ -18,6 +18,7 @@
 #
 #########################################################################
 
+import json
 import logging
 
 from fnmatch import fnmatch
@@ -26,6 +27,7 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 from geonode.base.models import Link
+from geonode.maps.models import MapLayer
 
 from .models import (
     rebuild_hostnameport_pattern_cache,
@@ -135,8 +137,21 @@ def sync_map_layers():
     Note: The flag can be added if the map layer's URL now maps to an
     SslConfig, even if it may not have mapped upon initial saving.
     """
-    # TODO: Like, the actual code and everything
-    pass
+    map_lyrs = list(MapLayer.objects.exclude(ows_url__isnull=True))
+    """:type: list[geonode.maps.models.MapLayer]"""
+
+    for map_lyr in map_lyrs:
+        ptn = hostnameport_pattern_for_url(map_lyr.ows_url)
+        if ptn is not None:
+            logger.debug(u'MapLayer URL matched hostname:port pattern:'
+                         u'{0} > {1}'.format(map_lyr, ptn))
+        else:
+            logger.debug(u'MapLayer URL does not match any hostname:port:'
+                         u' {0}'.format(map_lyr))
+        src_params = json.loads(map_lyr.source_params)
+        src_params['use_proxy'] = (ptn is not None)
+        map_lyr.source_params = json.dumps(src_params)
+        map_lyr.save(update_fields=['source_params'])
 
 
 # noinspection PyUnusedLocal
@@ -149,8 +164,8 @@ def add_update_mapping(sender, instance, created, raw,
     """
     rebuild_hostnameport_pattern_cache()
     sync_https_adapters()
-    sync_map_layers()
     sync_layer_legend_urls()
+    sync_map_layers()
 
 
 # noinspection PyUnusedLocal
@@ -162,5 +177,5 @@ def remove_mapping(sender, instance, using, **kwargs):
     """
     rebuild_hostnameport_pattern_cache()
     sync_https_adapters()
-    sync_map_layers()
     sync_layer_legend_urls()
+    sync_map_layers()
