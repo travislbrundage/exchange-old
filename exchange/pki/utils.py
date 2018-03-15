@@ -24,7 +24,7 @@ import logging
 
 # noinspection PyCompatibility
 from urlparse import urlparse
-from urllib import quote, unquote
+from urllib import quote, unquote, quote_plus, unquote_plus
 
 from django.conf import settings
 
@@ -66,6 +66,17 @@ def pki_site_prefix():
     return "{0}/pki/".format(exchange_site)
 
 
+def _pki_prefixes():
+    return [pki_prefix(), pki_site_prefix()]
+
+
+def has_pki_prefix(url):
+    for prefix in _pki_prefixes():
+        if url.startswith(prefix):
+            return True
+    return False
+
+
 def pki_route(url, site=False):
     """
     Reroutes a service url through the 'pki' internal proxy
@@ -85,13 +96,6 @@ def pki_route(url, site=False):
         pki_site_prefix() if site else pki_prefix(), quote(url))
 
 
-def has_pki_prefix(url):
-    for prefix in [pki_prefix(), pki_site_prefix()]:
-        if url.startswith(prefix):
-            return True
-    return False
-
-
 def pki_route_reverse(url):
     """
     Revert possibly rewritten /pki-proxied URL back to original value.
@@ -103,9 +107,30 @@ def pki_route_reverse(url):
     :type url: str | unicode
     :return: URL reverted back to value prior to rewriting
     """
-    for prefix in [pki_prefix(), pki_site_prefix()]:
+    for prefix in _pki_prefixes():
         if url.startswith(prefix):
-            return "https://{0}".format(unquote(url.replace(prefix, '')))
+            return "https://{0}".format(unquote(url.replace(prefix, '', 1)))
+    return url
+
+
+def proxy_prefix():
+    return "{0}{1}".format(settings.SITEURL.rstrip('/'), settings.PROXY_URL)
+
+
+def proxy_route(url):
+    return "{0}{1}".format(proxy_prefix(), quote_plus(url))
+
+
+def proxy_route_reverse(url):
+    if url.startswith(proxy_prefix()):
+        return unquote_plus(url.replace(proxy_prefix(), '', 1))
+    return url
+
+
+def pki_to_proxy_route(url):
+    """Converts a URL with a pki_route prefix to a settings.PROXY_URL one"""
+    if has_pki_prefix(url):
+        return proxy_route(pki_route_reverse(url))
     return url
 
 

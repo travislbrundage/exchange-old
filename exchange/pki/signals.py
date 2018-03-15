@@ -41,8 +41,8 @@ from .ssl_adapter import (
 from .utils import (
     hostname_port,
     has_pki_prefix,
-    pki_route,
-    pki_route_reverse
+    proxy_route,
+    proxy_route_reverse
 )
 
 logger = logging.getLogger(__name__)
@@ -109,13 +109,13 @@ def sync_layer_legend_urls():
             #              u'{0} > {1}'.format(link.link_type, link.url))
             continue
 
-        orig_url = pki_route_reverse(link.url)
+        orig_url = proxy_route_reverse(link.url)
         ptn = hostnameport_pattern_for_url(orig_url)
         if ptn is not None:
             logger.debug(u'Original link URL matched hostname:port pattern: '
                          u'{0} > {1}'.format(orig_url, ptn))
-            # Legend graphic URLs should be prefixed with browser site prefix
-            new_url = pki_route(orig_url, site=True)
+            # Legend graphic URLs should be proxied through geonode
+            new_url = proxy_route(orig_url)
         else:
             logger.debug(u'Original link URL does not match any hostname:port:'
                          u' {0}'.format(orig_url))

@@ -56,6 +56,7 @@ DATABASES = {
 SITEURL = os.getenv('SITEURL', "http://nginx.boundless.test/")
 EXCHANGE_LOCAL_URL = os.getenv('EXCHANGE_LOCAL_URL',
                                'http://exchange.boundless.test:8000')
+PROXY_URL = '/proxy/?url='
 
 # geoserver settings
 GEOSERVER_URL = os.getenv(
