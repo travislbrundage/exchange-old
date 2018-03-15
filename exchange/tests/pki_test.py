@@ -30,6 +30,8 @@ from requests.exceptions import ConnectionError
 
 from django.core import management
 from django.core.exceptions import ImproperlyConfigured, AppRegistryNotReady
+from django.test import TestCase
+from django.core.urlresolvers import reverse
 
 try:
     # Do this before geonode.services.serviceprocessors, so that apps are ready
@@ -39,7 +41,7 @@ except (RuntimeError, ImproperlyConfigured,
     raise
 
 from geonode.services import enumerations
-from geonode.services.serviceprocessors import get_service_handler
+from geonode.services.models import Service
 
 from . import ExchangeTest
 
@@ -51,11 +53,7 @@ from exchange.pki.models import (
     has_ssl_config,
     hostnameport_pattern_for_url,
 )
-from exchange.pki.utils import (
-    hostname_port,
-    requests_base_url,
-    get_pki_dir,
-)
+from exchange.pki.utils import *  # noqa
 from exchange.pki.crypto import Crypto
 from exchange.pki.ssl_adapter import (
     https_client,
@@ -143,6 +141,10 @@ class PkiTestCase(ExchangeTest):
 class TestHostnamePortSslConfig(PkiTestCase):
 
     def setUp(self):
+        self.login()
+
+        # Service.objects.all().delete()
+
         HostnamePortSslConfig.objects.all().delete()
         self.assertEqual(HostnamePortSslConfig.objects.count(), 0)
 
@@ -254,18 +256,27 @@ class TestHostnamePortSslConfig(PkiTestCase):
         # self.assertEqual(HostnamePortSslConfig.objects.count(), 0)
         # self.assertEqual(len(https_client.adapters), 1)
 
-    @pytest.mark.skip(reason="Just cause")
+    @pytest.mark.skip(reason="Because it can't auth to running exhcange")
     def testMapProxyRegistration(self):
+        logger.debug("Service.objects:\n{0}"
+                     .format(repr(Service.objects.all())))
         mp_service = self.mp_root + 'service'
 
-        handler = get_service_handler(
-            base_url=mp_service, service_type=enumerations.WMS)
-        result = handler.create_geonode_service(self.test_user)
-        self.assertEqual(result.base_url, mp_service.lower())
-        self.assertEqual(result.type, handler.service_type)
-        self.assertEqual(result.method, handler.indexing_method)
-        self.assertEqual(result.owner, self.test_user)
-        self.assertEqual(result.name, handler.name)
+        resp = self.client.post(
+            reverse("register_service"),
+            {'url': mp_service, 'type': enumerations.WMS}
+        )
+        self.assertIsNotNone(resp)
+        self.assertEqual(resp.status_code, 200)
+
+        logger.debug("Service.objects:\n{0}"
+                     .format(repr(Service.objects.all())))
+        wms_srv = Service.objects.get(base_url=mp_service)
+        self.assertEqual(wms_srv.base_url, mp_service)
+        self.assertEqual(wms_srv.online_resource, mp_service)
+        self.assertEqual(wms_srv.type, enumerations.WMS)
+        self.assertEqual(wms_srv.method, enumerations.INDEXED)
+        self.assertEqual(wms_srv.name, 'mapproxymapproxy-wms-proxy')
 
 
 @pytest.mark.skipif(
@@ -362,3 +373,72 @@ class TestPkiRequest(PkiTestCase):
         self.create_hostname_port_mapping(8)
         res = https_request(self.mp_root)
         self.assertEqual(res.status_code, 200)
+
+
+class TestPkiUtils(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.base_url = \
+            'https://mapproxy.boundless.test:8344/service' \
+            '?version=1.1.1&service=WMS'
+        cls.pki_url = \
+            'http://exchange.boundless.test:8000/pki/mapproxy.boundless.test' \
+            '%3A8344/service%3Fversion%3D1.1.1%26service%3DWMS'
+        cls.pki_site_url = \
+            'http://nginx.boundless.test/pki/mapproxy.boundless.test%3A8344/' \
+            'service%3Fversion%3D1.1.1%26service%3DWMS'
+        cls.proxy_url = \
+            'http://nginx.boundless.test/proxy/?url=https%3A%2F%2Fmapproxy.' \
+            'boundless.test%3A8344%2Fservice%3Fversion%3D1.1.1%26service%3DWMS'
+        super(TestPkiUtils, cls).setUpClass()
+
+    def test_routes(self):
+        # has
+        self.assertTrue(has_pki_prefix(pki_prefix()))
+        self.assertTrue(has_pki_prefix(pki_site_prefix()))
+        self.assertTrue(has_pki_prefix(self.pki_url))
+        self.assertTrue(has_pki_prefix(self.pki_site_url))
+        self.assertTrue(has_proxy_prefix(self.proxy_url))
+
+        # to
+        self.assertEqual(self.pki_url,
+                         pki_route(self.base_url))
+        self.assertEqual(self.pki_site_url,
+                         pki_route(self.base_url, site=True))
+        self.assertEqual(self.proxy_url,
+                         proxy_route(self.base_url))
+
+        # from
+        self.assertEqual(self.base_url,
+                         pki_route_reverse(self.pki_url))
+        self.assertEqual(self.base_url,
+                         pki_route_reverse(self.pki_site_url))
+        self.assertEqual(self.base_url,
+                         proxy_route_reverse(self.proxy_url))
+
+        # convert
+        self.assertEqual(self.proxy_url,
+                         pki_to_proxy_route(self.pki_url))
+        self.assertEqual(self.proxy_url,
+                         pki_to_proxy_route(self.pki_site_url))
+
+        # noop
+        self.assertEqual(self.base_url,
+                         pki_route_reverse(self.base_url))
+        self.assertEqual(self.base_url,
+                         proxy_route_reverse(self.base_url))
+
+        # chained
+        self.assertEqual(
+            self.base_url,
+            pki_route_reverse(pki_route(self.base_url)))
+        self.assertEqual(
+            self.base_url,
+            pki_route_reverse(pki_route(self.base_url, site=True)))
+        self.assertEqual(
+            self.base_url,
+            proxy_route_reverse(proxy_route(self.base_url)))
+        self.assertEqual(
+            self.base_url,
+            proxy_route_reverse(pki_to_proxy_route(pki_route(self.base_url))))
