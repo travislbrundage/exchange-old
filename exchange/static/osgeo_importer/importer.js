@@ -102,6 +102,13 @@
                 return layer.status === 'FAILURE';
             };
 
+            this.layerErrorMessage = function(layer) {
+                if (layer.hasOwnProperty('error_message')){
+                    return [layer.error_message];
+                }
+                return [];
+            };
+
             this.layerSuccessful = function(layer) {
                 return layer.status === 'SUCCESS';
             };
@@ -379,6 +386,7 @@
                                 $scope.processing = false;
                                 $scope.errors = layerService.layerFailure(updatedLayer);
                                 $scope.success = layerService.layerSuccessful(updatedLayer);
+                                $scope.errorMessages = layerService.layerErrorMessage(updatedLayer);
                             }
                         })
                     }, 2000);
