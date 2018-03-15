@@ -11,7 +11,6 @@ pushd /code > /dev/null
     --color=auto \
     --exitfirst \
     --showlocals \
-    --full-trace \
     -k test \
     exchange/tests/pki_test.py
 #  python manage.py test exchange.tests.pki_test -v 3 --failfast
