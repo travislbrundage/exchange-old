@@ -41,7 +41,7 @@ def delete_default_config(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pki', '0001_update_mapping_table'),
+        ('pki', '0001_initial'),
     ]
 
     operations = [
