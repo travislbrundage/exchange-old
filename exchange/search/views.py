@@ -9,6 +9,10 @@ from guardian.shortcuts import get_objects_for_user
 from six import iteritems
 
 from geonode.base.models import TopicCategory
+try:
+    from exchange.pki.models import has_ssl_config
+except ImportError:
+    has_ssl_config = None
 
 logger = logging.getLogger(__name__)
 
@@ -502,6 +506,19 @@ def elastic_search(request, resourcetype='base'):
     )
     # Get results
     objects = get_unified_search_result_objects(results.hits.hits)
+
+    # TODO: This isn't the proper way to do this, and needs to be fixed later.
+    if parameters.get("get_proxy", False):
+        # Add a "use_proxy" parameter to each item in objects
+        # Set to true if it has source_host which is matched in has_ssl_config
+        # Otherwise, set to false
+        for item in objects:
+            if ("source_host" in item) and \
+                    (callable(has_ssl_config) and
+                        has_ssl_config('https://' + item["source_host"])):
+                item["use_proxy"] = True
+            else:
+                item["use_proxy"] = False
 
     object_list = {
         "meta": {
