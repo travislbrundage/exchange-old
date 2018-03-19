@@ -25,12 +25,13 @@ import logging
 import pytest
 import django
 
+from urllib import quote, quote_plus
 from requests import get
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError, SSLError
 
+from django.conf import settings
 from django.core import management
 from django.core.exceptions import ImproperlyConfigured, AppRegistryNotReady
-from django.test import TestCase
 from django.core.urlresolvers import reverse
 
 try:
@@ -45,23 +46,31 @@ from geonode.services.models import Service
 
 from . import ExchangeTest
 
+from exchange.pki.settings import get_pki_dir
 from exchange.pki.models import (
     SslConfig,
     HostnamePortSslConfig,
     hostnameport_pattern_cache,
+    rebuild_hostnameport_pattern_cache,
     ssl_config_for_url,
     has_ssl_config,
     hostnameport_pattern_for_url,
 )
-from exchange.pki.utils import *  # noqa
 from exchange.pki.crypto import Crypto
-from exchange.pki.ssl_adapter import (
-    https_client,
-    https_request,
-    clear_https_adapters,
-    ssl_config_to_context_opts,
-    get_ssl_context_opts,
-    SslContextAdapter,
+from exchange.pki.ssl_adapter import SslContextAdapter
+from exchange.pki.ssl_session import https_client
+from exchange.pki.utils import (
+    hostname_port,
+    requests_base_url,
+    pki_prefix,
+    pki_site_prefix,
+    has_pki_prefix,
+    pki_route,
+    pki_route_reverse,
+    has_proxy_prefix,
+    proxy_route,
+    proxy_route_reverse,
+    pki_to_proxy_route,
 )
 
 logger = logging.getLogger(__name__)
@@ -120,6 +129,13 @@ class PkiTestCase(ExchangeTest):
 
         logger.debug("PKI_DIRECTORY: {0}".format(get_pki_dir()))
 
+        # Clear out all preexisting table and cache data that needs tested
+        https_client.clear_https_adapters()
+
+        HostnamePortSslConfig.objects.all().delete()
+        rebuild_hostnameport_pattern_cache()
+
+        # SslConfigs have a fixture, so do not delete
         logger.debug("SslConfig.objects:\n{0}"
                      .format(repr(SslConfig.objects.all())))
 
@@ -182,7 +198,7 @@ class TestHostnamePortSslConfig(PkiTestCase):
         pass
 
     def testHostnamePortSslConfigSignals(self):
-        clear_https_adapters()
+        https_client.clear_https_adapters()
         self.assertEqual(len(https_client.adapters), 1)  # for http://
 
         url1 = u'https://services.arcgisonline.com/arcgis/rest/' \
@@ -198,21 +214,19 @@ class TestHostnamePortSslConfig(PkiTestCase):
             self.assertIsNotNone(ssl_config)
             self.assertEqual(ssl_config, config)
             self.assertEqual(
-                ssl_config_to_context_opts(ssl_config),
-                ssl_config_to_context_opts(config)
+                SslContextAdapter.ssl_config_to_context_opts(ssl_config),
+                SslContextAdapter.ssl_config_to_context_opts(config)
             )
             self.assertEqual(hostnameport_pattern_for_url(url), p)
 
         for url, ssl_config in zip(urls, self.ssl_configs):
             base_url = requests_base_url(url)
-            https_client.mount(
-                base_url,
-                SslContextAdapter(*get_ssl_context_opts(base_url))
-            )
+            https_client.mount_sslcontext_adapter(url)
             adptr = https_client.adapters[base_url]
             """:type: SslContextAdapter"""
-            self.assertEqual(adptr.context_options(),
-                             ssl_config_to_context_opts(ssl_config))
+            self.assertEqual(
+                adptr.context_options(),
+                SslContextAdapter.ssl_config_to_context_opts(ssl_config))
 
         # return
         #
@@ -324,74 +338,82 @@ class TestPkiRequest(PkiTestCase):
             hostname_port=self.mp_host_port,
             ssl_config=config_1)
         host_port_map.save()
-        res = https_request(self.mp_root)
-        self.assertIsNone(res)
+        with self.assertRaises(SSLError):
+            # Default should not work for mapproxy PKI
+            https_client.get(self.mp_root)
 
         host_port_map = HostnamePortSslConfig(
             hostname_port='example.com',
             ssl_config=config_1)
         host_port_map.save()
-        res = https_request('https://example.com')
+        res = https_client.get('https://example.com')
         self.assertEqual(res.status_code, 200)
 
     def test_no_client(self):
         self.create_hostname_port_mapping(2)
-        res = https_request(self.mp_root)
+        res = https_client.get(self.mp_root)
         # Nginx non-standard status code 400 is for no client cert supplied
         self.assertEqual(res.status_code, 400)
 
     def test_client_no_password(self):
         self.create_hostname_port_mapping(3)
-        res = https_request(self.mp_root)
+        res = https_client.get(self.mp_root)
         self.assertEqual(res.status_code, 200)
         self.assertIn(self.mp_txt, res.content.decode("utf-8"))
 
     def test_client_and_password(self):
         self.create_hostname_port_mapping(4)
-        res = https_request(self.mp_root)
+        res = https_client.get(self.mp_root)
         self.assertEqual(res.status_code, 200)
         self.assertIn(self.mp_txt, res.content.decode("utf-8"))
 
     def test_client_and_password_alt_root(self):
         self.create_hostname_port_mapping(5)
-        res = https_request(self.mp_root)
+        res = https_client.get(self.mp_root)
         self.assertEqual(res.status_code, 200)
         self.assertIn(self.mp_txt, res.content.decode("utf-8"))
 
     def test_client_and_password_tls12_only(self):
         self.create_hostname_port_mapping(6)
-        res = https_request(self.mp_root)
+        res = https_client.get(self.mp_root)
         self.assertEqual(res.status_code, 200)
         self.assertIn(self.mp_txt, res.content.decode("utf-8"))
 
     def test_no_client_no_validation(self):
         self.create_hostname_port_mapping(7)
-        res = https_request(self.mp_root)
+        res = https_client.get(self.mp_root)
         self.assertEqual(res.status_code, 200)
 
     def test_client_no_password_tls12_only_ssl_opts(self):
         self.create_hostname_port_mapping(8)
-        res = https_request(self.mp_root)
+        res = https_client.get(self.mp_root)
         self.assertEqual(res.status_code, 200)
 
 
-class TestPkiUtils(TestCase):
+class TestPkiUtils(PkiTestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        cls.base_url = \
-            'https://mapproxy.boundless.test:8344/service' \
-            '?version=1.1.1&service=WMS'
-        cls.pki_url = \
-            'http://exchange.boundless.test:8000/pki/mapproxy.boundless.test' \
-            '%3A8344/service%3Fversion%3D1.1.1%26service%3DWMS'
-        cls.pki_site_url = \
-            'http://nginx.boundless.test/pki/mapproxy.boundless.test%3A8344/' \
-            'service%3Fversion%3D1.1.1%26service%3DWMS'
-        cls.proxy_url = \
-            'http://nginx.boundless.test/proxy/?url=https%3A%2F%2Fmapproxy.' \
-            'boundless.test%3A8344%2Fservice%3Fversion%3D1.1.1%26service%3DWMS'
-        super(TestPkiUtils, cls).setUpClass()
+    def setUp(self):
+        mproot = self.mp_root.rstrip('/').lower()
+        mphostpport = self.mp_host_port
+        ex_local_url = settings.EXCHANGE_LOCAL_URL.rstrip('/')
+        site_url = settings.SITEURL.rstrip('/')
+
+        self.base_url = \
+            '{0}/service?version=1.1.1&service=WMS'.format(mproot)
+        self.pki_url = \
+            '{0}/pki/{1}/service%3Fversion%3D1.1.1%26service%3DWMS'\
+            .format(ex_local_url, quote(mphostpport))
+        self.pki_site_url = \
+            '{0}/pki/{1}/service%3Fversion%3D1.1.1%26service%3DWMS'\
+            .format(site_url, quote(mphostpport))
+        self.proxy_url = \
+            '{0}/proxy/?url={1}%2Fservice%3Fversion%3D1.1.1%26service%3DWMS'\
+            .format(site_url, quote_plus(mproot))
+
+        logging.debug("base_url: {0}".format(self.base_url))
+        logging.debug("pki_url: {0}".format(self.pki_url))
+        logging.debug("pki_site_url: {0}".format(self.pki_site_url))
+        logging.debug("proxy_url: {0}".format(self.proxy_url))
 
     def test_routes(self):
         # has
