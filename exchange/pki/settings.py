@@ -20,12 +20,17 @@
 
 import os
 
+from exchange import settings
+
 
 # IMPORTANT: this directory should not be within application or www roots
 def get_pki_dir():
-    path = os.getenv('PKI_DIRECTORY')
-    # can not be defined with empty value
-    return path or '/usr/local/exchange-pki'
+    path = settings.PKI_DIRECTORY \
+        if hasattr(settings, 'PKI_DIRECTORY') else None
+    # can not be defined with empty value or non-existent dir
+    if path and os.path.exists(path) and os.path.isdir(path):
+        return path
+    return '/usr/local/exchange-pki'
 
 
 # TODO: Add .p12|.pfx regex support for cert_match

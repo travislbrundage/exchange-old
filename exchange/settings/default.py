@@ -484,6 +484,12 @@ FILESERVICE_CONFIG = {
     'streaming_supported': False
 }
 
+# Force max length validation on encrypted password fields (used by pki app)
+ENFORCE_MAX_LENGTH = 1
+
+# IMPORTANT: this directory should not be within application or www roots
+PKI_DIRECTORY = os.getenv('PKI_DIRECTORY', '/usr/local/exchange-pki')
+
 try:
     from local_settings import *  # noqa
 except ImportError:
