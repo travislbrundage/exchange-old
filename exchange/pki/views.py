@@ -28,9 +28,9 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from wsgiref import util as wsgiref_util
 
-from .ssl_adapter import https_request
 from geonode.services import enumerations
 
+from .ssl_session import https_client
 
 logger = logging.getLogger(__name__)
 
@@ -106,9 +106,13 @@ def pki_request(request, resource_url=None):
     url = 'https://' + r_url + (('?' + query) if query else '')
 
     # Do remote request
-    req_res = https_request(url, data=request.body,
-                            method=request.method, headers=headers)
     logger.debug("pki requests request headers: {0}".format(headers))
+    req_res = https_client.request(
+        method=request.method,
+        url=url,
+        headers=headers,
+        data=request.body,
+    )
     """:type: requests.Response"""
 
     if not req_res:
