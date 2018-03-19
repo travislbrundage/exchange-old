@@ -29,6 +29,8 @@ from django.http import HttpResponse
 from wsgiref import util as wsgiref_util
 
 from .ssl_adapter import https_request
+from geonode.services import enumerations
+
 
 logger = logging.getLogger(__name__)
 
@@ -51,10 +53,32 @@ def pki_request(request, resource_url=None):
     # TODO: Limit to localhost calls, e.g. when coming from local Py packages
 
     # Manually copy over headers, skipping unwanted ones
+    logger.debug("pki request.COOKIES: {0}".format(request.COOKIES))
+    logger.debug("pki request.META: {0}".format(request.META))
     # IMPORTANT: Don't pass any cookies or OAuth2 headers to remote resource
     headers = {}
     if request.method in ("POST", "PUT") and "CONTENT_TYPE" in request.META:
         headers["Content-Type"] = request.META["CONTENT_TYPE"]
+
+    # Pass through HTTP_ACCEPT* headers
+    accepts = [
+        'Accept', 'Accept-Encoding', 'Accept-Language']
+    # Why no support for Accept-Charset, i.e. no HTTP_ACCEPT_CHARSET?
+    http_accepts = [
+        'HTTP_ACCEPT', 'HTTP_ACCEPT_ENCODING', 'HTTP_ACCEPT_LANGUAGE']
+    for accept, http_accept in zip(accepts, http_accepts):
+        if http_accept in request.META:
+            headers[accept] = request.META[http_accept]
+
+    service_type = request.META['PKI_SERVICE_TYPE'] \
+        if 'PKI_SERVICE_TYPE' in request.META else None
+    if service_type == enumerations.REST or '/arcgis' in unquote(resource_url):
+        # TODO: [FIXME] Workaround for decompression error in arcrest,
+        #       in arcrest.web._base._chunk()
+        # Needed for both /proxy reroutes and arcrest pkg
+        headers['Accept-Encoding'] = ''
+
+    # TODO: Passthru HTTP_REFERER?
 
     # Strip our bearer token header!
     auth_header = request.META.get('HTTP_AUTHORIZATION', None)
@@ -82,9 +106,9 @@ def pki_request(request, resource_url=None):
     url = 'https://' + r_url + (('?' + query) if query else '')
 
     # Do remote request
-    # TODO: Add option to pass a bearer token (but not ours for OAuth2!)
     req_res = https_request(url, data=request.body,
                             method=request.method, headers=headers)
+    logger.debug("pki requests request headers: {0}".format(headers))
     """:type: requests.Response"""
 
     if not req_res:
@@ -94,6 +118,8 @@ def pki_request(request, resource_url=None):
 
     # TODO: Capture errors and signal to web UI for reporting to user.
     #       Don't let errors just raise exceptions
+
+    logger.debug("pki requests response headers:\n{0}".format(req_res.headers))
 
     if 'Content-Type' in req_res.headers:
         content_type = req_res.headers['Content-Type']
@@ -111,6 +137,15 @@ def pki_request(request, resource_url=None):
         )
         response['Location'] = req_res.headers['Location']
     else:
+        # logger.debug("pki requests response content (first 2000 chars):\n{0}"
+        #              .format(req_res.content[:2000]))
+        txt_content = 'Not textual content'
+        txt_types = ['text', 'json', 'xml']
+        if any([t in content_type.lower() for t in txt_types]):
+            txt_content = req_res.content
+        logger.debug("pki requests response content:\n{0}"
+                     .format(txt_content))
+
         response = HttpResponse(
             content=req_res.content,
             status=req_res.status_code,
@@ -127,5 +162,8 @@ def pki_request(request, resource_url=None):
                 and not wsgiref_util.is_hop_by_hop(h)\
                 and h not in response:
             response[h] = v
+
+    logger.debug("pki django response headers:\n{0}"
+                 .format(response.serialize_headers()))
 
     return response
