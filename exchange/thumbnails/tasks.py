@@ -17,7 +17,7 @@ import io
 from urlparse import urlparse
 
 from exchange.pki.models import has_ssl_config
-from exchange.pki.ssl_adapter import https_request
+from exchange.pki.ssl_session import https_client
 
 
 try:
@@ -104,7 +104,7 @@ def make_thumb_request(remote, baseurl, params=None):
                 # worker, whose hostnameport_pattern_cache may be out of sync
                 logger.debug('fetching %s with https_client'
                              % thumbnail_create_url)
-                resp = https_request(thumbnail_create_url)
+                resp = https_client.get(thumbnail_create_url)
             else:
                 logger.debug('fetching %s with no auth' % thumbnail_create_url)
                 resp = http_client.get(thumbnail_create_url)
