@@ -393,7 +393,7 @@ class SslConfig(models.Model):
         ssl_config.pk = 1
         return ssl_config
 
-    def to_ssl_config(self):
+    def to_dict(self):
         """Dump model values to dict like pki.settings.SSL_DEFAULT_CONFIG"""
         ssl_opts = self.ssl_options.replace(' ', '').split(',') \
             if self.ssl_options else None
@@ -469,7 +469,7 @@ class HostnamePortSslConfigManager(models.Manager):
         config = mp.ssl_config
         if config and isinstance(config, SslConfig):
             logger.debug("Found SslConfig related record: {0}"
-                         .format(config.to_ssl_config()
+                         .format(config.to_dict()
                                  .get('name', '(name missing)')))
         else:
             logger.debug("Missing SslConfig related record, "

@@ -212,22 +212,20 @@ class SslContextAdapter(HTTPAdapter):
     @staticmethod
     def ssl_config_to_context_opts(config):
         if isinstance(config, SslConfig):
-            ssl_config = config.to_ssl_config()
-        else:
-            ssl_config = config
+            config = config.to_dict()
 
-        if not isinstance(ssl_config, dict):
+        if not isinstance(config, dict):
             raise TypeError("SSL config not defined as dictionary")
-        if 'name' not in ssl_config:
+        if 'name' not in config:
             raise KeyError("SSL config does not have a name property")
 
         # SslContextAdapter context_create_options
         ctx_c_opts = dict()
         ctx_c_opts['ssl_version'] = \
-            resolve_ssl_version(ssl_config.get('ssl_version', None))
+            resolve_ssl_version(config.get('ssl_version', None))
         ctx_c_opts['cert_reqs'] = \
-            resolve_cert_reqs(ssl_config.get('ssl_verify_mode', None))
-        ssl_opts = ssl_config.get('ssl_options', None)
+            resolve_cert_reqs(config.get('ssl_verify_mode', None))
+        ssl_opts = config.get('ssl_options', None)
         opts = 0
         if ssl_opts and isinstance(ssl_opts, list):
             # ssl OP_* enums are dynamically loaded from OpenSSL, so verify
@@ -240,15 +238,15 @@ class SslContextAdapter(HTTPAdapter):
                     # TODO: Log (don't raise) unresolvable options, for admin
                     pass
         ctx_c_opts['options'] = opts if opts else None
-        ctx_c_opts['ciphers'] = ssl_config.get('ssl_ciphers', None)
+        ctx_c_opts['ciphers'] = config.get('ssl_ciphers', None)
 
         # SslContextAdapter context_options
         ctx_opts = dict()
-        ctx_opts['cafile'] = ssl_config.get('ca_custom_certs', None)
-        ctx_opts['certfile'] = ssl_config.get('client_cert', None)
-        ctx_opts['keyfile'] = ssl_config.get('client_key', None)
+        ctx_opts['cafile'] = config.get('ca_custom_certs', None)
+        ctx_opts['certfile'] = config.get('client_cert', None)
+        ctx_opts['keyfile'] = config.get('client_key', None)
         # coerce password to str or pyOpenSSL complains
-        pw = ssl_config.get('client_key_pass', None)
+        pw = config.get('client_key_pass', None)
         ctx_opts['password'] = str(pw) if pw else None
         # print('password: {0}'.format(ctx_opts['password']))
 
@@ -263,9 +261,9 @@ class SslContextAdapter(HTTPAdapter):
             return None
         adptr_opts = dict()
         adptr_opts['retries'] = _redo_value(
-            ssl_config.get('https_retries', None))
+            config.get('https_retries', None))
         adptr_opts['redirects'] = _redo_value(
-            ssl_config.get('https_redirects', None))
+            config.get('https_redirects', None))
 
         # logger.debug("ctx_c_opts: \n{0}".format(ctx_c_opts))
         # logger.debug("ctx_opts: \n{0}".format(ctx_opts))
