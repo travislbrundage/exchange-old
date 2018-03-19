@@ -72,12 +72,15 @@ class HostnamePortSslConfigAdminForm(forms.ModelForm):
 
 class HostnamePortSslConfigAdmin(OrderedModelAdmin):
     list_display = ('enabled', 'hostname_port',
-                    'ssl_config', 'move_up_down_links')
-    list_display_links = ('hostname_port',)
-    list_filter = ('enabled',)
+                    'ssl_config', 'proxy', 'move_up_down_links')
+    list_display_links = ('hostname_port', 'ssl_config',)
+    list_filter = ('enabled', 'proxy',)
     # list_editable = ('enabled',)
     form = HostnamePortSslConfigAdminForm
-    actions = ['enable_mapping', 'disable_mapping']
+    actions = [
+        'enable_mapping', 'disable_mapping',
+        'enable_proxy', 'disable_proxy'
+    ]
 
     def enable_mapping(self, request, queryset):
         up = queryset.count()
@@ -101,6 +104,29 @@ class HostnamePortSslConfigAdmin(OrderedModelAdmin):
 
     enable_mapping.short_description = "Enable selected mappings"
     disable_mapping.short_description = "Disable selected mappings"
+
+    def enable_proxy(self, request, queryset):
+        up = queryset.count()
+        for m in queryset:
+            m.proxy = True
+            m.save(update_fields=['proxy'])
+        self.message_user(
+            request,
+            "{0} mapping{1} proxy enabled.".format(up, 's' if up > 1 else '')
+        )
+
+    def disable_proxy(self, request, queryset):
+        up = queryset.count()
+        for m in queryset:
+            m.proxy = False
+            m.save(update_fields=['proxy'])
+        self.message_user(
+            request,
+            "{0} mapping{1} proxy disabled.".format(up, 's' if up > 1 else '')
+        )
+
+    enable_proxy.short_description = "Enable proxy for selected mappings"
+    disable_proxy.short_description = "Disable proxy for selected mappings"
 
 
 admin.site.register(SslConfig,

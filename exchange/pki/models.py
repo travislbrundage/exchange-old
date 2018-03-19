@@ -42,11 +42,14 @@ hostnameport_pattern_cache = list()
 hostnameport_pattern_cache_built = False
 
 
-def hostnameport_patterns():
+def hostnameport_patterns(requires_proxy=None):
     """
+    :param requires_proxy: Filter by whether connections should require
+    routing through internal proxy or not. 'None' indicates no filtering.
     :rtype: list
     """
-    return HostnamePortSslConfig.objects.hostnameport_patterns()
+    return HostnamePortSslConfig.objects.hostnameport_patterns(
+        requires_proxy=requires_proxy)
 
 
 def rebuild_hostnameport_pattern_cache():
@@ -65,10 +68,15 @@ def rebuild_hostnameport_pattern_cache():
         pass
 
 
-def hostnameport_pattern_for_url(url, via_query=False):
+def hostnameport_pattern_for_url(url, via_query=False, requires_proxy=None):
     if via_query or not hostnameport_pattern_cache_built:
         rebuild_hostnameport_pattern_cache()
-    for ptn in hostnameport_pattern_cache:
+    if requires_proxy is not None and isinstance(requires_proxy, bool):
+        ptrn_cache = hostnameport_patterns(requires_proxy=requires_proxy)
+    else:
+        ptrn_cache = hostnameport_pattern_cache
+
+    for ptn in ptrn_cache:
         if fnmatch(filter_hostname_port(url), ptn):
             logger.debug(u"URL matches hostname:port pattern: {0} > '{1}'"
                          .format(url, ptn))
@@ -82,22 +90,35 @@ def hostnameport_pattern_for_url(url, via_query=False):
 
 
 def has_ssl_config(url, via_query=False):
-    ptn = hostnameport_pattern_for_url(url, via_query)
+    """
+    Checks whether a URL matches a pattern in the cache.
+
+    Note: To check if external proxying is needed, use
+    :func:`requires_ssl_proxy` instead.
+
+    :param url: Any URL, with an https scheme.
+    :param via_query: Whether to rebuild the pattern cache first, via db query.
+    :rtype: bool
+    """
+    ptn = hostnameport_pattern_for_url(url, via_query=via_query)
     if ptn is not None:
         return True
     return False
 
 
-def ssl_config_for_url(url):
+def ssl_config_for_url(url, requires_proxy=None):
     """
     Find an SslConfig for a URL.
     Fix any missing related SslConfig by reverting to default.
     :param url:
+    :param requires_proxy: Filter by whether connections should require
+    routing through internal proxy or not. 'None' indicates no filtering.
     :rtype: SslConfig | None
     """
     ssl_config = None
 
-    ptn = hostnameport_pattern_for_url(url, via_query=True)
+    ptn = hostnameport_pattern_for_url(
+        url, via_query=True, requires_proxy=requires_proxy)
     if ptn is not None:
         # this get should not fail or return duplicates
         mp = HostnamePortSslConfig.objects.get(hostname_port=ptn)
@@ -105,6 +126,23 @@ def ssl_config_for_url(url):
         ssl_config = mp.ssl_config
 
     return ssl_config
+
+
+def requires_ssl_proxy(url):
+    """
+    Checks whether a URL matches a pattern in the cache, taking into account
+    whether mapping also requires an external proxy through this application.
+
+    Note: To check if URL just matches a mapping, i.e. has an SslConfig, use
+    :func:`has_ssl_config` instead.
+
+    :param url: Any URL, with an https scheme.
+    :rtype: bool
+    """
+    ptn = hostnameport_pattern_for_url(url, requires_proxy=True)
+    if ptn is not None:
+        return True
+    return False
 
 
 class SslConfigManager(models.Manager):
@@ -439,14 +477,18 @@ class HostnamePortSslConfigManager(models.Manager):
             mp.ssl_config = SslConfig.objects.get_create_default()
             mp.save()
 
-    def hostnameport_patterns(self):
+    def hostnameport_patterns(self, requires_proxy=None):
         """
-        Return all hostname:port mapping patterns.
+        Return enabled hostname:port mapping patterns (and optionally filter).
         Ensures hostname:port matching is done in user-defined order.
-        :return:
+        :param requires_proxy: Filter by whether connections should require
+        routing through internal proxy or not. 'None' indicates no filtering.
         :rtype: list
         """
-        q_set = self.filter(enabled=True).order_by('order')\
+        kwargs = {'enabled': True}
+        if requires_proxy is not None:
+            kwargs['proxy'] = bool(requires_proxy)
+        q_set = self.filter(**kwargs).order_by('order')\
             .values_list('hostname_port', flat=True)
         return list(q_set)
 
@@ -499,6 +541,13 @@ class HostnamePortSslConfig(OrderedModel):
         verbose_name='Ssl config',
         related_name='+',
         null=True,
+    )
+    proxy = models.BooleanField(
+        "Proxy",
+        default=True,
+        blank=False,
+        help_text="Whether to require client's browser connections to be "
+                  "proxied through this application.",
     )
     objects = HostnamePortSslConfigManager()
 
