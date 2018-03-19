@@ -23,47 +23,21 @@ import re
 # urllib3.create_urllib3_context() will create a context without support for
 # PKI private key password otherwise.
 import ssl
-import traceback
 import logging
 
 from ssl import Purpose, SSLError
 from requests.adapters import HTTPAdapter
-from requests import session, RequestException, Request
-from requests.exceptions import InvalidSchema
 from urllib3.util.ssl_ import (create_urllib3_context,
                                resolve_ssl_version,
                                resolve_cert_reqs)
 from urllib3.util.retry import Retry
 # noinspection PyCompatibility
-from urlparse import urlparse, parse_qsl
-from urllib import urlencode
+from urlparse import urlparse
 
-from .utils import requests_base_url, normalize_hostname
 from .models import SslConfig, ssl_config_for_url
 
 
 logger = logging.getLogger(__name__)
-
-# global, so base_url -> adapter registrations are cached across calls
-https_client = session()
-""":type: requests.Session"""
-# Clear default, fallback 'https://' adapter;
-# all https adapters in our session MUST be unique to a fqdn[:port]
-# TODO: Consider adding SslContextAdapter(<default_ssl_config>) for 'https://'
-try:
-    __https_adapter = https_client.get_adapter('https://')
-    __https_adapter.close()  # clean up session pool manager
-    del https_client.adapters['https://']
-except InvalidSchema:
-    pass
-
-
-def clear_https_adapters():
-    """Clears just the https:// prefixed cached adapters"""
-    for adptr in https_client.adapters:
-        if adptr.startswith('https://'):
-            https_client.adapters[adptr].close()
-            del https_client.adapters[adptr]
 
 
 class SslContextAdapterError(Exception):
@@ -110,11 +84,10 @@ class SslContextAdapter(HTTPAdapter):
           accepts: None, int >= 0 or False
           (0 does not redirect; False does the same, but skips rasising)
     """
-    def __init__(self, context_create_options, context_options,
-                 adapter_options, *args, **kwargs):
-        self._ctx_create_opts = context_create_options
-        self._ctx_opts = context_options
-        self._adptr_opts = adapter_options
+    def __init__(self, url, *args, **kwargs):
+
+        self._ctx_create_opts, self._ctx_opts, self._adptr_opts = \
+            self.get_ssl_context_opts(url)
 
         # set up adapter options
         _retries = self._adptr_opts.get('retries', None)
@@ -140,6 +113,22 @@ class SslContextAdapter(HTTPAdapter):
         """
         parts = urlparse(url)
         return re.sub(parts.hostname, parts.hostname, url, count=1, flags=re.I)
+
+    @staticmethod
+    def get_ssl_context_opts(url):
+        """
+        :param url: URL or base URL, e.g. https://mydomain:8000
+        :type url: basestring
+        :return: tuple of dicts that matches input for SslContextAdapter
+        """
+
+        ssl_config = ssl_config_for_url(url)
+
+        if ssl_config is None:
+            raise SslContextAdapterError(
+                'Could not retrieve SslConfig for URL: {0}'.format(url))
+
+        return SslContextAdapter.ssl_config_to_context_opts(ssl_config)
 
     def context_options(self):
         return self._ctx_create_opts, self._ctx_opts, self._adptr_opts
@@ -220,146 +209,66 @@ class SslContextAdapter(HTTPAdapter):
         request.url = self._normalize_hostname(request.url)
         return super(SslContextAdapter, self).send(request, **kwargs)
 
+    @staticmethod
+    def ssl_config_to_context_opts(config):
+        if isinstance(config, SslConfig):
+            ssl_config = config.to_ssl_config()
+        else:
+            ssl_config = config
 
-def ssl_config_to_context_opts(config):
-    if isinstance(config, SslConfig):
-        ssl_config = config.to_ssl_config()
-    else:
-        ssl_config = config
+        if not isinstance(ssl_config, dict):
+            raise TypeError("SSL config not defined as dictionary")
+        if 'name' not in ssl_config:
+            raise KeyError("SSL config does not have a name property")
 
-    if not isinstance(ssl_config, dict):
-        raise TypeError("SSL config not defined as dictionary")
-    if 'name' not in ssl_config:
-        raise KeyError("SSL config does not have a name property")
+        # SslContextAdapter context_create_options
+        ctx_c_opts = dict()
+        ctx_c_opts['ssl_version'] = \
+            resolve_ssl_version(ssl_config.get('ssl_version', None))
+        ctx_c_opts['cert_reqs'] = \
+            resolve_cert_reqs(ssl_config.get('ssl_verify_mode', None))
+        ssl_opts = ssl_config.get('ssl_options', None)
+        opts = 0
+        if ssl_opts and isinstance(ssl_opts, list):
+            # ssl OP_* enums are dynamically loaded from OpenSSL, so verify
+            # they are present in ssl module before bitwise appending them
+            op_opts = [o for o in dir(ssl) if o.startswith('OP_')]
+            for opt in ssl_opts:
+                if opt in op_opts:
+                    opts |= getattr(ssl, opt)
+                else:
+                    # TODO: Log (don't raise) unresolvable options, for admin
+                    pass
+        ctx_c_opts['options'] = opts if opts else None
+        ctx_c_opts['ciphers'] = ssl_config.get('ssl_ciphers', None)
 
-    # SslContextAdapter context_create_options
-    ctx_c_opts = dict()
-    ctx_c_opts['ssl_version'] = \
-        resolve_ssl_version(ssl_config.get('ssl_version', None))
-    ctx_c_opts['cert_reqs'] = \
-        resolve_cert_reqs(ssl_config.get('ssl_verify_mode', None))
-    ssl_opts = ssl_config.get('ssl_options', None)
-    opts = 0
-    if ssl_opts and isinstance(ssl_opts, list):
-        # ssl OP_* enums are dynamically loaded from OpenSSL, so verify
-        # they are present in ssl module before bitwise appending them
-        op_opts = [o for o in dir(ssl) if o.startswith('OP_')]
-        for opt in ssl_opts:
-            if opt in op_opts:
-                opts |= getattr(ssl, opt)
-            else:
-                # TODO: Log (don't raise) unresolvable options, for admin
-                pass
-    ctx_c_opts['options'] = opts if opts else None
-    ctx_c_opts['ciphers'] = ssl_config.get('ssl_ciphers', None)
+        # SslContextAdapter context_options
+        ctx_opts = dict()
+        ctx_opts['cafile'] = ssl_config.get('ca_custom_certs', None)
+        ctx_opts['certfile'] = ssl_config.get('client_cert', None)
+        ctx_opts['keyfile'] = ssl_config.get('client_key', None)
+        # coerce password to str or pyOpenSSL complains
+        pw = ssl_config.get('client_key_pass', None)
+        ctx_opts['password'] = str(pw) if pw else None
+        # print('password: {0}'.format(ctx_opts['password']))
 
-    # SslContextAdapter context_options
-    ctx_opts = dict()
-    ctx_opts['cafile'] = ssl_config.get('ca_custom_certs', None)
-    ctx_opts['certfile'] = ssl_config.get('client_cert', None)
-    ctx_opts['keyfile'] = ssl_config.get('client_key', None)
-    # coerce password to str or pyOpenSSL complains
-    pw = ssl_config.get('client_key_pass', None)
-    ctx_opts['password'] = str(pw) if pw else None
-    # print('password: {0}'.format(ctx_opts['password']))
-
-    # SslContextAdapter adapter_options
-    def _redo_value(value):
-        if value is None:
+        # SslContextAdapter adapter_options
+        def _redo_value(value):
+            if value is None:
+                return None
+            if value == 'False':
+                return False
+            if int(value) in range(11):
+                return int(value)
             return None
-        if value == 'False':
-            return False
-        if int(value) in range(11):
-            return int(value)
-        return None
-    adptr_opts = dict()
-    adptr_opts['retries'] = _redo_value(
-        ssl_config.get('https_retries', None))
-    adptr_opts['redirects'] = _redo_value(
-        ssl_config.get('https_redirects', None))
+        adptr_opts = dict()
+        adptr_opts['retries'] = _redo_value(
+            ssl_config.get('https_retries', None))
+        adptr_opts['redirects'] = _redo_value(
+            ssl_config.get('https_redirects', None))
 
-    return ctx_c_opts, ctx_opts, adptr_opts
+        # logger.debug("ctx_c_opts: \n{0}".format(ctx_c_opts))
+        # logger.debug("ctx_opts: \n{0}".format(ctx_opts))
+        # logger.debug("adptr_opts: \n{0}".format(adptr_opts))
 
-
-def get_ssl_context_opts(url):
-    """
-    :param url: URL or base URL, e.g. https://mydomain:8000
-    :type url: basestring
-    :return: tuple of dicts that matches input for SslContextAdapter
-    """
-
-    ssl_config = ssl_config_for_url(url)
-
-    if ssl_config is None:
-        raise SslContextAdapterError(
-            'Could not retrieve SslConfig for URL: {0}'.format(url))
-
-    return ssl_config_to_context_opts(ssl_config)
-
-
-def https_request(url, data=None, method='GET', headers=None,
-                  access_token=None):
-    """
-
-    :param url:
-    :type url: basestring
-    :param data:
-    :param method:
-    :param headers:
-    :param access_token:
-    :return:
-    """
-    if not url.lower().startswith('https'):
-        raise ValueError('URL does not start with https')
-
-    if headers is None:
-        headers = {}
-
-    # IMPORTANT: base_url is (scheme://hostname:port), not full url.
-    # Note: urllib3 (as of 1.22) seems to care about case when matching the
-    # hostname to the peer server's SSL cert, in contrast to the spec, which
-    # says such matches should be case-insensitive (this is a bug):
-    #   https://tools.ietf.org/html/rfc5280#section-4.2.1.6
-    #   https://tools.ietf.org/html/rfc6125 <-- best practices
-    # normalize_hostname() handles this bug
-    base_url = requests_base_url(normalize_hostname(url))
-
-    try:
-        adapter = https_client.get_adapter(base_url)
-        # Use of this debug text will flood log; enable temporarily during dev
-        # logger.debug(u'Using session adapter for {0}'.format(base_url))
-    except InvalidSchema:
-        https_client.mount(base_url,
-                           SslContextAdapter(*get_ssl_context_opts(base_url)))
-        logger.debug(u'Session adapter add {0}'.format(base_url))
-        adapter = https_client.get_adapter(base_url)
-
-    if access_token:
-        headers['Authorization'] = "Bearer {}".format(access_token)
-        parsed_url = urlparse(url)
-        params = parse_qsl(parsed_url.query.strip())
-        # Don't add access token to params; prefer header fields
-        # TODO: Should we add a call param option to enable/disable param?
-        # params.append(('access_token', access_token))
-        params = urlencode(params)
-        url = "{proto}://{address}{path}?{params}"\
-              .format(proto=parsed_url.scheme, address=parsed_url.netloc,
-                      path=parsed_url.path, params=params)
-
-    # TODO: [FIXME] Temp workaround for decompression error in arcrest pkg,
-    #       in arcrest.web._base._chunk()
-    headers['Accept-Encoding'] = ''
-
-    # Prepare request for adapter
-    r = Request(method.upper(), url, headers=headers, data=data)
-    req = r.prepare()
-
-    resp = None
-    # TODO: Do we need GeoFence stuff here, like in geonode/security/models.py?
-    #       See: geonode.security.models.http_request() response handling
-    try:
-        resp = adapter.send(req)
-    except RequestException:
-        logger.debug(traceback.format_exc())
-
-    return resp
+        return ctx_c_opts, ctx_opts, adptr_opts
