@@ -22,7 +22,7 @@ import logging
 
 from urllib import unquote, urlencode
 # noinspection PyCompatibility
-from urlparse import parse_qs
+from urlparse import parse_qsl
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
@@ -56,22 +56,24 @@ def pki_request(request, resource_url=None):
     if request.method in ("POST", "PUT") and "CONTENT_TYPE" in request.META:
         headers["Content-Type"] = request.META["CONTENT_TYPE"]
 
-    # Strip any OAuth2 header!
+    # Strip our bearer token header!
     auth_header = request.META.get('HTTP_AUTHORIZATION', None)
+    # TODO: Passing a bearer token for a remote service should be considered;
+    #       add a comparison of our get_bearer_token(), delete only on match
     if auth_header and 'bearer' in auth_header.lower():
         del request.META['HTTP_AUTHORIZATION']
 
-    # Strip any OAuth2 token from query params!
+    # Strip our bearer token token from query params!
     # TODO: Migrate to request.GET QueryDict parsing?
     #       Unsure if keep_blank_values and doseq are supported
     query_str = request.META['QUERY_STRING']
     query = None
     if query_str != '':
-        # TODO: Use parse_qsl, to preserve sequence
-        params = parse_qs(query_str.strip(), keep_blank_values=True)
-        if 'access_token' in params:
-            del params['access_token']
-        query = urlencode(params, doseq=True)
+        # Keep keys with empty values and maintain order
+        params = parse_qsl(query_str.strip(), keep_blank_values=True)
+        clean_params = [(k, v) for k, v in params if
+                        k.lower() != 'access_token']
+        query = urlencode(clean_params, doseq=True)
 
     # Turn the remainder of path back into original URL
     r_url = unquote(resource_url)
