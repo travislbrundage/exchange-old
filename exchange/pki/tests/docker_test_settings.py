@@ -29,8 +29,20 @@ from exchange.settings.default import *  # noqa
 #     }
 # }
 
-# Force max length validation on encrypted password fields
-ENFORCE_MAX_LENGTH = 1
+DJANGO_IGNORED_WARNINGS = {
+    'RemovedInDjango18Warning',
+    'RemovedInDjango19Warning',
+    'RuntimeWarning: DateTimeField',
+}
+
+
+# See: https://stackoverflow.com/a/30716923
+def filter_django_warnings(record):
+    for ignored in DJANGO_IGNORED_WARNINGS:
+        if ignored in record.args[0]:
+            return False
+    return True
+
 
 # Logging settings
 # 'DEBUG', 'INFO', 'WARNING', 'ERROR', or 'CRITICAL'
@@ -41,8 +53,8 @@ LOGGING = {
     'formatters': {
         'verbose': {
             'format':
-                ('%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d'
-                 ' %(message)s'),
+                ('%(levelname)s %(asctime)s %(pathname)s %(process)d '
+                 '%(thread)d %(message)s'),
         },
     },
     'handlers': {
@@ -52,21 +64,30 @@ LOGGING = {
             'formatter': 'verbose',
         }
     },
-    'loggers': {},
-    # 'loggers': {
-    #     'pki': {
-    #         'handlers': ['console'],
-    #         'level': DJANGO_LOG_LEVEL,
-    #     },
-    #     'urllib3': {
-    #         'handlers': ['console'],
-    #         'level': DJANGO_LOG_LEVEL,
-    #     },
-    #     'requests': {
-    #         'handlers': ['console'],
-    #         'level': DJANGO_LOG_LEVEL,
-    #     },
-    # },
+    'filters': {
+        'ignore_django_warnings': {
+            '()': 'django.utils.log.CallbackFilter',
+            'callback': filter_django_warnings,
+        },
+    },
+    'loggers': {
+        'py.warnings': {
+            'handlers': ['console', ],
+            'filters': ['ignore_django_warnings', ],
+        },
+        # 'pki': {
+        #     'handlers': ['console'],
+        #     'level': DJANGO_LOG_LEVEL,
+        # },
+        # 'urllib3': {
+        #     'handlers': ['console'],
+        #     'level': DJANGO_LOG_LEVEL,
+        # },
+        # 'requests': {
+        #     'handlers': ['console'],
+        #     'level': DJANGO_LOG_LEVEL,
+        # },
+    },
     'root': {
         'handlers': ['console'],
         'level': DJANGO_LOG_LEVEL
