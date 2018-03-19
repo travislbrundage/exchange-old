@@ -34,12 +34,8 @@ from .models import (
     hostnameport_pattern_for_url,
     HostnamePortSslConfig
 )
-from .ssl_adapter import (
-    https_client,
-    SslContextAdapter,
-    get_ssl_context_opts,
-    ssl_config_to_context_opts
-)
+from .ssl_adapter import SslContextAdapter
+from .ssl_session import https_client
 from .utils import (
     hostname_port,
     has_proxy_prefix,
@@ -81,15 +77,13 @@ def sync_https_adapters():
             logger.debug(u'Adapter URL matched hostname:port pattern: '
                          u'{0} > {1}'.format(base_url, ptn))
             config = ssl_configs[ptn]
-            if adpter.context_options() != ssl_config_to_context_opts(config):
+            if (adpter.context_options() !=
+                    SslContextAdapter.ssl_config_to_context_opts(config)):
                 # SslConfig differs, replace
                 adpter.close()  # clean up session pool manager
                 # The mount() call wraps a dictionary[key] = value assignment,
                 # so works for either creation or update.
-                https_client.mount(
-                    base_url,
-                    SslContextAdapter(*get_ssl_context_opts(base_url))
-                )
+                https_client.mount_sslcontext_adapter(base_url)
                 logger.debug(u'Updated session adapter: {0}'.format(base_url))
             else:
                 logger.debug(u'Session adapter unchanged: {0}'
