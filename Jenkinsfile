@@ -83,12 +83,6 @@ node {
         )
       }
 
-      stage('Verify Migrations'){
-        sh """
-          docker-compose exec -T exchange /bin/bash -c '. docker/devops/helper.sh && makemigrations-check'
-        """
-      }
-
       stage('py.test'){
         sh """
           docker-compose exec -T exchange /bin/bash -c '/code/docker/exchange/run_tests.sh'
