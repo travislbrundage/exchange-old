@@ -78,6 +78,8 @@ def rebuild_hostnameport_pattern_cache():
 
 
 def hostnameport_pattern_for_url(url, via_query=False, uses_proxy=None):
+    if not url.lower().startswith('https'):
+        return None
     if via_query or not hostnameport_pattern_cache_built:
         rebuild_hostnameport_pattern_cache()
     if uses_proxy is not None and isinstance(uses_proxy, bool):
@@ -117,6 +119,8 @@ def has_ssl_config(url, via_query=False):
     :param via_query: Whether to rebuild the pattern cache first, via db query.
     :rtype: bool
     """
+    if not url.lower().startswith('https'):
+        return False
     ptn = hostnameport_pattern_for_url(url, via_query=via_query)
     if ptn is not None:
         return True
@@ -132,6 +136,9 @@ def ssl_config_for_url(url, uses_proxy=None):
     routing through internal proxy or not. 'None' indicates no filtering.
     :rtype: SslConfig | None
     """
+    if not url.lower().startswith('https'):
+        return None
+
     ssl_config = None
 
     ptn = hostnameport_pattern_for_url(
@@ -160,6 +167,8 @@ def uses_proxy_route(url, via_query=False):
     :param via_query: Whether to rebuild the pattern cache first, via db query.
     :rtype: bool
     """
+    if not url.lower().startswith('https'):
+        return False
     ptn = hostnameport_pattern_for_url(
         url, via_query=via_query, uses_proxy=True)
     if ptn is not None:
