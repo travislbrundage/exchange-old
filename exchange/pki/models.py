@@ -41,51 +41,68 @@ logger = logging.getLogger(__name__)
 hostnameport_pattern_cache = list()
 hostnameport_pattern_cache_built = False
 
+# Global cache of mapping patterns that also have proxy enabled
+hostnameport_pattern_proxy_cache = list()
 
-def hostnameport_patterns(requires_proxy=None):
+
+def hostnameport_patterns(uses_proxy=None):
     """
-    :param requires_proxy: Filter by whether connections should require
+    :param uses_proxy: Filter by whether connections should require
     routing through internal proxy or not. 'None' indicates no filtering.
     :rtype: list
     """
     return HostnamePortSslConfig.objects.hostnameport_patterns(
-        requires_proxy=requires_proxy)
+        uses_proxy=uses_proxy)
 
 
 def rebuild_hostnameport_pattern_cache():
     global hostnameport_pattern_cache_built
     del hostnameport_pattern_cache[:]
+    del hostnameport_pattern_proxy_cache[:]
     try:
         hostnameport_pattern_cache.extend(
             hostnameport_patterns()
         )
+        hostnameport_pattern_proxy_cache.extend(
+            hostnameport_patterns(uses_proxy=True)
+        )
         hostnameport_pattern_cache_built = True
-        logger.debug('hostnameport_pattern_cache rebuilt: {0}'
+        logger.debug(u'hostnameport_pattern_cache rebuilt: {0}'
                      .format(hostnameport_pattern_cache))
+        logger.debug(u'hostnameport_pattern_proxy_cache rebuilt: {0}'
+                     .format(hostnameport_pattern_proxy_cache))
     except OperationalError:
         # skip if db isn't initialized yet
-        logger.debug('hostnameport_pattern_cache FAILED to rebuild')
+        logger.debug('hostnameport pattern caches FAILED to rebuild')
         pass
 
 
-def hostnameport_pattern_for_url(url, via_query=False, requires_proxy=None):
+def hostnameport_pattern_for_url(url, via_query=False, uses_proxy=None):
     if via_query or not hostnameport_pattern_cache_built:
         rebuild_hostnameport_pattern_cache()
-    if requires_proxy is not None and isinstance(requires_proxy, bool):
-        ptrn_cache = hostnameport_patterns(requires_proxy=requires_proxy)
+    if uses_proxy is not None and isinstance(uses_proxy, bool):
+        if uses_proxy:
+            ptrn_cache = hostnameport_pattern_proxy_cache
+        else:
+            ptrn_cache = [p for p in hostnameport_pattern_cache
+                          if p not in hostnameport_pattern_proxy_cache]
+        proxy_txt = 'proxy '
     else:
         ptrn_cache = hostnameport_pattern_cache
+        proxy_txt = ''
 
     for ptn in ptrn_cache:
         if fnmatch(filter_hostname_port(url), ptn):
-            logger.debug(u"URL matches hostname:port pattern: {0} > '{1}'"
-                         .format(url, ptn))
+            logger.debug(u"URL matches hostname:port {0}pattern: {1} > '{2}'"
+                         .format(proxy_txt, url, ptn))
             return ptn
 
-    logger.debug(u'URL does not match any hostname:port patterns: {0}'
-                 .format(url))
+    logger.debug(u'URL does not match any hostname:port {0}patterns: {1}'
+                 .format(proxy_txt, url))
     logger.debug(u'Current hostnameport_pattern_cache: {0}'
                  .format(hostnameport_pattern_cache))
+    logger.debug(u'Current hostnameport_pattern_proxy_cache: {0}'
+                 .format(hostnameport_pattern_proxy_cache))
     return None
 
 
@@ -94,7 +111,7 @@ def has_ssl_config(url, via_query=False):
     Checks whether a URL matches a pattern in the cache.
 
     Note: To check if external proxying is needed, use
-    :func:`requires_ssl_proxy` instead.
+    :func:`uses_proxy_route` instead.
 
     :param url: Any URL, with an https scheme.
     :param via_query: Whether to rebuild the pattern cache first, via db query.
@@ -106,19 +123,19 @@ def has_ssl_config(url, via_query=False):
     return False
 
 
-def ssl_config_for_url(url, requires_proxy=None):
+def ssl_config_for_url(url, uses_proxy=None):
     """
     Find an SslConfig for a URL.
     Fix any missing related SslConfig by reverting to default.
     :param url:
-    :param requires_proxy: Filter by whether connections should require
+    :param uses_proxy: Filter by whether connections should require
     routing through internal proxy or not. 'None' indicates no filtering.
     :rtype: SslConfig | None
     """
     ssl_config = None
 
     ptn = hostnameport_pattern_for_url(
-        url, via_query=True, requires_proxy=requires_proxy)
+        url, via_query=True, uses_proxy=uses_proxy)
     if ptn is not None:
         # this get should not fail or return duplicates
         mp = HostnamePortSslConfig.objects.get(hostname_port=ptn)
@@ -128,18 +145,23 @@ def ssl_config_for_url(url, requires_proxy=None):
     return ssl_config
 
 
-def requires_ssl_proxy(url):
+def uses_proxy_route(url, via_query=False):
     """
     Checks whether a URL matches a pattern in the cache, taking into account
-    whether mapping also requires an external proxy through this application.
+    whether mapping also uses an external proxy through this application.
+
+    This also indicates that the hostnameport pattern is effectively included
+    in settings.PROXY_ALLOWED_HOSTS.
 
     Note: To check if URL just matches a mapping, i.e. has an SslConfig, use
     :func:`has_ssl_config` instead.
 
     :param url: Any URL, with an https scheme.
+    :param via_query: Whether to rebuild the pattern cache first, via db query.
     :rtype: bool
     """
-    ptn = hostnameport_pattern_for_url(url, requires_proxy=True)
+    ptn = hostnameport_pattern_for_url(
+        url, via_query=via_query, uses_proxy=True)
     if ptn is not None:
         return True
     return False
@@ -477,17 +499,17 @@ class HostnamePortSslConfigManager(models.Manager):
             mp.ssl_config = SslConfig.objects.get_create_default()
             mp.save()
 
-    def hostnameport_patterns(self, requires_proxy=None):
+    def hostnameport_patterns(self, uses_proxy=None):
         """
         Return enabled hostname:port mapping patterns (and optionally filter).
         Ensures hostname:port matching is done in user-defined order.
-        :param requires_proxy: Filter by whether connections should require
+        :param uses_proxy: Filter by whether connections should require
         routing through internal proxy or not. 'None' indicates no filtering.
         :rtype: list
         """
         kwargs = {'enabled': True}
-        if requires_proxy is not None:
-            kwargs['proxy'] = bool(requires_proxy)
+        if uses_proxy is not None:
+            kwargs['proxy'] = bool(uses_proxy)
         q_set = self.filter(**kwargs).order_by('order')\
             .values_list('hostname_port', flat=True)
         return list(q_set)

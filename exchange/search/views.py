@@ -10,9 +10,9 @@ from six import iteritems
 
 from geonode.base.models import TopicCategory
 try:
-    from exchange.pki.models import requires_ssl_proxy
+    from exchange.pki.models import uses_proxy_route
 except ImportError:
-    requires_ssl_proxy = None
+    uses_proxy_route = None
 
 logger = logging.getLogger(__name__)
 
@@ -510,12 +510,12 @@ def elastic_search(request, resourcetype='base'):
     # TODO: This isn't the proper way to do this, and needs to be fixed later.
     if parameters.get("get_proxy", False):
         # Add a "use_proxy" parameter to each item in objects
-        # Set to true if it has source_host and matched in requires_ssl_proxy
+        # Set to true if it has source_host and matched in uses_proxy_route
         # Otherwise, set to false
         for item in objects:
             if ("source_host" in item) and \
-                    (callable(requires_ssl_proxy) and
-                        requires_ssl_proxy('https://' + item["source_host"])):
+                    (callable(uses_proxy_route) and
+                        uses_proxy_route('https://' + item["source_host"])):
                 item["use_proxy"] = True
             else:
                 item["use_proxy"] = False
