@@ -187,10 +187,12 @@ INSTALLED_APPS = (
     'geonode',
     'geonode.contrib.geogig',
     'geonode.contrib.slack',
+    'geonode.contrib.createlayer',
     'django_classification_banner',
     'exchange.maploom',
     'solo',
     'social_django',
+    'rest_framework',
 ) + ADDITIONAL_APPS + INSTALLED_APPS
 
 MIGRATION_MODULES = {
@@ -601,6 +603,16 @@ MAP_CLIENT_USE_CROSS_ORIGIN_CREDENTIALS = str2bool(os.getenv(
 ))
 
 PROXY_URL = ''
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+}
 
 CASTLING_ENABLED = str2bool(os.getenv('CASTLING_ENABLED', 'True'))
 if CASTLING_ENABLED:

@@ -7,6 +7,7 @@ import django
 from django.test import TestCase, Client
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
+from rest_framework.test import APIClient
 
 import os.path
 
@@ -64,13 +65,16 @@ class ExchangeTest(TestCase):
 
         return ('admin', 'admin')
 
-    def login(self, asTest=False):
+    def login(self, asTest=False, api_client=False):
         if(asTest):
             username, password = self.create_test_user()
         else:
             username, password = self.create_admin_user()
 
-        self.client = Client()
+        if api_client:
+            self.client = APIClient()
+        else:
+            self.client = Client()
         logged_in = self.client.login(
             username=username,
             password=password

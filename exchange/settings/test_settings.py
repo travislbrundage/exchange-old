@@ -19,11 +19,22 @@ FILESERVICE_CONFIG = {
     'streaming_supported': True
 }
 
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+}
+
 SECRET_KEY = os.getenv('SECRET_KEY', 'unit tests only not for production')
 DEBUG = True
 ALLOWED_HOSTS = ['testserver']
 _INSTALLED_APPS = (
     'geonode',
+    'rest_framework',
     'exchange.core',
     'exchange.themes',
     'django.contrib.admin',

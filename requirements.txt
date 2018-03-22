@@ -32,3 +32,4 @@ social-auth-app-django==1.2.0
 mock==2.0.0
 Django==1.8.18
 six==1.10.0
+djangorestframework==3.6.4

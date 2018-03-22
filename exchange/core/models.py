@@ -208,3 +208,31 @@ class CSWRecordReference(models.Model):
     scheme = models.CharField(
         verbose_name='Service Type', choices=scheme_choices, max_length=100)
     url = models.URLField(max_length=512, blank=False)
+
+
+class Map(object):
+
+    def __init__(self, title=None, abstract=None,
+                 name=None, sources={}, pitch=0, id=None,
+                 center=[0, 0], metadata={},
+                 zoom=None, layers=[], bearing=0,
+                 glyphs='', sprite='', version=8):
+        self.version = version
+        self.name = name
+        self.metadata = metadata
+        self.zoom = zoom if zoom is not None else settings.DEFAULT_MAP_ZOOM
+        self.bearing = bearing
+        self.pitch = pitch
+        self.light = 0
+        self.sources = sources
+        self.sprite = sprite
+        self.glyphs = glyphs
+        self.transition = {}
+        self.layers = layers
+        self.light = {}
+        self.anchor = 'viewport'
+        self.id = id
+        self.position = [1.15, 210, 30]
+        self.color = '#ffffff'
+        self.intensity = 0.5
+        self.center = center

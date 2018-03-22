@@ -26,6 +26,8 @@ from geonode.urls import urlpatterns as geonode_urls
 from exchange.maploom.urls import urlpatterns as maploom_urls
 from fileservice.urls import urlpatterns as fileservice_urls
 from thumbnails.urls import urlpatterns as thumbnail_urls
+from .api.base.router import api_urlpatterns as api_v1
+from .api.versioned.v2.router import api_urlpatterns as api_v2
 from castling.urls import urlpatterns as castling_urls
 from . import views
 
@@ -53,6 +55,8 @@ urlpatterns = patterns(
 
     url(r'^about/', views.about_page, name='about'),
     url(r'^capabilities/', views.capabilities, name='capabilities'),
+    url(r'^api/v1/', include(api_v1, namespace='api-v1')),
+    url(r'^api/v2/', include(api_v2, namespace='api-v2')),
 )
 
 if settings.ENABLE_SOCIAL_LOGIN is True:
@@ -115,4 +119,6 @@ urlpatterns += maploom_urls
 handler500 = 'exchange.views.handler500'
 
 if settings.CASTLING_ENABLED:
-    urlpatterns += castling_urls
+    urlpatterns += [
+        url('', include(castling_urls, namespace='castling'))
+    ]
