@@ -98,7 +98,7 @@ def make_thumb_request(remote, baseurl, params=None):
 
         if remote:
             # Check for SSL configs; use https_client
-            if thumbnail_create_url.startswith('https') \
+            if thumbnail_create_url.lower().startswith('https') \
                     and has_ssl_config(thumbnail_create_url, via_query=True):
                 # has_ssl_config needs to query db, as call may be from task
                 # worker, whose hostnameport_pattern_cache may be out of sync
