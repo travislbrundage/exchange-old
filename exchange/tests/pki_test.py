@@ -60,6 +60,9 @@ from exchange.pki.crypto import Crypto
 from exchange.pki.ssl_adapter import SslContextAdapter
 from exchange.pki.ssl_session import https_client
 from exchange.pki.utils import (
+    protocol_relative_url,
+    protocol_relative_to_scheme,
+    relative_to_absolute_url,
     hostname_port,
     requests_base_url,
     pki_prefix,
@@ -400,6 +403,9 @@ class TestPkiUtils(PkiTestCase):
 
         self.base_url = \
             '{0}/service?version=1.1.1&service=WMS'.format(mproot)
+        self.protocol_relative_url = \
+            '//{0}/service?version=1.1.1&service=WMS'\
+                .format(mphostpport)
         self.pki_url = \
             '{0}/pki/{1}/service%3Fversion%3D1.1.1%26service%3DWMS'\
             .format(ex_local_url, quote(mphostpport))
@@ -464,3 +470,26 @@ class TestPkiUtils(PkiTestCase):
         self.assertEqual(
             self.base_url,
             proxy_route_reverse(pki_to_proxy_route(pki_route(self.base_url))))
+
+    def test_urls(self):
+        self.assertTrue(protocol_relative_url(self.protocol_relative_url))
+        self.assertEqual(
+            self.base_url,
+            protocol_relative_to_scheme(self.protocol_relative_url))
+        self.assertEqual(
+            self.base_url,
+            protocol_relative_to_scheme(self.base_url))
+        self.assertNotEqual(
+            self.base_url,
+            protocol_relative_to_scheme(self.protocol_relative_url,
+                                        scheme='http'))
+        self.assertEqual(
+            self.base_url,
+            relative_to_absolute_url(self.protocol_relative_url))
+        self.assertNotEqual(
+            self.base_url,
+            relative_to_absolute_url(self.protocol_relative_url,
+                                     scheme='http'))
+        self.assertEqual(
+            self.base_url,
+            relative_to_absolute_url(self.base_url))

@@ -23,7 +23,7 @@ import re
 import logging
 
 # noinspection PyCompatibility
-from urlparse import urlparse
+from urlparse import urlparse, urlsplit, urljoin
 from urllib import quote, unquote, quote_plus, unquote_plus
 
 from django.conf import settings
@@ -32,6 +32,42 @@ from .settings import get_pki_dir
 
 
 logger = logging.getLogger(__name__)
+
+
+def protocol_relative_url(url):
+    return url.startswith('//') or url.startswith(u'//')
+
+
+def protocol_relative_to_scheme(url, scheme='https'):
+    """
+    Convert a protocol relative (starts with //) URL to one with a scheme
+    :param url: Protocol relative (or not) URL
+    :param scheme: Pass in request.scheme if available, otherwise https is
+    assumed, even if it might be unavailable at the endpoint, because there is
+    no way of knowing at this point.
+    :rtype: basestring
+    """
+    if protocol_relative_url(url):
+        if isinstance(url, unicode):  # noqa
+            return u'{0}:{1}'.format(scheme, url)
+        else:
+            return '{0}:{1}'.format(scheme, url)
+    return url
+
+
+def relative_to_absolute_url(url, scheme='https'):
+    parts = urlsplit(url)
+    if protocol_relative_url(url) or not parts.scheme:
+        if parts.netloc:
+            return protocol_relative_to_scheme(url, scheme=scheme)
+        else:
+            site_parts = urlsplit(settings.SITEURL.rstrip('/'))
+            current_uri = '{scheme}://{host}{path}'.format(
+                scheme=site_parts.scheme,
+                host=site_parts.netloc,
+                path=parts.path)
+            return urljoin(current_uri, url)  # rejoin any query/fragment
+    return url
 
 
 def normalize_hostname(url):
