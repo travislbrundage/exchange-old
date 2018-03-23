@@ -26,13 +26,14 @@ from collections import OrderedDict
 from fnmatch import fnmatch
 
 from ordered_model.models import OrderedModel
+from django.conf import settings
 from django.db import models
 from django.db.utils import OperationalError
 from django.core.exceptions import ValidationError
 
 from .settings import get_pki_dir, CERT_MATCH, KEY_MATCH, SSL_DEFAULT_CONFIG
 from .utils import hostname_port as filter_hostname_port
-from .utils import file_readable, pki_file
+from .utils import file_readable, pki_file, relative_to_absolute_url
 from .fields import EncryptedCharField, DynamicFilePathField
 
 logger = logging.getLogger(__name__)
@@ -77,7 +78,9 @@ def rebuild_hostnameport_pattern_cache():
         pass
 
 
-def hostnameport_pattern_for_url(url, via_query=False, uses_proxy=None):
+def hostnameport_pattern_for_url(
+        url, via_query=False, uses_proxy=None, scheme='https'):
+    url = relative_to_absolute_url(url, scheme=scheme)
     if not url.lower().startswith('https'):
         return None
     if via_query or not hostnameport_pattern_cache_built:
@@ -108,7 +111,7 @@ def hostnameport_pattern_for_url(url, via_query=False, uses_proxy=None):
     return None
 
 
-def has_ssl_config(url, via_query=False):
+def has_ssl_config(url, via_query=False, scheme='https'):
     """
     Checks whether a URL matches a pattern in the cache.
 
@@ -117,8 +120,10 @@ def has_ssl_config(url, via_query=False):
 
     :param url: Any URL, with an https scheme.
     :param via_query: Whether to rebuild the pattern cache first, via db query.
+    :param scheme: See utils.protocol_relative_to_scheme
     :rtype: bool
     """
+    url = relative_to_absolute_url(url, scheme=scheme)
     if not url.lower().startswith('https'):
         return False
     ptn = hostnameport_pattern_for_url(url, via_query=via_query)
@@ -127,15 +132,17 @@ def has_ssl_config(url, via_query=False):
     return False
 
 
-def ssl_config_for_url(url, uses_proxy=None):
+def ssl_config_for_url(url, uses_proxy=None, scheme='https'):
     """
     Find an SslConfig for a URL.
     Fix any missing related SslConfig by reverting to default.
     :param url:
     :param uses_proxy: Filter by whether connections should require
     routing through internal proxy or not. 'None' indicates no filtering.
+    :param scheme: See utils.protocol_relative_to_scheme
     :rtype: SslConfig | None
     """
+    url = relative_to_absolute_url(url, scheme=scheme)
     if not url.lower().startswith('https'):
         return None
 
@@ -152,7 +159,7 @@ def ssl_config_for_url(url, uses_proxy=None):
     return ssl_config
 
 
-def uses_proxy_route(url, via_query=False):
+def uses_proxy_route(url, via_query=False, scheme='https'):
     """
     Checks whether a URL matches a pattern in the cache, taking into account
     whether mapping also uses an external proxy through this application.
@@ -165,8 +172,10 @@ def uses_proxy_route(url, via_query=False):
 
     :param url: Any URL, with an https scheme.
     :param via_query: Whether to rebuild the pattern cache first, via db query.
+    :param scheme: See utils.protocol_relative_to_scheme
     :rtype: bool
     """
+    url = relative_to_absolute_url(url, scheme=scheme)
     if not url.lower().startswith('https'):
         return False
     ptn = hostnameport_pattern_for_url(
