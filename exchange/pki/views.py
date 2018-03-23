@@ -125,7 +125,10 @@ def pki_request(request, resource_url=None):
 
     logger.debug("pki requests response headers:\n{0}".format(req_res.headers))
 
-    if 'Content-Type' in req_res.headers:
+    if query and 'f=pjson' in query:
+        # Sometimes arcrest servers doesn't return proper content type
+        content_type = 'application/json'
+    elif 'Content-Type' in req_res.headers:
         content_type = req_res.headers['Content-Type']
     else:
         content_type = 'text/plain'
