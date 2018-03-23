@@ -178,6 +178,12 @@ def uses_proxy_route(url, via_query=False, scheme='https'):
     url = relative_to_absolute_url(url, scheme=scheme)
     if not url.lower().startswith('https'):
         return False
+
+    # No need to proxy a local GeoServer
+    if (url.startswith(settings.GEOSERVER_URL.rstrip('/')) and
+            settings.GEOSERVER_URL.startswith(settings.SITEURL.rstrip('/'))):
+        return False
+
     ptn = hostnameport_pattern_for_url(
         url, via_query=via_query, uses_proxy=True)
     if ptn is not None:
