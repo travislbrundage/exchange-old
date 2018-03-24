@@ -22,13 +22,14 @@ import logging
 
 from urllib import unquote, urlencode
 # noinspection PyCompatibility
-from urlparse import parse_qsl
+from urlparse import parse_qsl, urlsplit
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.http.request import validate_host
 from wsgiref import util as wsgiref_util
 
-from geonode.api.views import get_client_ip
 from geonode.services import enumerations
 
 from .ssl_session import https_client
@@ -46,13 +47,27 @@ def pki_request(request, resource_url=None):
     :rtype: HttpResponse
     """
 
-    # Limit to localhost calls, e.g. when coming from local Py packages
-    req_ip = get_client_ip(request)
-    logger.debug("req_ip: {0}".format(req_ip))
-    allowed_ips = ['127.0.0.1', '[::1]']
-    if req_ip not in allowed_ips:
+    # Limit to allowed host calls, e.g. when coming from local Py packages
+    req_host = request.get_host()
+    if not req_host:
         return HttpResponse(
-            "IP address requesting PKI proxy service is not of local origin.",
+            "Host missing for service request.",
+            status=403,
+            content_type="text/plain"
+        )
+    else:
+        req_host = req_host.split(':')[0]  # remove any port
+    logger.debug("req_host: {0}".format(req_host))
+    site_url = urlsplit(settings.SITEURL)
+    exch_url = urlsplit(settings.EXCHANGE_LOCAL_URL)
+    allowed_hosts = [
+        'localhost', '127.0.0.1', '[::1]',
+        site_url.hostname, exch_url.hostname
+    ]
+    logger.debug("allowed_hosts: {0}".format(allowed_hosts))
+    if not validate_host(req_host, allowed_hosts):
+        return HttpResponse(
+            "Host requesting service is not allowed.",
             status=403,
             content_type="text/plain"
         )
