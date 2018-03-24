@@ -405,7 +405,7 @@ class TestPkiUtils(PkiTestCase):
             '{0}/service?version=1.1.1&service=WMS'.format(mproot)
         self.protocol_relative_url = \
             '//{0}/service?version=1.1.1&service=WMS'\
-                .format(mphostpport)
+            .format(mphostpport)
         self.pki_url = \
             '{0}/pki/{1}/service%3Fversion%3D1.1.1%26service%3DWMS'\
             .format(ex_local_url, quote(mphostpport))

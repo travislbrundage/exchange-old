@@ -28,6 +28,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from wsgiref import util as wsgiref_util
 
+from geonode.api.views import get_client_ip
 from geonode.services import enumerations
 
 from .ssl_session import https_client
@@ -45,12 +46,21 @@ def pki_request(request, resource_url=None):
     :rtype: HttpResponse
     """
 
-    if resource_url is None:
+    # Limit to localhost calls, e.g. when coming from local Py packages
+    req_ip = get_client_ip(request)
+    logger.debug("req_ip: {0}".format(req_ip))
+    allowed_ips = ['127.0.0.1', '[::1]']
+    if req_ip not in allowed_ips:
+        return HttpResponse(
+            "IP address requesting PKI proxy service is not of local origin.",
+            status=403,
+            content_type="text/plain"
+        )
+
+    if not resource_url:
         return HttpResponse('Resource URL missing for PKI request',
                             status=400,
                             content_type='text/plain')
-
-    # TODO: Limit to localhost calls, e.g. when coming from local Py packages
 
     # Manually copy over headers, skipping unwanted ones
     logger.debug("pki request.COOKIES: {0}".format(request.COOKIES))
