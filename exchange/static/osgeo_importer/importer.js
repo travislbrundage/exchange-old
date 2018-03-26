@@ -308,6 +308,18 @@
                     }
                     $scope.categories = response.data.objects.filter(isActive);
                 });
+                $scope.layer.configuration_options.add_photos = false;
+                $http.get('/capabilities/').then(
+                    function(response) {
+                        try {
+                            $scope.anywhereEnabled = response.data.capabilities.mobile;
+                            console.log('Enabling Anywhere', $scope.anywhereEnabled, response.data);
+                        } 
+                        catch(err) {
+                            $scope.anywhereEnabled = false;
+                        }
+                    }
+                );
             };
 
             $scope.appending = function(asString) {
@@ -509,7 +521,7 @@
                     scope.configuring = false;
                     scope.hasError = false;
                     scope.complete = false;
-                    scope.importOptions = {configureTime: true, public: true, version_control: true, convert_to_date: []};
+                    scope.importOptions = {configureTime: true, public: true, version_control: true, add_photos: false, convert_to_date: []};
 
                     scope.isImported = function() {
                         return scope.status === 'SUCCESS';

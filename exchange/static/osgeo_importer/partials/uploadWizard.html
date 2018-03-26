@@ -157,7 +157,27 @@
                     <h4><strong>Enable Version Control?</strong></h4>
                     <div class="btn-group">
                         <label class="btn btn-primary"  ng-model='layer.configuration_options.version_control' uib-btn-radio="true">Yes</label>
-                        <label class="btn btn-primary" ng-model='layer.configuration_options.version_control' uib-btn-radio="false">No</label>
+                        <label class="btn btn-primary" ng-model='layer.configuration_options.version_control' uib-btn-radio="false" ng-class="{active: true}">No</label>
+                    </div>  </div>
+                <div class="row">
+                    <div class="col-md-6 import-wizard-button">
+                        <button class="btn btn-block" type="submit" wz-previous value="Previous Step"><i class="fa fa-arrow-circle-left"></i> Previous Step</button>
+                    </div>
+                    <div class="col-md-6 import-wizard-button">
+                        <button class="btn btn-block" type="submit" wz-next value="Next Step">Next Step <i class="fa fa-arrow-circle-right"></i></button>
+                    </div>
+                </div>
+
+            </wz-step>
+            
+            <wz-step title="Add Photos" wz-disabled="{{!anywhereEnabled}}">
+
+                <div class="gray-container">
+                    <img class="import-wizard-image" ng-src="{{ staticUrl }}/osgeo_importer/img/edit.png"/>
+                    <h4><strong>Enable Photos Field for Anywhere?</strong></h4>
+                    <div class="btn-group">
+                        <label class="btn btn-primary"  ng-model='layer.configuration_options.add_photos' uib-btn-radio="true">Yes</label>
+                        <label class="btn btn-primary" ng-model='layer.configuration_options.add_photos' uib-btn-radio="false">No</label>
                     </div>  </div>
                 <div class="row">
                     <div class="col-md-6 import-wizard-button">

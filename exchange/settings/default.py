@@ -451,6 +451,7 @@ if 'osgeo_importer' in INSTALLED_APPS:
         # geoserver running.
         # Warning: the order of the handlers here matters.
         'osgeo_importer.handlers.FieldConverterHandler',
+        'exchange.importer.photos_field_handler.PhotosFieldHandler',
         'osgeo_importer.handlers.geoserver.GeoserverPublishHandler',
         'osgeo_importer.handlers.geoserver.GeoserverPublishCoverageHandler',
         'osgeo_importer.handlers.geoserver.GeoServerTimeHandler',

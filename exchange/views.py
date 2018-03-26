@@ -154,7 +154,6 @@ def capabilities(request):
         # check that the OAuth application has been created
         len(Application.objects.filter(client_id='anywhere')) > 0
     )
-
     current_site = get_current_site(request)
     capabilities["site_name"] = current_site.name
 
