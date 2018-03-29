@@ -27,7 +27,6 @@ from geonode.settings import (
     STATICFILES_DIRS,
     INSTALLED_APPS,
     CELERY_IMPORTS,
-    MAP_BASELAYERS,
     DATABASES
 )
 
@@ -297,8 +296,22 @@ GEOFENCE = {
     'password': os.getenv('GEOFENCE_PASSWORD', GEOSERVER_PASSWORD)
 }
 
-MAP_BASELAYERS[0]['source']['url'] = (OGC_SERVER['default']
-                                      ['PUBLIC_LOCATION'] + 'wms')
+MAP_BASELAYERS = [{
+    "source": {"ptype": "gxp_olsource"},
+    "type": "OpenLayers.Layer",
+    "args": ["No background"],
+    "name": "background",
+    "visibility": False,
+    "fixed": True,
+    "group":"background"
+}, {
+    "source": {"ptype": "gxp_osmsource"},
+    "type": "OpenLayers.Layer.OSM",
+    "name": "mapnik",
+    "visibility": True,
+    "fixed": True,
+    "group": "background"
+}]
 
 POSTGIS_URL = os.getenv(
     'POSTGIS_URL',
