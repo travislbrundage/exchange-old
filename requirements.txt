@@ -1,7 +1,8 @@
 --index-url https://pypi.python.org/simple/
 -e ./vendor/geonode
-git+https://github.com/MapStory/composer.git@master#composer
+-e ./vendor/gsconfig
 -e ./vendor/django-osgeo-importer
+git+https://github.com/MapStory/composer.git@master#composer
 git+https://github.com/boundlessgeo/sphinx@bex#egg=Sphinx
 git+https://github.com/venicegeo/nearsight@master#egg=nearsight
 geonode-elasticsearch-app==0.2.1

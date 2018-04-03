@@ -12,3 +12,6 @@
 	path = vendor/django-osgeo-importer
 	url = https://github.com/Geonode/django-osgeo-importer
 	branch = angular-1.6
+[submodule "vendor/gsconfig"]
+	path = vendor/gsconfig
+	url = https://github.com/boundlessgeo/gsconfig.git
