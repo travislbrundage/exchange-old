@@ -19,7 +19,6 @@
 #
 #########################################################################
 
-import unittest
 import logging
 # noinspection PyPackageRequirements
 import pytest
@@ -84,16 +83,6 @@ logger = logging.getLogger(__name__)
 # bury these warnings for testing
 class RemovedInDjango19Warning(Exception):
     pass
-
-
-def skip_unless_has_mapproxy():
-    try:
-        mp_http = get('http://mapproxy.boundless.test:8088')
-        assert mp_http.status_code == 200
-        return lambda func: func
-    except (ConnectionError, AssertionError):
-        return unittest.skip(
-            'Test requires mapproxy docker-compose container running')
 
 
 def has_mapproxy():
