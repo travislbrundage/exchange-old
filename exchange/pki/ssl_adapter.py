@@ -123,6 +123,7 @@ class SslContextAdapter(HTTPAdapter):
         """
 
         ssl_config = ssl_config_for_url(url)
+        """:type: SslConfig"""
 
         if ssl_config is None:
             raise SslContextAdapterError(
@@ -131,10 +132,16 @@ class SslContextAdapter(HTTPAdapter):
         return SslContextAdapter.ssl_config_to_context_opts(ssl_config)
 
     def context_options(self):
+        """
+        Dump all custom context and adapter options
+        :return: tuple of dicts of options
+        """
         return self._ctx_create_opts, self._ctx_opts, self._adptr_opts
 
     def _update_context(self, context):
         """
+        Update the urllib3 connection context with SSL options
+
         :type context: ssl.SSLContext
         """
         cafile = self._ctx_opts.get('cafile', None)
@@ -211,6 +218,14 @@ class SslContextAdapter(HTTPAdapter):
 
     @staticmethod
     def ssl_config_to_context_opts(config):
+        """
+        Convert an SslConfig model instance (or its representation as a dict)
+        to a dict of options for SslContextAdapter
+
+        :param config: SslConfig or dict representation
+        :type  config: SslConfig | dict
+        :rtype: dict
+        """
         if isinstance(config, SslConfig):
             config = config.to_dict()
 
