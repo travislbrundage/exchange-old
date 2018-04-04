@@ -133,7 +133,16 @@ node {
           "Dependency Check" : {
             bashDocker(
               'quay.io/boundlessgeo/b7s-sonarqube-scanner',
-              'dependency-check --project exchange --disableBundleAudit --disableAssembly --out . --scan . -f ALL \
+              'dependency-check --project exchange \
+                                --disableBundleAudit \
+                                --disableAssembly \
+                                --out . \
+                                --scan . \
+                                -f ALL \
+                                --cveUrl12Base "https://nvd.nist.gov/feeds/xml/cve/1.2/nvdcve-%d.xml.gz" \
+                                --cveUrl20Base "https://nvd.nist.gov/feeds/xml/cve/2.0/nvdcve-2.0-%d.xml.gz" \
+                                --cveUrl12Modified "https://nvd.nist.gov/feeds/xml/cve/1.2/nvdcve-modified.xml.gz" \
+                                --cveUrl20Modified "https://nvd.nist.gov/feeds/xml/cve/2.0/nvdcve-2.0-modified.xml.gz" \
                && cat dependency-check-report.json'
             )
           }

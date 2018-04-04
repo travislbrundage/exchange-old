@@ -1,7 +1,7 @@
 
 from django.conf.urls import url
 from django.conf.urls.static import static
-
+from django.conf import settings
 from . import views
 
 
@@ -12,4 +12,4 @@ urlpatterns = [
     url(r'^castling/config.js$', views.config, name='config'),
     url(r'^documents/(?P<docid>[^/]*)/get$',
         views.get_document, name='get_document'),
-] + static('castling', document_root='/code/vendor/castling/build')
+] + static('castling', document_root=settings.CASTLING_ROOT)

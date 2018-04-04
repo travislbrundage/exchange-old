@@ -31,7 +31,7 @@ if [[ -f /code/vendor/services/setup.py ]]; then
   plugins=("${plugins[@]}" "worm")
 fi
 if [ "$plugins" ]; then
-  ADDITIONAL_APPS=$(IFS=,; echo "${plugins[*]}")
+  export ADDITIONAL_APPS=$(IFS=,; echo "${plugins[*]}")
 fi
 until $manage migrate account --noinput; do
   >&2 echo "db is unavailable - sleeping"

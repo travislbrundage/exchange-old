@@ -2,7 +2,7 @@ SHELL:=bash
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 current_dir := $(dir $(mkfile_path))
 
-.PHONY: help html lint start purge stop recreate test maploom migrations
+.PHONY: help html lint start purge stop recreate test maploom migrations castling
 
 help:
 	@echo "  make lint       - run to lint (style check) repo"
@@ -13,6 +13,7 @@ help:
 	@echo "  make recreate   - stop containers, prune volumes and recreate/build containers"
 	@echo "  make test       - run unit tests"
 	@echo "  make maploom    - build maploom"
+	@echo "  make castling   - build castling"
 	@echo "  make migrations - create django migrations"
 
 html:
@@ -28,13 +29,13 @@ lint:
 stop:
 	@docker-compose down --remove-orphans
 
-start: stop maploom
+start: stop maploom castling
 	@docker-compose up -d --build
 
 purge: stop
 	@docker volume prune -f
 
-recreate: purge
+recreate: purge maploom castling
 	@docker-compose up -d --build --force-recreate
 
 test: migration-check
@@ -45,6 +46,13 @@ maploom:
 	@docker run --rm -v $(current_dir):/code \
 	                 -w /code quay.io/boundlessgeo/bex-nodejs-bower-grunt bash \
 	                 -e -c '. docker/devops/helper.sh && build-maploom'
+
+castling:
+	@docker run --rm -v $(current_dir)/vendor/castling:/web \
+                     -w /web quay.io/boundlessgeo/node-yarn-sonar bash \
+                     -c 'echo "//registry.npmjs.org/:_authToken=db9401e4-d14e-4228-8199-c70228a0d7b4" > \
+                     ~/.npmrc && npm install && npm run build'
+	@cp -f $(current_dir)/vendor/castling/build/index.html $(current_dir)/exchange/castling/templates/castling/
 
 migration-check:
 	@docker-compose exec -T exchange /bin/bash \

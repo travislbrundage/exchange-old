@@ -1,14 +1,15 @@
 
-
 from django.shortcuts import render
 from django.http import JsonResponse
-
+from django.conf import settings
 from geonode.utils import resolve_object
 from geonode.documents.models import Document
 
 
 def index(request):
-    return render(request, 'castling/index.html', {
+    dev = settings.CASTLING_DEV
+    html = 'castling/index_dev.html' if dev is True else 'castling/index.html'
+    return render(request, html, {
         'CASTLING_BUILD_DIR': '.',
     })
 

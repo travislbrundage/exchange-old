@@ -45,6 +45,8 @@ def isValid(v):
         return False
 
 
+GEOS_LIBRARY_PATH = os.getenv('GEOS_LIBRARY_PATH', '/usr/lib/libgeos_c.so')
+ANYWHERE_ENABLED = os.getenv('ANYWHERE_ENABLED', False)
 SITENAME = os.getenv('SITENAME', 'exchange')
 WSGI_APPLICATION = "exchange.wsgi.application"
 ROOT_URLCONF = 'exchange.urls'
@@ -628,6 +630,8 @@ REST_FRAMEWORK = {
     ),
 }
 
+CASTLING_DEV = str2bool(os.getenv('CASTLING_DEV', 'False'))
+CASTLING_ROOT = os.getenv('CASTLING_ROOT', '/code/vendor/castling/build')
 CASTLING_ENABLED = str2bool(os.getenv('CASTLING_ENABLED', 'True'))
 if CASTLING_ENABLED:
     INSTALLED_APPS = INSTALLED_APPS + (

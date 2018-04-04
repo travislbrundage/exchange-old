@@ -1,7 +1,3 @@
-[submodule "vendor/geonode"]
-	path = vendor/geonode
-	url = https://github.com/boundlessgeo/geonode.git
-	branch = exchange/1.5.x
 [submodule "vendor/maploom"]
 	path = vendor/maploom
 	url = https://github.com/boundlessgeo/MapLoom.git
