@@ -373,7 +373,18 @@ class TestHostnamePortSslConfig(PkiTestCase):
         # self.assertEqual(HostnamePortSslConfig.objects.count(), 0)
         # self.assertEqual(len(https_client.adapters), 1)
 
-    @pytest.mark.skip(reason="Because it can't auth to running exchange")
+
+@pytest.mark.skip(reason="Because it can't auth to running exchange")
+@pytest.mark.skipif(
+    not has_mapproxy(),
+    reason='Test requires mapproxy docker-compose container running')
+class TestPkiServiceRegistration(PkiTestCase):
+
+    def setUp(self):
+        self.login()
+
+    # Service.objects.all().delete()
+
     def testMapProxyRegistration(self):
         logger.debug("Service.objects:\n{0}"
                      .format(repr(Service.objects.all())))
