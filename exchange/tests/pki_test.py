@@ -46,11 +46,12 @@ from geonode.services.models import Service
 
 from . import ExchangeTest
 
-from exchange.pki.settings import get_pki_dir
+from exchange.pki.settings import get_pki_dir, SSL_DEFAULT_CONFIG
 from exchange.pki.models import (
     SslConfig,
     HostnamePortSslConfig,
     hostnameport_pattern_cache,
+    hostnameport_pattern_proxy_cache,
     rebuild_hostnameport_pattern_cache,
     ssl_config_for_url,
     has_ssl_config,
@@ -106,8 +107,9 @@ def has_mapproxy():
 
 class PkiTestCase(ExchangeTest):
 
-    # fixtures = ['test_ssl_configs.json']
-    fixtures = ['test_ssl_configs_no_default.json']
+    # Note use of cls.local_fixtures, not cls.fixtures; see setUpTestData
+    # local_fixtures = ['test_ssl_configs.json']
+    local_fixtures = ['test_ssl_configs_no_default.json']
 
     @classmethod
     def setUpClass(cls):
@@ -122,6 +124,65 @@ class PkiTestCase(ExchangeTest):
     @classmethod
     def setUpTestData(cls):
         """Load initial data for the TestCase"""
+
+        # Delete any custom SslConfigs, but leave default added during
+        # initial data migration.
+        SslConfig.objects.all().delete()
+        ssl_def_config = SslConfig.objects.get_create_default()
+
+        if (SslConfig.objects.count() != 1 or
+                str(ssl_def_config.name) != SSL_DEFAULT_CONFIG['name']):
+            raise Exception('Problem setting up default SslConfig')
+
+        # We load fixtures here, because we need to ensure our test tables are
+        # clean of any existing non-default data, since this method is called
+        # *after* atomic rollback snapshot and fixtures loaded, which makes it
+        # tricky to clean the tables after snapshot, but prior to loading data.
+        if cls.local_fixtures:
+            for db_name in cls._databases_names(include_mirrors=False):
+                # Let this raise upon failure, so db rollback is triggered
+                management.call_command(
+                    'loaddata', *cls.local_fixtures, **{
+                        'verbosity': 0,
+                        'commit': False,
+                        'database': db_name,
+                    })
+
+        # No custom SslConfigs should exist; clean data state only
+        assert SslConfig.objects.count() == 8
+        cls.ssl_config_1 = SslConfig.objects.get(pk=1)
+        assert cls.ssl_config_1.name == \
+            u"Default: TLS-only"
+        cls.ssl_config_2 = SslConfig.objects.get(pk=2)
+        assert cls.ssl_config_2.name == \
+            u"Just custom CAs"
+        cls.ssl_config_3 = SslConfig.objects.get(pk=3)
+        assert cls.ssl_config_3.name == \
+            u"PKI: key with no password"
+        cls.ssl_config_4 = SslConfig.objects.get(pk=4)
+        assert cls.ssl_config_4.name == \
+            u"PKI: key with password"
+        cls.ssl_config_5 = SslConfig.objects.get(pk=5)
+        assert cls.ssl_config_5.name == \
+            u"PKI: key with password; TLSv1_2-only; alt root CA chain"
+        cls.ssl_config_6 = SslConfig.objects.get(pk=6)
+        assert cls.ssl_config_6.name == u"PKI: key with password; TLSv1_2-only"
+        cls.ssl_config_7 = SslConfig.objects.get(pk=7)
+        assert cls.ssl_config_7.name == \
+            u"PKI: key with no password; custom CAs with no validation"
+        cls.ssl_config_8 = SslConfig.objects.get(pk=8)
+        assert cls.ssl_config_8.name == \
+            u"PKI: key with no password; TLSv1_2-only (via ssl_options)"
+
+        # Clear out all preexisting table and cache data that needs tested
+        https_client.clear_https_adapters()
+
+        HostnamePortSslConfig.objects.all().delete()
+        rebuild_hostnameport_pattern_cache()
+        assert hostnameport_pattern_cache == []
+        assert hostnameport_pattern_proxy_cache == []
+
+        # Data associated with internal MapProxy test server
         # This needs to be mixed case, to ensure SslContextAdapter handles
         # server cert matching always via lowercase hostname (bug in urllib3)
         cls.mp_root = u'https://maPproxy.Boundless.test:8344/'
@@ -131,17 +192,14 @@ class PkiTestCase(ExchangeTest):
 
         cls.mp_txt = 'Welcome to MapProxy'
 
-        logger.debug("PKI_DIRECTORY: {0}".format(get_pki_dir()))
-
-        # Clear out all preexisting table and cache data that needs tested
-        https_client.clear_https_adapters()
-
-        HostnamePortSslConfig.objects.all().delete()
-        rebuild_hostnameport_pattern_cache()
-
-        # SslConfigs have a fixture, so do not delete
+        # Some debug output for sanity check on default data state
         logger.debug("SslConfig.objects:\n{0}"
                      .format(repr(SslConfig.objects.all())))
+
+        logger.debug("HostnamePort.objects:\n{0}"
+                     .format(repr(SslConfig.objects.all())))
+
+        logger.debug("PKI_DIRECTORY: {0}".format(get_pki_dir()))
 
     def create_hostname_port_mapping(self, ssl_config, ptn=None):
         if ptn is None:
@@ -163,16 +221,6 @@ class TestSslContextSessionAdapter(PkiTestCase):
     def setUp(self):
         HostnamePortSslConfig.objects.all().delete()
         self.assertEqual(HostnamePortSslConfig.objects.count(), 0)
-
-        self.assertEqual(SslConfig.objects.count(), 8)
-        self.ssl_config_1 = SslConfig.objects.get(pk=1)
-        self.ssl_config_2 = SslConfig.objects.get(pk=2)
-        self.ssl_config_3 = SslConfig.objects.get(pk=3)
-        self.ssl_config_4 = SslConfig.objects.get(pk=4)   # PKI: key with pass
-        self.ssl_config_5 = SslConfig.objects.get(pk=5)
-        self.ssl_config_6 = SslConfig.objects.get(pk=6)
-        self.ssl_config_7 = SslConfig.objects.get(pk=7)
-        self.ssl_config_8 = SslConfig.objects.get(pk=8)
 
         self.p1 = u'{0}*'.format(self.mp_host_port)
 
@@ -238,14 +286,6 @@ class TestHostnamePortSslConfig(PkiTestCase):
         HostnamePortSslConfig.objects.all().delete()
         self.assertEqual(HostnamePortSslConfig.objects.count(), 0)
 
-        self.ssl_config_1 = SslConfig.objects.get(pk=1)
-        self.ssl_config_2 = SslConfig.objects.get(pk=2)
-        self.ssl_config_3 = SslConfig.objects.get(pk=3)
-        self.ssl_config_4 = SslConfig.objects.get(pk=4)
-        self.ssl_config_5 = SslConfig.objects.get(pk=5)
-        self.ssl_config_6 = SslConfig.objects.get(pk=6)
-        self.ssl_config_7 = SslConfig.objects.get(pk=7)
-        self.ssl_config_8 = SslConfig.objects.get(pk=8)
         self.ssl_configs = [
             self.ssl_config_1,  # Default: TLS-only
             self.ssl_config_4,  # PKI: key with password
