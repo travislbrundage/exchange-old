@@ -2,6 +2,10 @@
 
 set -e
 
+
+pip show pip 2>&1 | grep -q 'should consider upgrading' \
+  && pip install --upgrade pip || true
+
 pip show pytest > /dev/null || pip install pytest
 
 pushd /code > /dev/null
