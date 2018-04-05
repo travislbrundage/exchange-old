@@ -65,9 +65,7 @@ def sync_https_adapters():
 
     for base_url, adpter in adapters.items():
         if base_url.startswith('http://'):
-            continue  # only work with https
-        if not isinstance(adpter, SslContextAdapter):
-            continue  # just in case; this shouldn't happen
+            continue  # only work with https adapters
         ptn = None
         for p in ssl_configs.keys():
             if fnmatch(hostname_port(base_url), p):
@@ -77,21 +75,36 @@ def sync_https_adapters():
             logger.debug(u'Adapter URL matched hostname:port pattern: '
                          u'{0} > {1}'.format(base_url, ptn))
             config = ssl_configs[ptn]
-            if (adpter.context_options() !=
-                    SslContextAdapter.ssl_config_to_context_opts(config)):
-                # SslConfig differs, replace
+            if (not isinstance(adpter, SslContextAdapter) or
+                    (adpter.context_options() !=
+                     SslContextAdapter.ssl_config_to_context_opts(config))):
+                # SslConfig differs, or needs to be SslContextAdapter; replace
                 adpter.close()  # clean up session pool manager
                 # The mount() call wraps a dictionary[key] = value assignment,
-                # so works for either creation or update.
+                # so works for either creation or update, but we want to be
+                # sure there are no orphans.
+                del https_client.adapters[base_url]
                 https_client.mount_sslcontext_adapter(base_url)
-                logger.debug(u'Updated session adapter: {0}'.format(base_url))
+                act = u'updated' \
+                    if isinstance(adpter, SslContextAdapter) else u'added'
+                logger.debug(u'Session SslContextAdapter {0}: {1}'
+                             .format(act, base_url))
             else:
-                logger.debug(u'Session adapter unchanged: {0}'
+                logger.debug(u'Session SslContextAdapter unchanged: {0}'
                              .format(base_url))
-        else:
-            logger.debug(u'Adapter URL does not match any hostname:port '
-                         u'(deleting): {0}'.format(base_url))
+            logging.debug(u'https_client Session.adapters: {0}'
+                          .format(https_client.adapters))
+        elif isinstance(adpter, SslContextAdapter):
+            logger.debug(u'SslContextAdapter URL no longer matches any '
+                         u'hostname:port pattern (deleting): {0}'
+                         .format(base_url))
+            adpter.close()  # clean up session pool manager
             del https_client.adapters[base_url]
+        else:
+            logger.debug(u'Session adapter is non-SslContextAdapter and does '
+                         u'not match pattern (skipping): {0}'
+                         .format(base_url))
+            continue
 
 
 def sync_layer_legend_urls():
