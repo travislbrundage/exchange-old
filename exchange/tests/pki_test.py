@@ -26,6 +26,7 @@ import django
 
 from urllib import quote, quote_plus
 from requests import get, Request
+from requests.adapters import HTTPAdapter
 from requests.exceptions import ConnectionError, SSLError
 
 from django.conf import settings
@@ -58,7 +59,7 @@ from exchange.pki.models import (
 )
 from exchange.pki.crypto import Crypto
 from exchange.pki.ssl_adapter import SslContextAdapter
-from exchange.pki.ssl_session import https_client
+from exchange.pki.ssl_session import SslContextSession, https_client
 from exchange.pki.utils import (
     protocol_relative_url,
     protocol_relative_to_scheme,
@@ -176,6 +177,8 @@ class PkiTestCase(ExchangeTest):
         # server cert matching always via lowercase hostname (bug in urllib3)
         cls.mp_root = u'https://maPproxy.Boundless.test:8344/'
 
+        cls.mp_root_http = u'http://mapproxy.boundless.test:8088/'
+
         # Already know what the lookup table key should be like
         cls.mp_host_port = hostname_port(cls.mp_root)
 
@@ -233,14 +236,14 @@ class TestSslContextSessionAdapter(PkiTestCase):
         # expected SslConfig
         self.assertEqual(
             ssla.get_ssl_context_opts(normalize_hostname(self.mp_root)),
-            ssla.ssl_config_to_context_opts(self.ssl_config_4))
+            SslContextAdapter.ssl_config_to_context_opts(config))
         # Same, but via dump-to-tuple method
         self.assertEqual(
             ssla.context_options(),
-            ssla.ssl_config_to_context_opts(config))
+            SslContextAdapter.ssl_config_to_context_opts(config))
 
         # Ensure adapter's Retry object matches passed-in settings
-        _, _, adptr_opts = ssla.ssl_config_to_context_opts(config)
+        _, _, adptr_opts = SslContextAdapter.ssl_config_to_context_opts(config)
         self.assertEqual(ssla.max_retries.total, adptr_opts['retries'])
         self.assertEqual(ssla.max_retries.redirect, adptr_opts['redirects'])
 
@@ -254,15 +257,122 @@ class TestSslContextSessionAdapter(PkiTestCase):
 
         # SslContextAdapter should always normalize the URL, because urllib3's
         # SSL cert hostname matching is case-sensitive (and shouldn't be)
-        self.assertEqual(ssla._normalize_hostname(self.mp_root),
+        self.assertEqual(SslContextAdapter._normalize_hostname(self.mp_root),
                          normalize_hostname(self.mp_root))
-        self.assertEqual(ssla._normalize_hostname(self.mp_root),
+        self.assertEqual(SslContextAdapter._normalize_hostname(self.mp_root),
                          p_req.url)
 
         # Sending solely via adapter (outside of session) should work for
         # connections that do not require cookies, etc.
         resp = ssla.send(p_req)
         self.assertEqual(resp.status_code, 200)
+
+    def testSslContextSession(self):
+        def clear_adapters():
+            https_client.clear_https_adapters()
+            self.assertEqual(len(https_client.adapters), 1)  # just 'http://'
+
+        self.assertIsInstance(https_client, SslContextSession)
+
+        self.assertEqual(len(https_client.adapters), 1)  # for 'http://'
+
+        https_client.mount('https://', HTTPAdapter())
+        self.assertEqual(len(https_client.adapters), 2)
+        clear_adapters()
+
+        resp = https_client.get(self.mp_root_http)
+        self.assertEqual(resp.status_code, 200)
+        # No new adapters should have been created
+        self.assertEqual(len(https_client.adapters), 1)
+
+        resp = https_client.get('https://example.com')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(len(https_client.adapters), 2)
+
+        # Should not delete any http adapters
+        clear_adapters()
+
+        resp2 = None
+        try:
+            resp2 = https_client.get(self.mp_root)
+        except SSLError:
+            pass  # needs PKI
+        if resp2:
+            self.assertEqual(resp2.status_code, 400)  # needs PKI
+        mp_adptr = https_client.get_adapter(requests_base_url(self.mp_root))
+        self.assertIsNotNone(mp_adptr)
+        self.assertIsInstance(mp_adptr, HTTPAdapter)
+        self.assertEqual(len(https_client.adapters), 2)
+
+        clear_adapters()
+
+        # Now add it back, so we can verify adding a mapping clears bad adapter
+        resp2 = None
+        try:
+            resp2 = https_client.get(self.mp_root)
+        except SSLError:
+            pass  # still needs PKI
+        if resp2:
+            self.assertEqual(resp2.status_code, 400)  # still needs PKI
+        self.assertEqual(len(https_client.adapters), 2)
+
+        # Add a PKI SslConfig mapping for the MapProxy endpoint
+        config = self.ssl_config_4
+        self.create_hostname_port_mapping(config)
+        self.assertEqual(HostnamePortSslConfig.objects.count(), 1)
+        # Signal should have updated any adapter that now matches a mapping
+        logging.debug('https_client.adapters: {0}'
+                      .format(https_client.adapters))
+        self.assertEqual(len(https_client.adapters), 2)
+        # Adapter should now be SslContextAdapter (not HTTPAdapter), and have
+        # same SslConfig opts
+        mp_adptr1 = https_client.get_adapter(requests_base_url(self.mp_root))
+        self.assertIsNotNone(mp_adptr1)
+        self.assertIsInstance(mp_adptr1, SslContextAdapter)
+        self.assertEqual(
+            mp_adptr1.get_ssl_context_opts(normalize_hostname(self.mp_root)),
+            SslContextAdapter.ssl_config_to_context_opts(config))
+
+        HostnamePortSslConfig.objects.all().delete()
+        # Signal should have deleted any SslContextAdapter that no longer
+        # matches a mapping
+        self.assertEqual(len(https_client.adapters), 1)  # just 'http://'
+
+        # Add the mapping again, but leave adapters cleared for next test
+        self.create_hostname_port_mapping(config)
+        self.assertEqual(HostnamePortSslConfig.objects.count(), 1)
+        # Adding a mapping does not create an adapter, only connections do
+        self.assertEqual(len(https_client.adapters), 1)
+
+        # Mount the URL's adapter directly
+        https_client.mount_sslcontext_adapter(self.mp_root)
+        self.assertEqual(len(https_client.adapters), 2)
+        # Adapter should be SslContextAdapter and have same SslConfig opts
+        mp_adptr2 = https_client.get_adapter(requests_base_url(self.mp_root))
+        self.assertIsNotNone(mp_adptr2)
+        self.assertIsInstance(mp_adptr2, SslContextAdapter)
+        self.assertEqual(
+            mp_adptr2.get_ssl_context_opts(normalize_hostname(self.mp_root)),
+            SslContextAdapter.ssl_config_to_context_opts(config))
+
+        resp2 = https_client.get(self.mp_root)
+        self.assertEqual(resp2.status_code, 200)
+        # No new adapters should have been created
+        self.assertEqual(len(https_client.adapters), 2)
+
+        clear_adapters()
+
+        # Mount the URL's adapter dynamically during a connection
+        resp3 = https_client.get(self.mp_root)
+        self.assertEqual(resp3.status_code, 200)
+        # A new adapter should have been auto-created, via mapping match
+        self.assertEqual(len(https_client.adapters), 2)
+        mp_adptr3 = https_client.get_adapter(requests_base_url(self.mp_root))
+        self.assertIsNotNone(mp_adptr3)
+        self.assertIsInstance(mp_adptr3, SslContextAdapter)
+        self.assertEqual(
+            mp_adptr3.get_ssl_context_opts(normalize_hostname(self.mp_root)),
+            SslContextAdapter.ssl_config_to_context_opts(config))
 
 
 class TestHostnamePortSslConfig(PkiTestCase):
