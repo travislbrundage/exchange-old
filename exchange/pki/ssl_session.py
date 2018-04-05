@@ -47,8 +47,8 @@ class SslContextSession(Session):
 
         # Clear default, fallback 'https://' adapter;
         # all https adapters in our session MUST be unique to a fqdn[:port]
-        # It's up to admin what adapter gets mapped to all https connections,
-        #   e.g. '*.*' wildcard mapping --> default SslConfig
+        # It's up to admin what (if any) adapter gets mapped to all https
+        # connections, e.g. '*.*' wildcard mapping --> default SslConfig
         # NOTE: such a wildcard mapping WON'T create an 'https://' adapter
         self.clear_https_adapters()
 
@@ -72,7 +72,7 @@ class SslContextSession(Session):
         try:
             self.get_adapter(base_url)
             # This debug text will flood log; enable temporarily during dev
-            # logger.debug(u'Using session adapter for {0}'
+            # logger.debug(u'Using session SslContextAdapter for {0}'
             #              .format(base_url))
         except InvalidSchema:
             # TODO: via_query=True here *may* cause excessive db calls; if so,
