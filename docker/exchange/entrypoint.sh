@@ -20,11 +20,6 @@ sleep 15
 $setup build_sphinx
 # app integration
 plugins=()
-# anywhere integration
-if [[ -f /code/vendor/exchange-mobile-extension/setup.py ]]; then
-   pip install /code/vendor/exchange-mobile-extension
-   plugins=("${plugins[@]}" "geonode_anywhere")
-fi
 # worm integration
 if [[ -f /code/vendor/services/setup.py ]]; then
   pip install /code/vendor/services
@@ -41,11 +36,8 @@ $manage migrate --noinput
 $manage collectstatic --noinput
 $manage loaddata default_users
 $manage loaddata base_resources
-# anywhere fixture
 $manage loaddata /code/docker/exchange/docker_oauth_apps.json
-if [[ -f /code/vendor/exchange-mobile-extension/setup.py ]]; then
-  $manage loaddata /code/docker/exchange/anywhere.json
-fi
+$manage loaddata /code/docker/exchange/anywhere.json
 $manage rebuild_index
 if [[ $DEV == True ]]; then
   $manage importservice http://data-test.boundlessgeo.io/geoserver/wms bcs-hosted-data WMS I
