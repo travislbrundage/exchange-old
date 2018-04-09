@@ -263,6 +263,9 @@ GEOGIG_DATASTORE_DIR = os.getenv(
 PG_DATASTORE = os.getenv('PG_DATASTORE', 'exchange_imports')
 PG_GEOGIG = str2bool(os.getenv('PG_GEOGIG', 'True'))
 
+GEOSERVER_URL = os.getenv(
+    'PUBLIC_GEOSERVER_URL', "{}/geoserver/".format(SITEURL.rstrip('/')))
+
 OGC_SERVER = {
     'default': {
         'BACKEND': 'geonode.geoserver',
@@ -288,7 +291,7 @@ OGC_SERVER = {
     }
 }
 
-GEOSERVER_BASE_URL = OGC_SERVER['default']['PUBLIC_LOCATION'] + 'wms'
+GEOSERVER_BASE_URL = "{}wms".format(OGC_SERVER['default']['PUBLIC_LOCATION'])
 GEOGIG_DATASTORE_NAME = 'geogig-repo'
 
 GEOFENCE = {
