@@ -52,7 +52,7 @@ There are three submodules in the vendor directory
 Run the following command to clone all repositories
 
 ```bash
-git clone --recursive -j8 git@github.com/boundlessgeo/exchange.git
+git clone --recursive -j8 git@github.com:boundlessgeo/exchange.git
 cd exchange
 ```
 
