@@ -72,13 +72,17 @@ class MapSerializer(serializers.Serializer):
                                   required=False)
     sources = serializers.DictField(child=serializers.DictField())
     sprite = serializers.CharField(max_length=256, required=False)
-    glyphs = serializers.CharField(max_length=256, required=False)
+    glyphs = serializers.CharField(max_length=256,
+                                   allow_blank=True, required=False)
+
     transition = serializers.DictField(child=serializers.CharField(),
                                        required=False)
     layers = serializers.ListField(
         child=serializers.DictField(), required=False,
         validators=[validate_layers]
     )
+
+    light = serializers.DictField(required=False)
 
     def validate(self, data):
 
@@ -92,6 +96,10 @@ class MapSerializer(serializers.Serializer):
                 raise serializers.ValidationError({'sources': msg %
                                                   (", ".join(source_types),
                                                    v['type'])})
+        # The light field is not stored.
+        for ignore in ['light', 'transition']:
+            if ignore in data:
+                del data[ignore]
 
         return data
 

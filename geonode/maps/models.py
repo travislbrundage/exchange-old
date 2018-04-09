@@ -103,6 +103,9 @@ class Map(ResourceBase, GXPMapBase):
         blank=True)
     # Full URL for featured map view, ie http://domain/someview
 
+    map_params = models.TextField(_('map params'), default='{}')
+    # A JSON-encoded dictionary of arbitrary parameters for the map itself.
+
     def __unicode__(self):
         return '%s by %s' % (
             self.title, (self.owner.username if self.owner else "<Anonymous>"))

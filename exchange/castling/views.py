@@ -2,6 +2,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.conf import settings
+from django.middleware.csrf import get_token
 from geonode.utils import resolve_object
 from geonode.documents.models import Document
 
@@ -18,6 +19,7 @@ def config(request):
     config = {
         'access_token': request.session['access_token'],
         'geoserver_url': '/geoserver',
+        'csrf_token': get_token(request),
     }
 
     return JsonResponse(config)

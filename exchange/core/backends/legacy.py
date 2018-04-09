@@ -88,8 +88,17 @@ class GeonodeMapServiceBackend(BaseServiceBackend):
             domain['sources'] = sources
             domain['layers'] = layer_configs
             domain['center'] = [data.center_x, data.center_y]
-            domain['metadata'] = {'title': data.title,
-                                  'abstract': data.abstract}
+
+            try:
+                domain['metadata'] = json.loads(data.map_params)
+            except:
+                # Flag the layer as potentially "legacy" since
+                #  it does not have the proper parseable JSON metadata.
+                domain['metadata'] = {
+                    'legacy': True,
+                    'title': data.title,
+                    'abstract': data.abstract
+                }
             return Map(**domain)
 
         if isinstance(object, (list,)):
@@ -138,11 +147,7 @@ class GeonodeMapServiceBackend(BaseServiceBackend):
             map_obj.name = item.name
 
         if item.metadata:
-            if 'title' in item.metadata:
-                map_obj.title = item.metadata['title']
-
-            if 'abstract' in item.metadata:
-                map_obj.abstract = item.metadata['abstract']
+            map_obj.map_params = json.dumps(item.metadata)
 
         if item.layers:
             layers = [l for l in item.layers]
@@ -165,6 +170,7 @@ class GeonodeMapServiceBackend(BaseServiceBackend):
                              center_x=0, center_y=0)
 
         map_obj.name = instance.name
+        map_obj.title = instance.name
         map_obj.zoom = instance.zoom
         map_obj.version = instance.version
         map_obj.bearing = instance.bearing
@@ -189,11 +195,7 @@ class GeonodeMapServiceBackend(BaseServiceBackend):
             return source
 
         if instance.metadata:
-            if 'title' in instance.metadata:
-                map_obj.title = instance.metadata['title']
-
-            if 'abstract' in instance.metadata:
-                map_obj.abstract = instance.metadata['abstract']
+            map_obj.map_params = json.dumps(instance.metadata)
 
         if instance.layers:
             layers = [l for l in instance.layers]
