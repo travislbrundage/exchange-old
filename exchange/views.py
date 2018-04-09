@@ -148,12 +148,9 @@ def capabilities(request):
         'geoserver': get_geoserver_version(),
     }
 
-    mobile_extension_installed = "geonode_anywhere" in settings.INSTALLED_APPS
-    capabilities["mobile"] = (
-        mobile_extension_installed and
-        # check that the OAuth application has been created
-        len(Application.objects.filter(client_id='anywhere')) > 0
-    )
+    # check that the OAuth application has been created
+    client_enabled = len(Application.objects.filter(client_id='anywhere')) > 0
+    capabilities["mobile"] = settings.ANYWHERE_ENABLED and client_enabled
 
     current_site = get_current_site(request)
     capabilities["site_name"] = current_site.name

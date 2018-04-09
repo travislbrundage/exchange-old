@@ -45,6 +45,7 @@ def isValid(v):
         return False
 
 
+ANYWHERE_ENABLED = str2bool(os.getenv('ANYWHERE_ENABLED', False))
 SITENAME = os.getenv('SITENAME', 'exchange')
 WSGI_APPLICATION = "exchange.wsgi.application"
 ROOT_URLCONF = 'exchange.urls'
