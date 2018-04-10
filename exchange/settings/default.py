@@ -307,7 +307,7 @@ GEOFENCE = {
 MAP_BASELAYERS[0]['source']['url'] = (OGC_SERVER['default']
                                       ['PUBLIC_LOCATION'] + 'wms')
 
-PROXY_BASEMAP = True
+PROXY_BASEMAP = str2bool(os.getenv('PROXY_BASEMAP', 'True'))
 
 POSTGIS_URL = os.getenv(
     'POSTGIS_URL',
