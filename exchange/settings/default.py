@@ -233,8 +233,8 @@ AUTH_EXEMPT_URLS = ('/capabilities', '/complete/*', '/login/*',
 
 # geoserver settings
 GEOSERVER_URL = os.getenv(
-    'GEOSERVER_URL',
-    'http://127.0.0.1:8080/geoserver/'
+    'PUBLIC_GEOSERVER_URL',
+    "{}/geoserver/".format(SITEURL.rstrip('/'))
 )
 GEOSERVER_LOCAL_URL = os.getenv(
     'GEOSERVER_LOCAL_URL',
@@ -262,9 +262,6 @@ GEOGIG_DATASTORE_DIR = os.getenv(
 )
 PG_DATASTORE = os.getenv('PG_DATASTORE', 'exchange_imports')
 PG_GEOGIG = str2bool(os.getenv('PG_GEOGIG', 'True'))
-
-GEOSERVER_URL = os.getenv(
-    'PUBLIC_GEOSERVER_URL', "{}/geoserver/".format(SITEURL.rstrip('/')))
 
 OGC_SERVER = {
     'default': {
