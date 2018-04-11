@@ -50,6 +50,11 @@ function exchange-healthcheck {
     done; docker-compose logs && (exit $s)
 }
 
+# Jenkins function to get exchange version via python3
+function py3-bex-version {
+    python3 -c "print(__import__('exchange').semantic_version())"
+}
+
 # function to build maploom from src
 function build-maploom {
     pushd vendor/maploom

@@ -22,7 +22,7 @@ import os
 import subprocess
 
 
-def get_version(version=None):
+def get_version(version=None, with_commit=True):
     "Returns a version number with commit id if the git repo is present"
     if version is None:
         from exchange import __version__ as version
@@ -37,6 +37,6 @@ def get_version(version=None):
         universal_newlines=True
     )
     commit = _commit.communicate()[0].partition('\n')[0]
-    if commit:
+    if with_commit and commit:
         version = "%s.%s" % (version, commit)
     return version
