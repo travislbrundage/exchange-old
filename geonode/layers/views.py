@@ -785,6 +785,7 @@ def get_layer(request, layername):
             'name': layer_obj.name,
             'title': layer_obj.title,
             'ptype': layer_obj.ptype,
+            'workspace': layer_obj.workspace,
             'url': url,
             'date': layer_obj.date.strftime('%Y-%m-%d'),
             'date_type': layer_obj.date_type,
