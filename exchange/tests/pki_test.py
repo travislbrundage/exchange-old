@@ -33,6 +33,7 @@ from django.conf import settings
 from django.core import management
 from django.core.exceptions import ImproperlyConfigured, AppRegistryNotReady
 from django.core.urlresolvers import reverse
+from django.test import TestCase
 
 try:
     # Do this before geonode.services.serviceprocessors, so that apps are ready
@@ -58,6 +59,24 @@ from exchange.pki.models import (
     hostnameport_pattern_for_url,
 )
 from exchange.pki.crypto import Crypto
+from exchange.pki.validate import (
+    PkiValidationError,
+    pki_dir_path,
+    pki_file_exists_readable,
+    pki_file_contents,
+    pki_acceptable_format,
+    cert_date_valid,
+    is_ca_cert,
+    is_client_cert,
+    cert_subject_common_name,
+    load_certs,
+    load_first_cert,
+    load_private_key,
+    validate_cert_matches_private_key,
+    validate_ca_certs,
+    validate_client_cert,
+    validate_client_key,
+)
 from exchange.pki.ssl_adapter import SslContextAdapter
 from exchange.pki.ssl_session import SslContextSession, https_client
 from exchange.pki.utils import (
@@ -68,6 +87,7 @@ from exchange.pki.utils import (
     normalize_hostname,
     requests_base_url,
     pki_prefix,
+    pki_file,
     pki_site_prefix,
     has_pki_prefix,
     pki_route,
@@ -714,3 +734,349 @@ class TestPkiUtils(PkiTestCase):
         self.assertEqual(
             self.base_url,
             relative_to_absolute_url(self.base_url))
+
+
+class TestPkiValidation(TestCase):
+
+    def test_pki_functions(self):
+        # pki_dir_path
+        for k in (
+                'alice-cert.pem',
+                'bad/alice-cert_unsupported.der',
+        ):
+            pki_f = pki_dir_path(k)
+            self.assertTrue(pki_f.startswith(get_pki_dir()))
+
+            pki_f2 = pki_file(k)
+            self.assertEqual(pki_f, pki_f2)
+            pki_f3 = pki_dir_path(pki_f2)
+            self.assertEqual(pki_f2, pki_f3)
+
+        # pki_file_exists_readable
+        for k in (
+            'alice-cert.pem',
+            'bad/alice-cert_unsupported.der',
+        ):
+            self.assertTrue(pki_file_exists_readable(k))
+
+        self.assertFalse(pki_file_exists_readable('blah.pem'))
+
+        # pki_file_contents
+        alice_key = b"""-----BEGIN RSA PRIVATE KEY-----
+MIICXQIBAAKBgQDUCocRWKuiSAent74zw+HQVUA1cWIgp9odE/oawgE8kyx3dCX3
+o/CR1mqfG9vCcFW0vCBBiJmVJv5W3EBIjKpW5yiPoOJqqzQihkNdwoFi+vRO7370
+liEjoHwFN+V0S0/UqCT4TKnZLk5HslEp+ekbh9PdBHkS//7rDM47F+PtAQIDAQAB
+AoGBAKNknWIjhtadVLDL6RgwmGCWYM0N2wS481022KIn3xYTfs9pxBwIy0dGB5El
+wXkaYSDNWrnFDjwd+R1ryWleY579+4qSYAkRl0m0HG0aaj0kws1Rg1obJLYFVlVj
+UEEaaD4ynGpf4PBdZVRD1bo5rgTZKQOM7tNKKOmKoIk76mwVAkEA9zqT6SUtcsrT
+DjhxszXzG9umEZoOolNLu8bgB1RXVrDmPeeYsjfD541toeAsH1/19vCeRQeptJVz
+NHhm3aovjwJBANuQXMNW7NMbRgh5TZEVvG6DvG/4VeSknA0Y5LipYeId0Mf59UkM
+PIfWoss4rXBTENZKdzv4ouavklv+B/OK0m8CQQCCG8ffuPsUIH22TCo6QDgy/wOE
+2+i7sM54gg9AjDhynSJujcWkdQiagamiuVE/KcdOMA97EK9VJBm/EWZBXeEtAkAb
+9gR6M+Ww9LY0eg4wvc3jXQ9wSvXVSkk9OcBW6+s1OorODLz58n765ZCRxMQBm/J2
+98C7eGx2aEGBSZaFo1YtAkBNAc/tTQGvUblf3ZuaF3mg5oMhzwAk9oj+8YzXrlY9
+MPrd0MBerM5NERa+58Jn87K7a3h0TgSIQ5N8ypXHTi3H
+-----END RSA PRIVATE KEY-----
+"""
+        alice_key_contents = pki_file_contents('alice-key.pem')
+        self.assertEqual(alice_key, alice_key_contents)
+
+        blah_contents = pki_file_contents('blah.pem')
+        self.assertEqual(b'', blah_contents)
+
+        # acceptable_format
+        for k in (
+            'root-root2-chains.pem',
+            'alice-key.pem',
+            'alice-cert.pem',
+            'bad/marinus-client-key_pkcs8.pem',
+        ):
+            self.assertTrue(pki_acceptable_format(pki_file_contents(k)))
+
+        for k in (
+            'bad/alice-cert_unsupported.der',
+            'blah.pem',
+        ):
+            self.assertFalse(pki_acceptable_format(pki_file_contents(k)))
+
+        # cert_date_valid
+        for k in (
+            'root-root2-chains.pem',
+            'alice-cert.pem',
+        ):
+            self.assertTrue(cert_date_valid(pki_file_contents(k)))
+
+        for k in (
+            'bad/marinus-client-cert_expired.pem',
+            'bad/Google-IA-G2_expired-CA.pem',
+        ):
+            self.assertFalse(cert_date_valid(pki_file_contents(k)))
+
+        # is_ca_cert
+        for k in (
+            'root-root2-chains.pem',
+            'bad/Google-IA-G2_expired-CA.pem',
+        ):
+            self.assertTrue(is_ca_cert(pki_file_contents(k)))
+
+        for k in (
+            'alice-cert.pem',
+            'blah.pem',
+        ):
+            self.assertFalse(is_ca_cert(pki_file_contents(k)))
+
+        # is_client_cert
+        for k in (
+            'alice-cert.pem',
+            'bad/marinus-client-cert_expired.pem',
+        ):
+            self.assertTrue(is_client_cert(pki_file_contents(k)))
+
+        for k in (
+            'root-root2-chains.pem',
+            'bad/Google-IA-G2_expired-CA.pem',
+            'blah.pem',
+        ):
+            self.assertFalse(is_client_cert(pki_file_contents(k)))
+
+    def test_pki_load_functions(self):
+        # load_certs
+        certs = load_certs(
+            pki_file_contents('alice-cert.pem')
+        )[0]
+        self.assertEqual(len(certs), 1)
+        certs = load_certs(
+            pki_file_contents('alice-key.pem')
+        )[0]
+        self.assertEqual(len(certs), 0)
+        certs = load_certs(
+            pki_file_contents('root-root2-chains.pem')
+        )[0]
+        self.assertEqual(len(certs), 5)
+        certs = load_certs(
+            pki_file_contents('blah.pem')
+        )[0]
+        self.assertEqual(len(certs), 0)
+
+        certs, msgs = load_certs(
+            pki_file_contents('bad/certs_one-bad.pem')
+        )
+        self.assertEqual(len(certs), 1)
+        self.assertTrue(len(msgs) == 1)
+        # logging.debug('msgs: {0}'.format(msgs))
+
+        # load_first_cert
+        cert = load_first_cert(
+            pki_file_contents('alice-cert.pem')
+        )
+        self.assertTrue(hasattr(cert, 'public_bytes'))
+        cert = load_first_cert(
+            pki_file_contents('bad/certs_one-bad.pem')
+        )
+        self.assertTrue(hasattr(cert, 'public_bytes'))
+
+        cert = load_first_cert(
+            pki_file_contents('alice-key.pem')
+        )
+        self.assertIsNone(cert)
+        cert = load_first_cert(
+            pki_file_contents('blah.pem')
+        )
+        self.assertIsNone(cert)
+
+        # cert_subject_common_name
+        cert = load_first_cert(
+            pki_file_contents('alice-cert.pem')
+        )
+        self.assertEqual(cert_subject_common_name(cert), 'alice')
+
+        # load_private_key
+        priv_key = load_private_key(
+            pki_file_contents('alice-key.pem')
+        )
+        self.assertTrue(hasattr(priv_key, 'private_bytes'))
+        priv_key2 = load_private_key(
+            pki_file_contents('alice-key_w-pass.pem'),
+            password=b'password'
+        )
+        self.assertTrue(hasattr(priv_key2, 'private_bytes'))
+        # password not in bytes should be converted
+        priv_key3 = load_private_key(
+            pki_file_contents('alice-key_w-pass.pem'),
+            password=u'password'
+        )
+        self.assertTrue(hasattr(priv_key3, 'private_bytes'))
+        # PKCS#8 format, instead of OpenSSL 'traditional'
+        priv_key4 = load_private_key(
+            pki_file_contents('bad/marinus-client-key_pkcs8.pem'),
+            password=b'password'
+        )
+        self.assertTrue(hasattr(priv_key4, 'private_bytes'))
+
+        with self.assertRaises(PkiValidationError):
+            # not a private key
+            load_private_key(
+                pki_file_contents('alice-cert.pem')
+            )
+        with self.assertRaises(PkiValidationError):
+            # password needed, but not supplied
+            load_private_key(
+                pki_file_contents('alice-key_w-pass.pem')
+            )
+        with self.assertRaises(PkiValidationError):
+            # password defined, but key not encrypted
+            load_private_key(
+                pki_file_contents('alice-key.pem'),
+                password=b'password'
+            )
+        with self.assertRaises(PkiValidationError):
+            # just plain bad key (line removed)
+            load_private_key(
+                pki_dir_path('bad/jane-key-bad.pem')
+            )
+
+    def test_pki_validations(self):
+        # validate_cert_matches_private_key
+        validate_cert_matches_private_key(
+            pki_file_contents('alice-cert.pem'),
+            pki_file_contents('alice-key_w-pass.pem'),
+            password=b'password'
+        )
+        with self.assertRaises(PkiValidationError):
+            validate_cert_matches_private_key(
+                pki_file_contents('jane-cert.pem'),
+                pki_file_contents('alice-key_w-pass.pem'),
+                password=b'password'
+            )
+        with self.assertRaises(PkiValidationError):
+            validate_cert_matches_private_key(
+                pki_file_contents('alice-cert.pem'),
+                pki_file_contents('alice-key_w-pass.pem'),
+                password=b''
+            )
+        # first cert or certs_one-bad.pem is alice-cert.pem
+        msgs = validate_cert_matches_private_key(
+            pki_file_contents('bad/certs_one-bad.pem'),
+            pki_file_contents('alice-key_w-pass.pem'),
+            password=b'password'
+        )
+        self.assertTrue(len(msgs) == 1)
+        # logging.debug('msgs: {0}'.format(msgs))
+
+        # validate_ca_certs
+        msgs = validate_ca_certs(
+            pki_dir_path('root-root2-chains.pem'),
+            allow_expired=False
+        )
+        self.assertTrue(len(msgs) == 0)
+
+        with self.assertRaises(PkiValidationError) as e:
+            validate_ca_certs(
+                pki_dir_path('bad/Google-IA-G2_expired-CA.pem'),
+                allow_expired=False
+            )
+        err = e.exception
+        self.assertIn('are expired', err.message)
+
+        msgs = validate_ca_certs(
+            pki_dir_path('bad/Google-IA-G2_expired-CA.pem'),
+            allow_expired=True
+        )
+        self.assertTrue(len(msgs) == 1)
+        self.assertIn('are expired', msgs[0])
+
+        with self.assertRaises(PkiValidationError) as e:
+            validate_ca_certs(
+                pki_dir_path('blah.pem'),
+                allow_expired=True
+            )
+        err = e.exception
+        self.assertIn('can not be located', err.message)
+
+        # validate_client_cert
+        msgs = validate_client_cert(
+            pki_dir_path('alice-cert.pem')
+        )
+        self.assertTrue(len(msgs) == 0)
+
+        with self.assertRaises(PkiValidationError) as e:
+            validate_client_cert(
+                pki_dir_path('blah.pem')
+            )
+        err = e.exception
+        self.assertIn('can not be located', err.message)
+
+        with self.assertRaises(PkiValidationError) as e:
+            validate_client_cert(
+                pki_dir_path('bad/alice-cert_unsupported.der')
+            )
+        err = e.exception
+        self.assertIn('not in acceptable format', err.message)
+
+        with self.assertRaises(PkiValidationError) as e:
+            validate_client_cert(
+                pki_dir_path('root-root2-chains.pem')
+            )
+        err = e.exception
+        self.assertIn('no readable client certs', err.message)
+
+        msgs = validate_client_cert(
+            pki_dir_path('bad/multiple-client-certs.pem')
+        )
+        self.assertTrue(len(msgs) == 1)
+        self.assertIn('multiple client certs', msgs[0])
+
+        with self.assertRaises(PkiValidationError) as e:
+            validate_client_cert(
+                pki_dir_path('bad/marinus-client-cert_expired.pem'),
+            )
+        err = e.exception
+        self.assertIn('are expired', err.message)
+
+        # validate_client_key
+        msgs = validate_client_key(
+            pki_dir_path('alice-key.pem')
+        )
+        self.assertTrue(len(msgs) == 0)
+
+        msgs = validate_client_key(
+            pki_dir_path('alice-key_w-pass.pem'),
+            password=b'password'
+        )
+        self.assertTrue(len(msgs) == 0)
+
+        # password not in bytes should be converted
+        msgs = validate_client_key(
+            pki_dir_path('alice-key_w-pass.pem'),
+            password=u'password'
+        )
+        self.assertTrue(len(msgs) == 0)
+
+        # PKCS#8 format, instead of OpenSSL 'traditional'
+        msgs = validate_client_key(
+            pki_dir_path('bad/marinus-client-key_pkcs8.pem'),
+            password=b'password'
+        )
+        self.assertTrue(len(msgs) == 0)
+
+        with self.assertRaises(PkiValidationError):
+            # not a private key
+            validate_client_key(
+                pki_dir_path('alice-cert.pem')
+            )
+        with self.assertRaises(PkiValidationError):
+            # password needed, but not supplied
+            validate_client_key(
+                pki_dir_path('alice-key_w-pass.pem')
+            )
+        with self.assertRaises(PkiValidationError):
+            # password defined, but key not encrypted
+            validate_client_key(
+                pki_dir_path('alice-key.pem'),
+                password=b'password'
+            )
+        with self.assertRaises(PkiValidationError):
+            # just plain bad key (line removed)
+            validate_client_key(
+                pki_dir_path('bad/jane-key-bad.pem')
+            )
