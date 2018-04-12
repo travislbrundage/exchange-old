@@ -41,8 +41,9 @@ six==1.10.0
 urllib3==1.22
 # minimum of requests 2.12 needed, though not sure if it is urllib3-bug-free
 requests==2.18.4
-# pyOpenSSL for PKI component validations
+# more robust SSL in urllib3 with pyOpenSSL
 pyOpenSSL==17.5.0
+# PKI component validations and db field encryption
 cryptography==2.1.4
 # for user-ordering of wildcard hostname:port mappings
 django-ordered-model==1.4.3
