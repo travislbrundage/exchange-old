@@ -742,7 +742,7 @@ class TestPkiValidation(TestCase):
         # pki_dir_path
         for k in (
                 'alice-cert.pem',
-                'bad/alice-cert_unsupported.der',
+                'bad_alice-cert_unsupported.der',
         ):
             pki_f = pki_dir_path(k)
             self.assertTrue(pki_f.startswith(get_pki_dir()))
@@ -755,7 +755,7 @@ class TestPkiValidation(TestCase):
         # pki_file_exists_readable
         for k in (
             'alice-cert.pem',
-            'bad/alice-cert_unsupported.der',
+            'bad_alice-cert_unsupported.der',
         ):
             self.assertTrue(pki_file_exists_readable(k))
 
@@ -789,12 +789,12 @@ MPrd0MBerM5NERa+58Jn87K7a3h0TgSIQ5N8ypXHTi3H
             'root-root2-chains.pem',
             'alice-key.pem',
             'alice-cert.pem',
-            'bad/marinus-client-key_pkcs8.pem',
+            'bad_marinus-key_pkcs8.pem',
         ):
             self.assertTrue(pki_acceptable_format(pki_file_contents(k)))
 
         for k in (
-            'bad/alice-cert_unsupported.der',
+            'bad_alice-cert_unsupported.der',
             'blah.pem',
         ):
             self.assertFalse(pki_acceptable_format(pki_file_contents(k)))
@@ -807,15 +807,15 @@ MPrd0MBerM5NERa+58Jn87K7a3h0TgSIQ5N8ypXHTi3H
             self.assertTrue(cert_date_valid(pki_file_contents(k)))
 
         for k in (
-            'bad/marinus-client-cert_expired.pem',
-            'bad/Google-IA-G2_expired-CA.pem',
+            'bad_marinus-cert_expired.pem',
+            'bad_Google-IA-G2_expired-CA.pem',
         ):
             self.assertFalse(cert_date_valid(pki_file_contents(k)))
 
         # is_ca_cert
         for k in (
             'root-root2-chains.pem',
-            'bad/Google-IA-G2_expired-CA.pem',
+            'bad_Google-IA-G2_expired-CA.pem',
         ):
             self.assertTrue(is_ca_cert(pki_file_contents(k)))
 
@@ -828,13 +828,13 @@ MPrd0MBerM5NERa+58Jn87K7a3h0TgSIQ5N8ypXHTi3H
         # is_client_cert
         for k in (
             'alice-cert.pem',
-            'bad/marinus-client-cert_expired.pem',
+            'bad_marinus-cert_expired.pem',
         ):
             self.assertTrue(is_client_cert(pki_file_contents(k)))
 
         for k in (
             'root-root2-chains.pem',
-            'bad/Google-IA-G2_expired-CA.pem',
+            'bad_Google-IA-G2_expired-CA.pem',
             'blah.pem',
         ):
             self.assertFalse(is_client_cert(pki_file_contents(k)))
@@ -859,7 +859,7 @@ MPrd0MBerM5NERa+58Jn87K7a3h0TgSIQ5N8ypXHTi3H
         self.assertEqual(len(certs), 0)
 
         certs, msgs = load_certs(
-            pki_file_contents('bad/certs_one-bad.pem')
+            pki_file_contents('bad_certs_one-bad.pem')
         )
         self.assertEqual(len(certs), 1)
         self.assertTrue(len(msgs) == 1)
@@ -871,7 +871,7 @@ MPrd0MBerM5NERa+58Jn87K7a3h0TgSIQ5N8ypXHTi3H
         )
         self.assertTrue(hasattr(cert, 'public_bytes'))
         cert = load_first_cert(
-            pki_file_contents('bad/certs_one-bad.pem')
+            pki_file_contents('bad_certs_one-bad.pem')
         )
         self.assertTrue(hasattr(cert, 'public_bytes'))
 
@@ -908,7 +908,7 @@ MPrd0MBerM5NERa+58Jn87K7a3h0TgSIQ5N8ypXHTi3H
         self.assertTrue(hasattr(priv_key3, 'private_bytes'))
         # PKCS#8 format, instead of OpenSSL 'traditional'
         priv_key4 = load_private_key(
-            pki_file_contents('bad/marinus-client-key_pkcs8.pem'),
+            pki_file_contents('bad_marinus-key_pkcs8.pem'),
             password=b'password'
         )
         self.assertTrue(hasattr(priv_key4, 'private_bytes'))
@@ -932,7 +932,7 @@ MPrd0MBerM5NERa+58Jn87K7a3h0TgSIQ5N8ypXHTi3H
         with self.assertRaises(PkiValidationError):
             # just plain bad key (line removed)
             load_private_key(
-                pki_dir_path('bad/jane-key-bad.pem')
+                pki_dir_path('bad_jane-key.pem')
             )
 
     def test_pki_validations(self):
@@ -954,9 +954,9 @@ MPrd0MBerM5NERa+58Jn87K7a3h0TgSIQ5N8ypXHTi3H
                 pki_file_contents('alice-key_w-pass.pem'),
                 password=b''
             )
-        # first cert or certs_one-bad.pem is alice-cert.pem
+        # first cert or bad_certs_one-bad.pem is alice-cert.pem
         msgs = validate_cert_matches_private_key(
-            pki_file_contents('bad/certs_one-bad.pem'),
+            pki_file_contents('bad_certs_one-bad.pem'),
             pki_file_contents('alice-key_w-pass.pem'),
             password=b'password'
         )
@@ -972,14 +972,14 @@ MPrd0MBerM5NERa+58Jn87K7a3h0TgSIQ5N8ypXHTi3H
 
         with self.assertRaises(PkiValidationError) as e:
             validate_ca_certs(
-                pki_dir_path('bad/Google-IA-G2_expired-CA.pem'),
+                pki_dir_path('bad_Google-IA-G2_expired-CA.pem'),
                 allow_expired=False
             )
         err = e.exception
         self.assertIn('are expired', err.message)
 
         msgs = validate_ca_certs(
-            pki_dir_path('bad/Google-IA-G2_expired-CA.pem'),
+            pki_dir_path('bad_Google-IA-G2_expired-CA.pem'),
             allow_expired=True
         )
         self.assertTrue(len(msgs) == 1)
@@ -1008,7 +1008,7 @@ MPrd0MBerM5NERa+58Jn87K7a3h0TgSIQ5N8ypXHTi3H
 
         with self.assertRaises(PkiValidationError) as e:
             validate_client_cert(
-                pki_dir_path('bad/alice-cert_unsupported.der')
+                pki_dir_path('bad_alice-cert_unsupported.der')
             )
         err = e.exception
         self.assertIn('not in acceptable format', err.message)
@@ -1021,14 +1021,14 @@ MPrd0MBerM5NERa+58Jn87K7a3h0TgSIQ5N8ypXHTi3H
         self.assertIn('no readable client certs', err.message)
 
         msgs = validate_client_cert(
-            pki_dir_path('bad/multiple-client-certs.pem')
+            pki_dir_path('bad_multiple-client-certs.pem')
         )
         self.assertTrue(len(msgs) == 1)
         self.assertIn('multiple client certs', msgs[0])
 
         with self.assertRaises(PkiValidationError) as e:
             validate_client_cert(
-                pki_dir_path('bad/marinus-client-cert_expired.pem'),
+                pki_dir_path('bad_marinus-cert_expired.pem'),
             )
         err = e.exception
         self.assertIn('are expired', err.message)
@@ -1054,7 +1054,7 @@ MPrd0MBerM5NERa+58Jn87K7a3h0TgSIQ5N8ypXHTi3H
 
         # PKCS#8 format, instead of OpenSSL 'traditional'
         msgs = validate_client_key(
-            pki_dir_path('bad/marinus-client-key_pkcs8.pem'),
+            pki_dir_path('bad_marinus-key_pkcs8.pem'),
             password=b'password'
         )
         self.assertTrue(len(msgs) == 0)
@@ -1078,5 +1078,5 @@ MPrd0MBerM5NERa+58Jn87K7a3h0TgSIQ5N8ypXHTi3H
         with self.assertRaises(PkiValidationError):
             # just plain bad key (line removed)
             validate_client_key(
-                pki_dir_path('bad/jane-key-bad.pem')
+                pki_dir_path('bad_jane-key.pem')
             )
