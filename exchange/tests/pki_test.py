@@ -73,6 +73,7 @@ from exchange.pki.validate import (
     load_first_cert,
     load_private_key,
     validate_cert_matches_private_key,
+    validate_cert_file_matches_key_file,
     validate_ca_certs,
     validate_client_cert,
     validate_client_key,
@@ -962,6 +963,13 @@ MPrd0MBerM5NERa+58Jn87K7a3h0TgSIQ5N8ypXHTi3H
         )
         self.assertTrue(len(msgs) == 1)
         # logging.debug('msgs: {0}'.format(msgs))
+
+        # validate_cert_file_matches_key_file
+        validate_cert_file_matches_key_file(
+            'alice-cert.pem',
+            'alice-key_w-pass.pem',
+            password=b'password'
+        )
 
         # validate_ca_certs
         msgs = validate_ca_certs(

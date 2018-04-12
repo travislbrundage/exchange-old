@@ -435,6 +435,24 @@ def validate_cert_matches_private_key(cert_data, key_data, password=None):
     return warn
 
 
+def validate_cert_file_matches_key_file(cert_file_name, key_file_name,
+                                        password=None):
+    """
+    Validate a cert and private key match, and signature can be verified
+
+    :param cert_file_name: Name or path of file in PKI_DIRECTORY
+    :param key_file_name: Name or path of file in PKI_DIRECTORY
+    :param password: Optional password of private key
+    :return: List of any warnings or raises PkiValidationError
+    :rtype: list
+    """
+    return validate_cert_matches_private_key(
+        pki_file_contents(cert_file_name),
+        pki_file_contents(key_file_name),
+        password=password
+    )
+
+
 def validate_ca_certs(file_name, allow_expired=True):
     """
     Validate all CAs in file (skip expired, if 'allow expired' set).
