@@ -22,6 +22,9 @@ import datetime
 import hashlib
 import logging
 
+# noinspection PyCompatibility
+from exceptions import UserWarning
+
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization, hashes
@@ -55,6 +58,30 @@ class PkiValidationError(Exception):
             return self.msgs
         else:
             return [self.msgs]
+
+    def message_html(self):
+        return '<br>'.join(self.message_list())
+
+
+class PkiValidationWarning(UserWarning):
+    def __init__(self, msgs):
+        self.msgs = msgs
+        super(PkiValidationWarning, self).__init__(self.__str__())
+
+    def __str__(self):
+        if isinstance(self.msgs, list):
+            return u' \n\n'.join(self.msgs)
+        else:
+            return self.msgs
+
+    def message_list(self):
+        if isinstance(self.msgs, list):
+            return self.msgs
+        else:
+            return [self.msgs]
+
+    def message_html_pre(self):
+        return "<pre>\n{0}\n</pre>".format(self)
 
 
 # From OpenSSL._util protected member
