@@ -113,7 +113,10 @@ class MapserverServiceHandler(base.ServiceHandlerBase,
             return False
 
     def get_resource(self, resource_id):
-        return self.parsed_service.layers[int(resource_id)]
+        for layer in self.parsed_service.layers:
+            if layer.id == int(resource_id):
+                return layer
+        return None
 
     def get_resources(self):
         """Return an iterable with the service's resources.
