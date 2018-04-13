@@ -352,7 +352,7 @@ def load_private_key(key_data, password=None):
     try:
         priv_key = serialization.load_pem_private_key(
             key_data,
-            native(password),
+            None if not password else native(password),
             default_backend()
         )
     except ValueError as e:
