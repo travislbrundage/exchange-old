@@ -517,8 +517,8 @@ def validate_ca_certs(file_name, allow_expired=True):
                      if not cert_date_valid(c)]
     if expired_certs:
         cn_msg = ("Defined CA certs file has CAs that are not yet valid or "
-                  "are expired: \n(common names) \n{0}"
-                  .format(" \n".join(expired_certs)))
+                  "are expired (common names): \n{0}"
+                  .format(", \n".join(expired_certs)))
         if allow_expired:
             warn.append(cn_msg)
         else:
@@ -567,8 +567,8 @@ def validate_client_cert(cert_file_name):
                      if not cert_date_valid(c)]
     if expired_certs:
         cn_msg = ("Defined client cert file has certs that are not yet valid "
-                  "or are expired: \n(common name) \n{0}"
-                  .format(" \n".join(expired_certs)))
+                  "or are expired (common names): \n{0}"
+                  .format(", \n".join(expired_certs)))
         raise PkiValidationError(cn_msg)
 
     return warn

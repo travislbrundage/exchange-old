@@ -18,11 +18,15 @@
 #
 #########################################################################
 
-from django.contrib import admin
+import warnings
+
+from django.contrib import admin, messages
 from django import forms
 from ordered_model.admin import OrderedModelAdmin
+from django.utils.safestring import mark_safe
 
 from .models import SslConfig, HostnamePortSslConfig
+from .validate import PkiValidationWarning
 
 
 class SslConfigAdminForm(forms.ModelForm):
@@ -62,6 +66,40 @@ class SslConfigAdmin(admin.ModelAdmin):
             ),
         }),
     )
+
+    def changeform_view(self, request, object_id=None, form_url='',
+                        extra_context=None):
+
+        if request.method == 'POST':
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always", category=PkiValidationWarning)
+                tmpl_resp = super(SslConfigAdmin, self).changeform_view(
+                    request,
+                    object_id=object_id,
+                    form_url=form_url,
+                    extra_context=extra_context)
+
+            if len(w) > 0:
+                # noinspection PyProtectedMember
+                sslconfig_verbose_name = SslConfig._meta.verbose_name
+                warn = w[0].message
+                if isinstance(warn, PkiValidationWarning):
+                    msg = warn.message_html_pre()
+                else:
+                    msg = str(warn)
+                self.message_user(
+                    request,
+                    mark_safe("Last saved {0} validation warnings:<br>{1}"
+                              .format(sslconfig_verbose_name, msg)),
+                    messages.WARNING)
+
+            return tmpl_resp
+        else:
+            return super(SslConfigAdmin, self).changeform_view(
+                request,
+                object_id=object_id,
+                form_url=form_url,
+                extra_context=extra_context)
 
 
 class HostnamePortSslConfigAdminForm(forms.ModelForm):
