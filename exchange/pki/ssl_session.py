@@ -24,6 +24,20 @@ from requests import Session
 from requests.adapters import HTTPAdapter
 from requests.exceptions import InvalidSchema
 
+try:
+    # Nix automatic support for pyOpenSSL in urllib3, as it will fail with:
+    #  PyOpenSSLContext object has no attribute 'load_default_certs'
+    #  (which we need for PKI functionality)
+    # Also, any Python > 2.7.9 will do for SSL/SNI support (for now):
+    # http://urllib3.readthedocs.io/en/latest/advanced-usage.html#ssl-warnings
+    from urllib3.contrib import pyopenssl
+    from urllib3.util import IS_PYOPENSSL
+    if IS_PYOPENSSL:
+        pyopenssl.extract_from_urllib3()
+except ImportError:
+    pyopenssl = None
+    IS_PYOPENSSL = None
+
 from .models import has_ssl_config
 from .utils import requests_base_url, normalize_hostname
 from .ssl_adapter import SslContextAdapter
