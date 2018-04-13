@@ -21,6 +21,7 @@
 import ssl
 import re
 import logging
+import warnings
 
 from collections import OrderedDict
 from fnmatch import fnmatch
@@ -35,6 +36,14 @@ from .settings import get_pki_dir, CERT_MATCH, KEY_MATCH, SSL_DEFAULT_CONFIG
 from .utils import hostname_port as filter_hostname_port
 from .utils import file_readable, pki_file, relative_to_absolute_url
 from .fields import EncryptedCharField, DynamicFilePathField
+from .validate import (
+    PkiValidationError,
+    PkiValidationWarning,
+    validate_cert_file_matches_key_file,
+    validate_ca_certs,
+    validate_client_cert,
+    validate_client_key,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -428,10 +437,50 @@ class SslConfig(models.Model):
             msg = 'Client key password limited to 100 characters.'
             val_mgs['client_key_pass'] = msg
 
+        # Validate supplied PKI components
+        warn_msgs = []
+        if self.ca_custom_certs:
+            try:
+                warns = validate_ca_certs(
+                    self.ca_custom_certs,
+                    allow_expired=self.ca_allow_invalid_certs
+                )
+                warn_msgs.extend(warns)
+            except PkiValidationError as e:
+                val_mgs['ca_custom_certs'] = e.message_html()
+
+        if self.client_cert:
+            try:
+                warns = validate_client_cert(self.client_cert)
+                warn_msgs.extend(warns)
+            except PkiValidationError as e:
+                val_mgs['client_cert'] = e.message_html()
+
+        if self.client_key:
+            try:
+                warns = validate_client_key(
+                    self.client_key,
+                    password=self.client_key_pass.strip()
+                )
+                warn_msgs.extend(warns)
+            except PkiValidationError as e:
+                val_mgs['client_key'] = e.message_html()
+
+            try:
+                warns = validate_cert_file_matches_key_file(
+                    self.client_cert,
+                    self.client_key,
+                    self.client_key_pass
+                )
+                warn_msgs.extend(warns)
+            except PkiValidationError as e:
+                val_mgs['client_key'] = e.message_html()
+
         if val_mgs:
             raise ValidationError(val_mgs)
 
-        # TODO: validate supplied PKI components
+        if warn_msgs:
+            warnings.warn(PkiValidationWarning(warn_msgs))
 
     @staticmethod
     def default_ssl_config():
