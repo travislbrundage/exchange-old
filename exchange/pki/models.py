@@ -662,7 +662,8 @@ class HostnamePortSslConfig(OrderedModel):
         #       but not symbol code points, which is probably an edge case.
         #       Not sure how to do this in Py2 (maybe regex package?)
         p_domain_char = re.compile('[-.\w:*]', re.IGNORECASE | re.UNICODE)
-        if not all([p_domain_char.match(c) for c in self.hostname_port]):
+        if not all([p_domain_char.match(c.encode('UTF-8'))
+                    for c in self.hostname_port]):
             msg = u'Invalid characters in hostname:port definition: {0}' \
                 .format(self.hostname_port)
             val_mgs['hostname_port'] = msg
