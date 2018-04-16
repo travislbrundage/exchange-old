@@ -18,9 +18,14 @@
 #
 #########################################################################
 
-__version__ = '1.4.2'
+__version__ = '1.4.8'
 
 
 def get_version():
     import exchange.version
     return exchange.version.get_version(__version__)
+
+
+def semantic_version():
+    import exchange.version
+    return exchange.version.get_version(__version__, with_commit=False)

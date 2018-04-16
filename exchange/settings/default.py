@@ -28,7 +28,6 @@ from geonode.settings import (
     STATICFILES_DIRS,
     INSTALLED_APPS,
     CELERY_IMPORTS,
-    MAP_BASELAYERS,
     DATABASES
 )
 
@@ -47,6 +46,7 @@ def isValid(v):
         return False
 
 
+ANYWHERE_ENABLED = str2bool(os.getenv('ANYWHERE_ENABLED', False))
 SITENAME = os.getenv('SITENAME', 'exchange')
 EXCHANGE_LOCAL_URL = os.getenv('EXCHANGE_LOCAL_URL', 'http://localhost')
 WSGI_APPLICATION = "exchange.wsgi.application"
@@ -304,8 +304,22 @@ GEOFENCE = {
     'password': os.getenv('GEOFENCE_PASSWORD', GEOSERVER_PASSWORD)
 }
 
-MAP_BASELAYERS[0]['source']['url'] = (OGC_SERVER['default']
-                                      ['PUBLIC_LOCATION'] + 'wms')
+MAP_BASELAYERS = [{
+    "source": {"ptype": "gxp_olsource"},
+    "type": "OpenLayers.Layer",
+    "args": ["No background"],
+    "name": "background",
+    "visibility": False,
+    "fixed": True,
+    "group":"background"
+}, {
+    "source": {"ptype": "gxp_osmsource"},
+    "type": "OpenLayers.Layer.OSM",
+    "name": "mapnik",
+    "visibility": True,
+    "fixed": True,
+    "group": "background"
+}]
 
 PROXY_BASEMAP = str2bool(os.getenv('PROXY_BASEMAP', 'True'))
 

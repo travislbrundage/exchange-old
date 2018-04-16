@@ -24,7 +24,7 @@ from sphinx.setup_command import BuildDoc
 os.environ['SPHINX_BUILD'] = 'exchange/static/docs'
 
 cmdclass = {'build_sphinx': BuildDoc}
-version = __import__('exchange').get_version() # '1.3.1'
+version = __import__('exchange').semantic_version()
 
 def read(*rnames):
     return open(os.path.join(os.path.dirname(__file__), *rnames)).read()

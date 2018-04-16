@@ -1,5 +1,6 @@
 --index-url https://pypi.python.org/simple/
 -e ./vendor/geonode
+-e ./vendor/gsconfig
 -e ./vendor/django-osgeo-importer
 -e ./vendor/arcrest/src
 git+https://github.com/MapStory/composer.git@93300659c4f1a02c4eb2f17713d38779c47cc4e1#composer

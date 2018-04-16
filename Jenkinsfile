@@ -1,7 +1,9 @@
 node {
-  withCredentials([string(credentialsId: 'boundlessgeoadmin-token', variable: 'GITHUB_TOKEN'), string(credentialsId: 'sonar-jenkins-pipeline-token', variable: 'SONAR_TOKEN')]) {
+  withCredentials(
+    [string(credentialsId: 'boundlessgeoadmin-token', variable: 'GITHUB_TOKEN'),
+     string(credentialsId: 'connect-ftp-combo', variable: 'CONNECT_FTP'),
+     string(credentialsId: 'sonar-jenkins-pipeline-token', variable: 'SONAR_TOKEN')]) {
 
-    currentBuild.result = "SUCCESS"
 
     try {
       stage('Checkout'){
@@ -101,6 +103,25 @@ node {
         }
       }
 
+      if (gitTagCheck()) {
+        stage('Update Connect Docs') {
+          sh """
+            docker run --rm -e CONNECT_FTP=$CONNECT_FTP \
+                       -v \$(pwd -P):/code \
+                       -w /code quay.io/boundlessgeo/sonar-maven-py3-alpine bash \
+                       -c '. docker/devops/helper.sh && \
+                           lftp -e "set ftp:ssl-allow no; \
+                                    mkdir /site/wwwroot/docs/exchange/`py3-bex-version`; \
+                                    mirror -R -e exchange/static/docs/html /site/wwwroot/docs/exchange/`py3-bex-version`; \
+                                    mirror -R -e exchange/static/docs/html /site/wwwroot/docs/exchange/latest; \
+                                    quit" \
+                                -u $CONNECT_FTP \
+                                waws-prod-ch1-017.ftp.azurewebsites.windows.net'
+            """
+        }
+      }
+
+      currentBuild.result = "SUCCESS"
     }
     catch (err) {
 
