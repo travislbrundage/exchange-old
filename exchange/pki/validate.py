@@ -419,7 +419,8 @@ def validate_cert_matches_private_key(cert_data, key_data, password=None):
         raise PkiValidationError(
             'No certificate found to match against private key.')
     if len(certs) > 1:
-        warn.append('Multiple certificates found.')
+        warn.append('Multiple certificates found to compare against key. '
+                    'Using first.')
     if msgs:
         warn.extend(msgs)
     cert = certs[0]
@@ -565,7 +566,7 @@ def validate_client_cert(cert_file_name):
 
     if len(c_certs) > 1:
         warn.append('Defined client cert file has multiple client certs. '
-                    'First will be used')
+                    'First will be used.')
 
     expired_certs = [cert_subject_common_name(c) for c in c_certs
                      if not cert_date_valid(c)]
