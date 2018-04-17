@@ -288,8 +288,7 @@ def is_client_cert(cert_data, require_extended_key_usage=False):
     key_usage = key_usage_ext.value
     """:type: x509.KeyUsage"""
     res = (key_usage.digital_signature and
-           key_usage.key_encipherment and
-           key_usage.data_encipherment)
+           key_usage.key_encipherment)
 
     if res and require_extended_key_usage:
         try:
