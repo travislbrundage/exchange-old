@@ -89,7 +89,7 @@ class SslConfigAdmin(admin.ModelAdmin):
                     msg = str(warn)
                 self.message_user(
                     request,
-                    mark_safe("Last saved {0} validation warnings:<br>{1}"
+                    mark_safe(u"Last saved {0} validation warnings:<br>{1}"
                               .format(sslconfig_verbose_name, msg)),
                     messages.WARNING)
 

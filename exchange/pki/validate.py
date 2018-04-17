@@ -49,9 +49,10 @@ class PkiValidationError(Exception):
 
     def __str__(self):
         if isinstance(self.msgs, list):
-            return u' \n'.join(self.msgs)
+            encoded_list = [m.encode('utf-8') for m in self.msgs]
+            return b' \n\n'.join(encoded_list)
         else:
-            return self.msgs
+            return self.msgs.encode('utf-8')
 
     def message_list(self):
         if isinstance(self.msgs, list):
@@ -60,7 +61,7 @@ class PkiValidationError(Exception):
             return [self.msgs]
 
     def message_html(self):
-        return '<br>'.join(self.message_list())
+        return u'<br>'.join(self.message_list())
 
 
 class PkiValidationWarning(UserWarning):
@@ -70,9 +71,10 @@ class PkiValidationWarning(UserWarning):
 
     def __str__(self):
         if isinstance(self.msgs, list):
-            return u' \n\n'.join(self.msgs)
+            encoded_list = [m.encode('utf-8') for m in self.msgs]
+            return b' \n\n'.join(encoded_list)
         else:
-            return self.msgs
+            return self.msgs.encode('utf-8')
 
     def message_list(self):
         if isinstance(self.msgs, list):
@@ -81,7 +83,7 @@ class PkiValidationWarning(UserWarning):
             return [self.msgs]
 
     def message_html_pre(self):
-        return "<pre>\n{0}\n</pre>".format(self)
+        return u"<pre>\n{0}\n</pre>".format(u' \n\n'.join(self.msgs))
 
 
 # From OpenSSL._util protected member
@@ -308,15 +310,17 @@ def cert_subject_common_name(cert_data):
 
     :param cert_data: Certificate data already parsed
     :type cert_data: x509.Certificate
-    :rtype: str | unicode
+    :rtype: unicode
     """
     if isinstance(cert_data, x509.Certificate):
         cmn_names = cert_data.subject.get_attributes_for_oid(
             x509.oid.NameOID.COMMON_NAME)
         if cmn_names:
-            return cmn_names[0].value
+            cmn_name = cmn_names[0].value
+            return cmn_name if cmn_name \
+                else u'(Certificate lacks common name)'
 
-    return u''
+    return u'(No common name found)'
 
 
 def load_certs(cert_data):
@@ -516,8 +520,8 @@ def validate_ca_certs(file_name, allow_expired=True):
     expired_certs = [cert_subject_common_name(c) for c in ca_certs
                      if not cert_date_valid(c)]
     if expired_certs:
-        cn_msg = ("Defined CA certs file has CAs that are not yet valid or "
-                  "are expired (common names): \n{0}"
+        cn_msg = (u"Defined CA certs file has CAs that are not yet valid or "
+                  u"are expired (common names): \n{0}"
                   .format(", \n".join(expired_certs)))
         if allow_expired:
             warn.append(cn_msg)
@@ -566,8 +570,8 @@ def validate_client_cert(cert_file_name):
     expired_certs = [cert_subject_common_name(c) for c in c_certs
                      if not cert_date_valid(c)]
     if expired_certs:
-        cn_msg = ("Defined client cert file has certs that are not yet valid "
-                  "or are expired (common names): \n{0}"
+        cn_msg = (u"Defined client cert file has certs that are not yet valid "
+                  u"or are expired (common names): \n{0}"
                   .format(", \n".join(expired_certs)))
         raise PkiValidationError(cn_msg)
 
