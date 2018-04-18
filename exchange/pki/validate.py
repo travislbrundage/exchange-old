@@ -176,17 +176,17 @@ def pki_acceptable_format(file_data):
     return False
 
 
-def cert_date_valid(cert_data):
+def cert_date_not_yet_valid(cert_data):
     """
-    Whether a certificate is currently valid, e.g. between its 'not before' and
-    'not after' dates.
+    Whether a certificate's start date is currently invalid, e.g. before
+    'not before' date.
 
     :param cert_data: Cert data to test
     :type cert_data: bytes | x509.Certificate
     :rtype: bool
     """
     if not cert_data:
-        return False
+        return True
 
     if isinstance(cert_data, x509.Certificate):
         cert = cert_data
@@ -195,11 +195,32 @@ def cert_date_valid(cert_data):
             cert = x509.load_pem_x509_certificate(cert_data, default_backend())
             """:type: x509.Certificate"""
         except ValueError:
-            return False
+            return True
 
-    return (cert.not_valid_before <=
-            datetime.datetime.utcnow() <=
-            cert.not_valid_after)
+    return datetime.datetime.utcnow() < cert.not_valid_before
+
+
+def cert_date_expired(cert_data):
+    """
+    Whether a certificate's end date has passed, e.g. after 'not after' date.
+
+    :param cert_data: Cert data to test
+    :type cert_data: bytes | x509.Certificate
+    :rtype: bool
+    """
+    if not cert_data:
+        return True
+
+    if isinstance(cert_data, x509.Certificate):
+        cert = cert_data
+    else:
+        try:
+            cert = x509.load_pem_x509_certificate(cert_data, default_backend())
+            """:type: x509.Certificate"""
+        except ValueError:
+            return True
+
+    return cert.not_valid_after < datetime.datetime.utcnow()
 
 
 def is_ca_cert(cert_data, require_key_usage=True):
@@ -518,10 +539,10 @@ def validate_ca_certs(file_name, allow_expired=True):
             'Defined CA certs file has no readable Certificate Authorities.')
 
     expired_certs = [cert_subject_common_name(c) for c in ca_certs
-                     if not cert_date_valid(c)]
+                     if cert_date_expired(c)]
     if expired_certs:
-        cn_msg = (u"Defined CA certs file has CAs that are not yet valid or "
-                  u"are expired (common names): \n{0}"
+        cn_msg = (u"Defined CA certs file contains CAs that are expired "
+                  u"(common names): \n{0}"
                   .format(", \n".join(expired_certs)))
         if allow_expired:
             warn.append(cn_msg)
@@ -567,13 +588,15 @@ def validate_client_cert(cert_file_name):
         warn.append('Defined client cert file has multiple client certs. '
                     'First will be used.')
 
-    expired_certs = [cert_subject_common_name(c) for c in c_certs
-                     if not cert_date_valid(c)]
-    if expired_certs:
-        cn_msg = (u"Defined client cert file has certs that are not yet valid "
-                  u"or are expired (common names): \n{0}"
-                  .format(", \n".join(expired_certs)))
-        raise PkiValidationError(cn_msg)
+    client_cert = c_certs[0]
+
+    # Makes sense to warn about 'not yet valid' certs, but not to block any
+    # form submission with a validation error.
+    if cert_date_not_yet_valid(client_cert):
+        warn.append('Defined client cert file is not yet valid')
+
+    if cert_date_expired(client_cert):
+        raise PkiValidationError('Defined client cert file is expired')
 
     return warn
 

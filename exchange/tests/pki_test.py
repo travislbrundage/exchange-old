@@ -65,7 +65,8 @@ from exchange.pki.validate import (
     pki_file_exists_readable,
     pki_file_contents,
     pki_acceptable_format,
-    cert_date_valid,
+    cert_date_not_yet_valid,
+    cert_date_expired,
     is_ca_cert,
     is_client_cert,
     cert_subject_common_name,
@@ -800,18 +801,31 @@ MPrd0MBerM5NERa+58Jn87K7a3h0TgSIQ5N8ypXHTi3H
         ):
             self.assertFalse(pki_acceptable_format(pki_file_contents(k)))
 
-        # cert_date_valid
+        # cert_date_not_yet_valid
         for k in (
             'root-root2-chains.pem',
             'alice-cert.pem',
         ):
-            self.assertTrue(cert_date_valid(pki_file_contents(k)))
+            self.assertFalse(cert_date_not_yet_valid(pki_file_contents(k)))
+
+        for k in (
+            'bad_jane-client_not-yet.pem',
+            'blah.pem',
+        ):
+            self.assertTrue(cert_date_not_yet_valid(pki_file_contents(k)))
+
+        # cert_date_expired
+        for k in (
+            'root-root2-chains.pem',
+            'alice-cert.pem',
+        ):
+            self.assertFalse(cert_date_expired(pki_file_contents(k)))
 
         for k in (
             'bad_marinus-cert_expired.pem',
             'bad_Google-IA-G2_expired-CA.pem',
         ):
-            self.assertFalse(cert_date_valid(pki_file_contents(k)))
+            self.assertTrue(cert_date_expired(pki_file_contents(k)))
 
         # is_ca_cert
         for k in (
@@ -984,14 +998,14 @@ MPrd0MBerM5NERa+58Jn87K7a3h0TgSIQ5N8ypXHTi3H
                 allow_expired=False
             )
         err = e.exception
-        self.assertIn('are expired', err.message)
+        self.assertIn(u'are expired', err.message)
 
         msgs = validate_ca_certs(
             pki_dir_path('bad_Google-IA-G2_expired-CA.pem'),
             allow_expired=True
         )
         self.assertTrue(len(msgs) == 1)
-        self.assertIn('are expired', msgs[0])
+        self.assertIn(u'are expired', msgs[0])
 
         with self.assertRaises(PkiValidationError) as e:
             validate_ca_certs(
@@ -1039,7 +1053,7 @@ MPrd0MBerM5NERa+58Jn87K7a3h0TgSIQ5N8ypXHTi3H
                 pki_dir_path('bad_marinus-cert_expired.pem'),
             )
         err = e.exception
-        self.assertIn('are expired', err.message)
+        self.assertIn('is expired', err.message)
 
         # validate_client_key
         msgs = validate_client_key(
