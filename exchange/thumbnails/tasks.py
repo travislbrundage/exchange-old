@@ -3,6 +3,7 @@ import time
 from celery.task import task
 
 from django.db.models.signals import post_save
+from django.conf import settings
 from geonode.utils import get_bearer_token
 from geonode.layers.models import Layer
 from geonode.maps.models import Map
@@ -216,8 +217,9 @@ def get_wms_thumbnail(instance=None, layers=None, bbox=None,
         if bbox is None or height is None:
             return None
         remote = True
-        layers = 'ne:NE1_HR_LC_SR_W_DR'
-        baseurl = 'https://demo.boundlessgeo.com/geoserver/wms?'
+        layers = settings.THUMBNAIL_BACKGROUND_LAYER['layers']\
+            .strip().replace(' ', '')
+        baseurl = settings.THUMBNAIL_BACKGROUND_LAYER['url'].strip() + '?'
 
     elif (hasattr(instance, 'storeType') and
             instance.storeType == 'remoteStore'):

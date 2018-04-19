@@ -504,6 +504,23 @@ ENFORCE_MAX_LENGTH = 1
 # IMPORTANT: this directory should not be within application or www roots
 PKI_DIRECTORY = os.getenv('PKI_DIRECTORY', '/usr/local/exchange-pki')
 
+# Custom default background used during thumbnail generation.
+# As of v1.4.8 (ps/pki branch), this service must support the following:
+#   Type: WMS
+#     service = wms
+#     version = 1.3.0
+#     request = GetMap
+#     format = image/png
+#     transparent = true
+#     crs = EPSG:3857
+#     styles = ''
+# Only the url and layer name(s) should be specified.
+#   'layers' should be defined as per WMS URL param value spec.
+THUMBNAIL_BACKGROUND_LAYER = {
+    'url': 'https://demo.boundlessgeo.com/geoserver/wms',
+    'layers': 'ne:NE1_HR_LC_SR_W_DR',
+}
+
 try:
     from local_settings import *  # noqa
 except ImportError:
