@@ -545,6 +545,7 @@ class TestPkiServiceRegistration(PkiTestCase):
 class TestPkiRequest(PkiTestCase):
 
     def setUp(self):
+        self.login()
         HostnamePortSslConfig.objects.all().delete()
 
     def tearDown(self):
@@ -634,6 +635,50 @@ class TestPkiRequest(PkiTestCase):
         self.create_hostname_port_mapping(8)
         res = https_client.get(self.mp_root)
         self.assertEqual(res.status_code, 200)
+
+    def test_pki_request_correct_url(self):
+        # client and password to access mapproxy
+        self.create_hostname_port_mapping(4)
+        response = self.client.get(pki_route(self.mp_root))
+        self.assertEqual(response.status_code, 200)
+        default_mp_response = '<ServiceException>unknown WMS request type'
+        self.assertIn(default_mp_response, response.content.decode("utf-8"))
+
+    def test_pki_request_incorrect_url(self):
+        incorrect_url = 'https://mapproxy.boundless.test:8044/service'
+        # TODO: Is there a better way to test a bad url?
+        response = None
+        response = self.client.get(pki_route(incorrect_url))
+        # The get should fail, so response remains None
+        self.assertIsNone(response)
+
+    def test_pki_request_missing_url(self):
+        pki_root = '/pki/'
+        response = self.client.get(pki_root)
+        missing_url_response = 'Resource URL missing for PKI request'
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(missing_url_response, response.content.decode("utf-8"))
+
+
+class TestGeoNodeProxy(PkiTestCase):
+    # TODO: Does this require overriding teardown?
+    def setUp(self):
+        self.login()
+
+    def test_proxy_request_correct_url(self):
+        proxy_root = '/proxy/?url='
+        response = self.client.get(proxy_root + quote(self.mp_root))
+        self.assertEqual(response.status_code, 200)
+        default_mp_response = '<ServiceException>unknown WMS request type'
+        self.assertIn(default_mp_response, response.content.decode("utf-8"))
+
+    def test_proxy_request_incorrect_url(self):
+        proxy_root = '/proxy/?url='
+        incorrect_url = 'https://mapproxy.boundless.test:8044/service'
+        response = None
+        response = self.client.get(proxy_root + quote(incorrect_url))
+        # The get should fail, so response remains None
+        self.assertIsNone(response)
 
 
 class TestPkiUtils(PkiTestCase):

@@ -61,7 +61,7 @@ def pki_request(request, resource_url=None):
     site_url = urlsplit(settings.SITEURL)
     exch_url = urlsplit(settings.EXCHANGE_LOCAL_URL)
     allowed_hosts = [
-        'localhost', '127.0.0.1', '[::1]',
+        'localhost', '127.0.0.1', '[::1]', 'testserver',
         site_url.hostname, exch_url.hostname
     ]
     logger.debug("allowed_hosts: {0}".format(allowed_hosts))
