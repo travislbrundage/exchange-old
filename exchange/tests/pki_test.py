@@ -134,6 +134,21 @@ class PkiTestCase(ExchangeTest):
         super(PkiTestCase, cls).tearDownClass()
 
     @classmethod
+    def load_local_fixtures(cls, fixture_list):
+        """Load fixtures independent of Django's TestCase"""
+        if not isinstance(fixture_list, list):
+            raise Exception('fixture_list is not a list')
+
+        for db_name in cls._databases_names(include_mirrors=False):
+            # Let this raise upon failure, so db rollback is triggered
+            management.call_command(
+                'loaddata', *fixture_list, **{
+                    'verbosity': 0,
+                    'commit': False,
+                    'database': db_name,
+                })
+
+    @classmethod
     def setUpTestData(cls):
         """Load initial data for the TestCase"""
 
@@ -151,14 +166,7 @@ class PkiTestCase(ExchangeTest):
         # *after* atomic rollback snapshot and fixtures loaded, which makes it
         # tricky to clean the tables after snapshot, but prior to loading data.
         if cls.local_fixtures:
-            for db_name in cls._databases_names(include_mirrors=False):
-                # Let this raise upon failure, so db rollback is triggered
-                management.call_command(
-                    'loaddata', *cls.local_fixtures, **{
-                        'verbosity': 0,
-                        'commit': False,
-                        'database': db_name,
-                    })
+            cls.load_local_fixtures(cls.local_fixtures)
 
         # No custom SslConfigs should exist; clean data state only
         assert SslConfig.objects.count() == 8
