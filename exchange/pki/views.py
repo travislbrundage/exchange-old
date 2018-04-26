@@ -97,7 +97,8 @@ def pki_request(request, resource_url=None):
 
     service_type = request.META['PKI_SERVICE_TYPE'] \
         if 'PKI_SERVICE_TYPE' in request.META else None
-    if service_type == enumerations.REST or '/arcgis' in unquote(resource_url):
+    if service_type == enumerations.REST or \
+            '/arcgis/rest' in unquote(resource_url).lower():
         # TODO: [FIXME] Workaround for decompression error in arcrest,
         #       in arcrest.web._base._chunk()
         # Needed for both /proxy reroutes and arcrest pkg
