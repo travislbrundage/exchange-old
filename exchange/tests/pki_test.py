@@ -19,6 +19,7 @@
 #
 #########################################################################
 
+import json
 import logging
 # noinspection PyPackageRequirements
 import pytest
@@ -27,7 +28,7 @@ import django
 from urllib import quote, quote_plus
 from requests import get, Request
 from requests.adapters import HTTPAdapter
-from requests.exceptions import ConnectionError, SSLError
+from requests.exceptions import ConnectionError, SSLError, InvalidSchema
 
 from django.conf import settings
 from django.core import management
@@ -42,6 +43,8 @@ except (RuntimeError, ImproperlyConfigured,
         AppRegistryNotReady, LookupError, ValueError):
     raise
 
+from geonode.base import models as base_models
+from geonode.maps import models as maps_models
 from geonode.services import enumerations
 from geonode.services.models import Service
 
@@ -57,6 +60,7 @@ from exchange.pki.models import (
     ssl_config_for_url,
     has_ssl_config,
     hostnameport_pattern_for_url,
+    uses_proxy_route,
 )
 from exchange.pki.crypto import Crypto
 from exchange.pki.validate import (
@@ -232,10 +236,11 @@ class PkiTestCase(ExchangeTest):
             ssl_config = SslConfig.objects.get(pk=ssl_config)
         if not isinstance(ssl_config, SslConfig):
             raise Exception('ssl_config not an instance of SslConfig')
-        HostnamePortSslConfig.objects.create_hostnameportsslconfig(
+        hp_map = HostnamePortSslConfig.objects.create_hostnameportsslconfig(
             ptn, ssl_config)
         logger.debug("Hostname:Port mappings:\n{0}"
                      .format(HostnamePortSslConfig.objects.all()))
+        return hp_map
 
 
 class TestSslContextSessionAdapter(PkiTestCase):
@@ -427,15 +432,17 @@ class TestHostnamePortSslConfig(PkiTestCase):
         self.ptrns = [self.p1, self.p2, self.p3]
 
         ptrns_l = []
-        self.hnp_sslconfigs = []
+        self.hp_maps = []
         for config, p in zip(self.ssl_configs, self.ptrns):
-            self.create_hostname_port_mapping(config, p)
+            hp_map = self.create_hostname_port_mapping(config, p)
             ptrns_l.append(p)
             self.assertEqual(hostnameport_pattern_cache, ptrns_l)
 
-            self.hnp_sslconfigs.append(HostnamePortSslConfig.objects.get(
-                hostname_port=p))
-        self.assertTrue(all(self.hnp_sslconfigs))
+            hp_map_query = HostnamePortSslConfig.objects.get(hostname_port=p)
+            self.assertEqual(hp_map, hp_map_query)
+            self.hp_maps.append(hp_map)
+
+        self.assertTrue(all(self.hp_maps))
 
     def tearDown(self):
         pass
@@ -448,7 +455,8 @@ class TestHostnamePortSslConfig(PkiTestCase):
                u'services/topic/layer/?f=pjson'
         url2 = u'https://maPproxy.Boundless.test:8344/service?' \
                u'service=WMS&request=GetCapabilities&version=1.1.1'
-        url3 = u'https://привет.你好.çéàè.example.com/some/path?key=value#frag'
+        url3 = u'https://data-test.boundlessgeo.io/some/path?key=value#frag'
+        # u'https://привет.你好.çéàè.example.com/some/path?key=value#frag'
         urls = [url1, url2, url3]
 
         for p, config, url in zip(self.ptrns, self.ssl_configs, urls):
@@ -462,56 +470,232 @@ class TestHostnamePortSslConfig(PkiTestCase):
             )
             self.assertEqual(hostnameport_pattern_for_url(url), p)
 
+        # Load hostnameport mappings
+        # Done in setUp()
+
+        # Load https_client adapters
         for url, ssl_config in zip(urls, self.ssl_configs):
             base_url = requests_base_url(url)
             https_client.mount_sslcontext_adapter(url)
             adptr = https_client.adapters[base_url]
             """:type: SslContextAdapter"""
+            self.assertIsInstance(adptr, SslContextAdapter)
             self.assertEqual(
                 adptr.context_options(),
                 SslContextAdapter.ssl_config_to_context_opts(ssl_config))
 
-        # return
+        self.assertEqual(len(https_client.adapters), 4)  # https* + http://
+
+        # Ensure *.* pattern is not enabled (to match loaded test data state)
+        wild_hp_map = HostnamePortSslConfig.objects.get(hostname_port='*.*')
+        wild_hp_map.enabled = False
+        wild_hp_map.save()
+
+        self.assertEqual(len(https_client.adapters), 3)  # https* + http://
+        # https://data-test.boundlessgeo.io should now not match; so deleted
+
+        # Load layer legend links
+        base_models.Link.objects.all().delete()
+        self.load_local_fixtures(['test_geonode_base_legend_link.json'])
+
+        # Load map links
+        maps_models.MapLayer.objects.all().delete()
+        self.load_local_fixtures(['test_geonode_maps_maplayer.json'])
+
+        base_urls = [
+            u'https://services.arcgisonline.com',     # proxied
+            u'https://mapproxy.boundless.test:8344',  # proxied
+            u'https://data-test.boundlessgeo.io',     # not proxied
+            u'//data-test.boundlessgeo.io',           # not proxied ()
+            # u'https://привет.你好.çéàè.example.com',   # not proxied
+            # u'//привет.你好.çéàè.example.com',         # not proxied
+        ]
+
+        def test_base_urls(b_urls, url_specs):
+            """
+            :param b_urls: List of base URLs to test
+            :param url_specs: list[dict] indicating whether a url should match
+            a pattern and whether that pattern is enabled or should use a proxy
+            :return: None
+            """
+            if not url_specs:
+                raise Exception('No pattern boolean map to test against')
+            for b in range(0, len(b_urls)):
+                url_spec = url_specs[b]
+                b_url = b_urls[b]
+                print('url_specs[{0}]: {1}'.format(b, url_spec))
+                print('b_urls[{0}]   : {1}'.format(b, b_url))
+                hp_map = None
+                hp_ptn = hostnameport_pattern_for_url(b_url)
+                hp_ptn_match = hp_ptn is not None
+                self.assertEqual(hp_ptn_match, url_spec['match'])
+                if hp_ptn_match:
+                    hp_map = HostnamePortSslConfig.objects\
+                        .get(hostname_port=hp_ptn)
+                    self.assertIsNotNone(hp_map)
+
+                    self.assertEqual(url_spec['match'], hp_map.enabled)
+                    self.assertEqual(url_spec['proxy'], hp_map.proxy)
+
+                    # Verify sync of rebuild_hostnameport_pattern_cache()
+                    self.assertEqual(
+                        hp_map.enabled,
+                        hp_ptn in hostnameport_pattern_cache)
+                    self. assertEqual(
+                        hp_map.enabled and hp_map.proxy,
+                        uses_proxy_route(b_url))
+                    self.assertEqual(
+                        hp_map.enabled and hp_map.proxy,
+                        hp_ptn in hostnameport_pattern_proxy_cache)
+                else:
+                    self.assertFalse(uses_proxy_route(b_url))
+
+                # Verify sync_https_adapters()
+                # Note: Syncing for adapters tested in testSslContextSession
+                #       Here we test for syncing of enabled, etc.
+                try:
+                    hp_adptr = https_client.get_adapter(
+                        requests_base_url(b_url))
+                except InvalidSchema:
+                    hp_adptr = None
+
+                if hp_map is not None:
+                    # Note: enabling a hp mapping will NOT create an adapter;
+                    #       this can only be done manually via
+                    #       https_client.mount_sslcontext_adapter(), or by
+                    #       creating a connection to an endpoint that has an
+                    #       enabled mapping that matches
+                    if hp_adptr is not None:
+                        self.assertTrue(hp_map.enabled)
+                else:
+                    self.assertTrue(hp_adptr is None)
+
+                # Verify sync_layer_legend_urls()
+                link_url = base_models.Link.objects.get(pk=b + 1).url
+                print('link_url: {0}'.format(link_url))
+                if hp_map is not None:
+                    # Note: legend graphics URL should always be proxied, if
+                    #       mapping is enabled, as JS viewers manage the link
+                    #       themselves
+                    self.assertEqual(hp_map.enabled,
+                                     has_proxy_prefix(link_url))
+                else:
+                    self.assertFalse(has_proxy_prefix(link_url))
+
+                # Verify sync_map_layers()
+                map_lyr = maps_models.MapLayer.objects.get(pk=b + 1)
+                self.assertFalse(has_proxy_prefix(map_lyr.ows_url))  # never
+                src_params = json.loads(map_lyr.source_params)
+
+                if hp_map is not None:
+                    self.assertEqual(hp_map.enabled and hp_map.proxy,
+                                     src_params['use_proxy'])
+                else:
+                    self.assertFalse(src_params['use_proxy'])
+
+        base_specs = [
+            {'match': True, 'proxy': True},    # services.arcgisonline.com
+            {'match': True, 'proxy': True},    # mapproxy.bdless.test
+            {'match': False, 'proxy': False},  # data-test.bdlessgeo.io
+            {'match': False, 'proxy': False},  # //data-test.bdlessgeo.io
+        ]
+        # Test defaults of loaded data
+        test_base_urls(base_urls, base_specs)
+
+        # Edit mappings: en/disable and/or proxy, and move up/down, then retest
         #
-        # self.assertEqual(HostnamePortSslConfig.objects.count(), 1)
-        # self.assertEqual(len(https_client.adapters), 2)
-        #
-        # adptr_1 = https_client.adapters[requests_base_url(self.mp_root)]
-        # """:type: SslContextAdapter"""
-        #
-        # self.assertIsInstance(adptr_1, SslContextAdapter)
-        #
-        # self.assertEqual(ssl_config_to_context_opts(
-        #     ssl_config_1), adptr_1.context_options())
-        #
-        # # Update ssl_config
-        #
-        # HostnamePortSslConfig.objects.create_hostnameportsslconfig(
-        #     self.mp_root, ssl_config_2)
-        #
-        # self.assertEqual(HostnamePortSslConfig.objects.count(), 1)
-        # self.assertEqual(len(https_client.adapters), 2)
-        #
-        # adptr_2 = https_client.adapters[requests_base_url(self.mp_root)]
-        # """:type: SslContextAdapter"""
-        #
-        # self.assertIsInstance(adptr_2, SslContextAdapter)
-        #
-        # self.assertEqual(ssl_config_to_context_opts(
-        #     ssl_config_2), adptr_2.context_options())
-        #
-        # # Delete first, unreferenced config
-        # SslConfig.objects.get(pk=1).delete()
-        # # nothing should have changed
-        # self.assertEqual(HostnamePortSslConfig.objects.count(), 1)
-        # self.assertEqual(len(https_client.adapters), 2)
-        #
-        # # Delete second, referenced config
-        # SslConfig.objects.get(pk=2).delete()
-        # # Should automatically remove mapping (related record) and
-        # # adapter (via signal)
-        # self.assertEqual(HostnamePortSslConfig.objects.count(), 0)
-        # self.assertEqual(len(https_client.adapters), 1)
+        # self.hp_maps (hnp -> sslconfig patterns, in order)
+        #     u'*.arcgisonline.com*'
+        #     u'*.boundless.test*'
+        #     u'*.*'
+
+        # Flip just proxy
+        arc_hp_map = self.hp_maps[0]
+        arc_hp_map.proxy = False
+        arc_hp_map.save()
+        base_specs[0]['proxy'] = False
+        test_base_urls(base_urls, base_specs)
+
+        # Flip just enabled
+        arc_hp_map.enabled = False
+        arc_hp_map.save()
+        base_specs[0]['match'] = False
+        test_base_urls(base_urls, base_specs)
+
+        # (proxy should be considered False, even if True, when map disabled)
+        arc_hp_map.proxy = True
+        arc_hp_map.save()
+        base_specs[0]['proxy'] = True
+        test_base_urls(base_urls, base_specs)
+
+        # Enable wildcard (arc and data now match; all match some mapping)
+        wild_hp_map.enabled = True
+        wild_hp_map.proxy = True
+        wild_hp_map.save()
+        for i in range(0, len(base_specs)):
+            for k in base_specs[i]:
+                base_specs[i][k] = True
+        test_base_urls(base_urls, base_specs)
+
+        # Move wildcard up from bottom and disable mapproxy (matches all)
+        wild_hp_map.move_up()  # auto-saves
+        mp_hp_map = self.hp_maps[1]
+        mp_hp_map.enabled = False
+        mp_hp_map.save()
+        for i in range(0, len(base_specs)):
+            for k in base_specs[i]:
+                base_specs[i][k] = True
+        test_base_urls(base_urls, base_specs)
+
+        # Move arc down from top and disable it (matches all)
+        arc_hp_map.move_down()  # auto-saves
+        arc_hp_map.enabled = False
+        arc_hp_map.save()
+        for i in range(0, len(base_specs)):
+            for k in base_specs[i]:
+                base_specs[i][k] = True
+        test_base_urls(base_urls, base_specs)
+
+        # Disable wildcard proxy (matches all)
+        wild_hp_map.proxy = False
+        wild_hp_map.save()
+        for i in range(0, len(base_specs)):
+            base_specs[i]['proxy'] = False
+        test_base_urls(base_urls, base_specs)
+
+        # Re-enable wildcard proxy (matches all)
+        wild_hp_map.proxy = True
+        wild_hp_map.save()
+        for i in range(0, len(base_specs)):
+            base_specs[i]['proxy'] = True
+        test_base_urls(base_urls, base_specs)
+
+        # Enable arc; disable wildcard (only arc should match)
+        arc_hp_map.enabled = True
+        arc_hp_map.save()
+        wild_hp_map.enabled = False
+        wild_hp_map.save()
+        base_specs[0]['match'] = True
+        base_specs[0]['proxy'] = True
+        for i in range(1, len(base_specs)):
+            for k in base_specs[i]:
+                base_specs[i][k] = False
+        test_base_urls(base_urls, base_specs)
+
+        # Re-enable wildcard
+        wild_hp_map.enabled = True
+        wild_hp_map.save()
+        for i in range(0, len(base_specs)):
+            for k in base_specs[i]:
+                base_specs[i][k] = True
+        test_base_urls(base_urls, base_specs)
+
+        # Delete wildcard (only arc should match, other mappings disabled)
+        wild_hp_map.delete()
+        for i in range(1, len(base_specs)):
+            for k in base_specs[i]:
+                base_specs[i][k] = False
+        test_base_urls(base_urls, base_specs)
 
 
 @pytest.mark.skip(reason="Because it can't auth to running exchange")
