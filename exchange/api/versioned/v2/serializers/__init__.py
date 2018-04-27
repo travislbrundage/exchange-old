@@ -18,9 +18,9 @@
 #
 #########################################################################
 
-from .attribute import AttributeSerializer # NOQA
-from .category import CategorySerializer # NOQA
-from .layer import LayerSerializer # NOQA
-from .map import MapSerializer # NOQA
-from .service import ServiceSerializer # NOQA
-from .style import StyleSerializer # NOQA
+from .attribute import AttributeSerializer  # NOQA
+from .category import CategorySerializer  # NOQA
+from .layer import LayerSerializer  # NOQA
+from .map import MapSerializer  # NOQA
+from .service import ServiceSerializer  # NOQA
+from .style import StyleSerializer  # NOQA
