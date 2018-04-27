@@ -148,13 +148,13 @@ def sync_map_layers():
     """:type: list[geonode.maps.models.MapLayer]"""
 
     for map_lyr in map_lyrs:
-        ptn = hostnameport_pattern_for_url(map_lyr.ows_url)
+        ptn = hostnameport_pattern_for_url(map_lyr.ows_url, uses_proxy=True)
         if ptn is not None:
-            logger.debug(u'MapLayer URL matched hostname:port pattern:'
+            logger.debug(u'MapLayer URL matched hostname:port proxy pattern:'
                          u'{0} > {1}'.format(map_lyr, ptn))
         else:
-            logger.debug(u'MapLayer URL does not match any hostname:port:'
-                         u' {0}'.format(map_lyr))
+            logger.debug(u'MapLayer URL does not match any proxied '
+                         u'hostname:port: {0}'.format(map_lyr))
         src_params = json.loads(map_lyr.source_params)
         src_params['use_proxy'] = (ptn is not None)
         map_lyr.source_params = json.dumps(src_params)
