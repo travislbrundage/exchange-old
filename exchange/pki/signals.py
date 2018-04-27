@@ -108,6 +108,19 @@ def sync_https_adapters():
 
 
 def sync_layer_legend_urls():
+    """
+        Sync saved layer's legend URL that indicates it be requested through
+        /pki route (via GeoNode's /proxy route) when changes occur to the
+        HostnamePortSslConfig mappings, including reordering.
+
+        Note: The update can happen if the map layer's URL now maps to an
+        SslConfig, even if it may not have mapped upon initial saving.
+
+        Important: Proxying is triggered if a mapping is enabled and matched,
+        as the JS map viewers manage/generate the legend link themselves from
+        the layer's base URL. This legend link is currently only shown on
+        the layer/map details page.
+        """
     links = list(Link.objects.filter(name='Legend').order_by('url'))
     """:type: list[geonode.base.models.Link]"""
 
