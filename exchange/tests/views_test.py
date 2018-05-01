@@ -6,6 +6,7 @@ from . import ExchangeTest
 from exchange.tests.osgeo_importer_upload_test import UploaderMixin
 import json
 import logging
+from django.core.urlresolvers import reverse
 logger = logging.getLogger(__name__)
 
 
@@ -79,6 +80,58 @@ class AutocompleteEmptyPageTest(ViewTestCase):
         self.doit()
 
 
+# TODO: Do we want to test these views here in Exchange?
+class LayerDetailTest(ViewTestCase):
+
+    def setUp(self):
+        super(LayerDetailTest, self).setUp()
+
+        from geonode.layers.utils import file_upload
+        self.layer = file_upload(
+            os.path.join(TESTDIR, 'test_point.shp'),
+            name='testlayer'
+        )
+        self.url = '/layers/geonode:testlayer/'
+        self.service_name = 'data-test'
+
+    def test(self):
+        self.doit()
+
+    # Mock the Service model and assign it to self.layer
+    @mock.patch("geonode.services.models.Service", autospec=True)
+    def mock_resolve_layer(self, mock_service):
+        # mock a service
+        mock_service.base_url = self.mp_root
+        mock_service.ptype = 'gxp_wmscsource'
+        mock_service.name = self.service_name
+        self.layer.service = mock_service
+        self.layer.storageType = 'remoteStore'
+        return self.layer
+
+    @mock.patch("geonode.layers.views._resolve_layer",
+                side_effect=mock_resolve_layer)
+    def testUseProxyExists(self):
+        layer_name = 'geonode:testlayer'
+        layer_template = os.path.join(TESTDIR, 'mock_layer_detail.html')
+        # mock the request object
+        request = RequestFactory().get(self.url)
+        request.user = self.admin_user
+        request.session = []
+        from geonode.layers.views import layer_detail
+        # TODO: Does response need to be reformatted into dict? json.loads()?
+        response = layer_detail(request, layer_name, layer_template)
+        # TODO: Is this correct examination?
+        # Go through sources and find the mock service
+        found_service = False
+        for source in response['sources']:
+            if ('name' in response['sources'][source] and
+                    self.service_name == response['sources'][source]['name']):
+                found_service = True
+                self.assertIn('use_proxy', response['sources'][source])
+                self.assertFalse(response['sources'][source]['use_proxy'])
+        self.assertTrue(found_service)
+
+
 class LayerMetadataDetailTest(ViewTestCase):
 
     def setUp(self):
@@ -133,6 +186,59 @@ class MapMetadataDetailTest(ViewTestCase):
 
     def test(self):
         self.doit()
+
+
+class NewMapConfigTest(ViewTestCase):
+    def setUp(self):
+        super(NewMapConfigTest, self).setUp()
+
+        from geonode.maps.models import Map
+        self.map = Map.objects.create(
+            owner=self.admin_user,
+            zoom=0,
+            center_x=0,
+            center_y=0
+        )
+        self.url = '/layers/geonode:testlayer'
+        self.service_name = 'data-test'
+
+    def test(self):
+        self.doit()
+
+    # Mock the Service model and assign it to self.layer
+    @mock.patch("geonode.services.models.Service", autospec=True)
+    def mock_resolve_layer(self, mock_service):
+        # mock a service
+        mock_service.base_url = self.mp_root
+        mock_service.ptype = 'gxp_wmscsource'
+        mock_service.name = self.service_name
+        self.layer.service = mock_service
+        self.layer.storageType = 'remoteStore'
+        return self.layer
+
+    @mock.patch("geonode.layers.views._resolve_layer",
+                side_effect=mock_resolve_layer)
+    def testUseProxyExists(self):
+        layer_name = 'geonode:testlayer'
+        # mock request
+        request = RequestFactory().get(
+            self.url,
+            data={'layer': [layer_name]}
+        )
+        request.user = self.admin_user
+        request.session = []
+        from geonode.maps.views import new_map_config
+        response = json.loads(new_map_config(request))
+        # TODO: Is this correct examination?
+        # Go through sources and find the mock service
+        found_service = False
+        for config in response['sources']:
+            if ('name' in response['sources'][config] and
+                    self.service_name == response['sources'][config]['name']):
+                found_service = True
+                self.assertIn('use_proxy', response['sources'][config])
+                self.assertFalse(response['sources'][config]['use_proxy'])
+        self.assertTrue(found_service)
 
 
 class GeoServerReverseProxyTest(ViewTestCase):
