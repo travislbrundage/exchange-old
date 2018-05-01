@@ -1,0 +1,42 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Site Admin{% endblock %}
+{% block extrastyle %}
+<style>
+#header {
+  width: auto;
+  height: 40px;
+  padding: 10px 40px;
+  background: linear-gradient(107deg, #262c3a 8%, #29648e 140%);
+  line-height: 40px;
+  color: #fff;
+  overflow: hidden;
+}
+
+.button, input[type=submit], input[type=button], .submit-row input, a.button {
+  background-color: #2b303b;
+}
+
+div.breadcrumbs {
+  background: #2a5273;
+}
+
+.module h2, .module caption, .inline-group h2{
+    background-color: #e6e6e6;
+}
+
+#branding h1, #branding h1 a:link, #branding h1 a:visited {
+    color: #f5dd5d;
+}
+
+a.section:link, a.section:visited {
+    color: #2c303b;
+    text-decoration: none;
+}
+</style>
+{% endblock %}
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_name|default:_('Site administration') }}</a></h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
