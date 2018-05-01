@@ -35,6 +35,7 @@ from django.core import management
 from django.core.exceptions import ImproperlyConfigured, AppRegistryNotReady
 from django.core.urlresolvers import reverse
 from django.test import TestCase
+from django.http import HttpResponse
 
 try:
     # Do this before geonode.services.serviceprocessors, so that apps are ready
@@ -838,7 +839,7 @@ class TestPkiRequest(PkiTestCase):
 
     def test_pki_request_incorrect_url(self):
         incorrect_url = 'https://mapproxy.boundless.test:8044/service'
-        # TODO: Is there a better way to test a bad url?
+        # TODO: Use raise from pytest rather than expecting failure
         response = None
         response = self.client.get(pki_route(incorrect_url))
         # The get should fail, so response remains None
@@ -852,6 +853,9 @@ class TestPkiRequest(PkiTestCase):
         self.assertIn(missing_url_response, response.content.decode("utf-8"))
 
 
+@pytest.mark.skipif(
+    not has_mapproxy(),
+    reason='Test requires mapproxy docker-compose container running')
 class TestGeoNodeProxy(PkiTestCase):
     # TODO: Does this require overriding teardown?
     def setUp(self):
@@ -871,6 +875,40 @@ class TestGeoNodeProxy(PkiTestCase):
         response = self.client.get(proxy_root + quote(incorrect_url))
         # The get should fail, so response remains None
         self.assertIsNone(response)
+
+    # TODO: Check this mock patch works as expected (tests pass)
+    # Patch pki_request so we can tell if proxy rerouted to it
+    def mock_pki_request(**kwargs):
+        return HttpResponse("Mock pki request response",
+                            status=302,
+                            content_type="text/plain")
+
+    @mock.patch("exchange.pki.views.pki_request", side_effect=mock_pki_request)
+    def test_proxy_reroute(self, mock_pki_request):
+        proxy_root = '/proxy/?url='
+        response = self.client.get(proxy_root + quote(self.mp_root))
+        # response should have gotten the mock_pki_request response
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.content, "Mock pki request response")
+
+    @mock.patch("exchange.pki.views.pki_request", side_effect=mock_pki_request)
+    def test_proxy_no_reroute(self, mock_pki_request):
+        proxy_root = '/proxy/?url='
+        response = self.client.get(proxy_root + quote(self.mp_root_http))
+        self.assertNotEqual(response.status_code,
+                            mock_pki_request.return_value.status_code)
+        self.assertNotEqual(response.content,
+                            mock_pki_request.return_value.content)
+
+
+class TestPkiServiceHandler(PkiTestCase):
+    def setUp(self):
+        self.login()
+        HostnamePortSslConfig.objects.all().delete()
+        self.create_hostname_port_mapping(6)
+
+    def tearDown(self):
+        HostnamePortSslConfig.objects.all().delete()
 
 
 class TestPkiUtils(PkiTestCase):
