@@ -7,6 +7,8 @@ from exchange.tests.osgeo_importer_upload_test import UploaderMixin
 import json
 import logging
 from django.core.urlresolvers import reverse
+import mock
+from django.test import RequestFactory
 logger = logging.getLogger(__name__)
 
 
@@ -101,7 +103,8 @@ class LayerDetailTest(ViewTestCase):
     @mock.patch("geonode.services.models.Service", autospec=True)
     def mock_resolve_layer(self, mock_service):
         # mock a service
-        mock_service.base_url = self.mp_root
+        # TODO: Does mapproxy need to be up or just referenced?
+        mock_service.base_url = u'https://maPproxy.Boundless.test:8344/'
         mock_service.ptype = 'gxp_wmscsource'
         mock_service.name = self.service_name
         self.layer.service = mock_service
@@ -209,7 +212,8 @@ class NewMapConfigTest(ViewTestCase):
     @mock.patch("geonode.services.models.Service", autospec=True)
     def mock_resolve_layer(self, mock_service):
         # mock a service
-        mock_service.base_url = self.mp_root
+        # TODO: Does mapproxy need to be up or just referenced?
+        mock_service.base_url = u'https://maPproxy.Boundless.test:8344/'
         mock_service.ptype = 'gxp_wmscsource'
         mock_service.name = self.service_name
         self.layer.service = mock_service
