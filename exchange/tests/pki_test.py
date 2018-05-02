@@ -24,6 +24,7 @@ import logging
 # noinspection PyPackageRequirements
 import pytest
 import django
+import mock
 
 from urllib import quote, quote_plus
 from requests import get, Request
@@ -34,7 +35,7 @@ from django.conf import settings
 from django.core import management
 from django.core.exceptions import ImproperlyConfigured, AppRegistryNotReady
 from django.core.urlresolvers import reverse
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
 from django.http import HttpResponse
 
 try:
@@ -901,6 +902,7 @@ class TestGeoNodeProxy(PkiTestCase):
                             mock_pki_request.return_value.content)
 
 
+# TODO: Is this the correct place to test service handler?
 class TestPkiServiceHandler(PkiTestCase):
     def setUp(self):
         self.login()
@@ -909,6 +911,41 @@ class TestPkiServiceHandler(PkiTestCase):
 
     def tearDown(self):
         HostnamePortSslConfig.objects.all().delete()
+
+    def test_handler_contains_header(self):
+        from geonode.services.serviceprocessors.handler import get_service_handler
+        test_key = 'test_key'
+        test_header = {test_key: 'test_value'}
+        service = get_service_handler(
+            self.mp_root,
+            enumerations.WMS,
+            test_header
+        )
+        self.assertIn('PKI_SERVICE_TYPE', service.parsed_service.headers)
+        self.assertIn('Authorization', service.parsed_service.headers)
+        self.assertIn(test_key, service.parsed_service.headers)
+        # TODO: Can arcrest serivce headers be tested as well?
+
+    @mock.patch("geonode.services.models.Service", autospec=True)
+    def test_non_pki_handler_contains_bearer_token(self, mock_service):
+        from geonode.services.views import _get_service_handler
+        request = RequestFactory().get('/layers/geonode:testlayer/')
+        request.session = []
+        # need a mock service
+        mock_service.base_url = self.mp_root
+        mock_service.type = 'WMS'
+        mock_service.name = self.service_name
+        service = _get_service_handler(request, mock_service)
+        self.assertIn('Authorization', service.parsed_service.headers)
+
+    def test_handler_contains_pki_url(self):
+        from geonode.services.serviceprocessors.handler import get_service_handler
+        wms_service = get_service_handler(self.mp_root, enumerations.WMS)
+        self.assertIsNotNone(wms_service.pki_url)
+        self.assertIsNotNone(wms_service.pki_proxy_url)
+        arcrest_service = get_service_handler(self.mp_root, enumerations.REST)
+        self.assertIsNotNone(arcrest_service.pki_url)
+        self.assertIsNotNone(arcrest_service.pki_proxy_url)
 
 
 class TestPkiUtils(PkiTestCase):
