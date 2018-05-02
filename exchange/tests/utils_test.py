@@ -1,6 +1,5 @@
 from . import ExchangeTest
 import mock
-from django.test import RequestFactory
 
 
 class DefaultMapConfigTest(ExchangeTest):

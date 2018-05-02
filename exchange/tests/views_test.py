@@ -6,7 +6,6 @@ from . import ExchangeTest
 from exchange.tests.osgeo_importer_upload_test import UploaderMixin
 import json
 import logging
-from django.core.urlresolvers import reverse
 import mock
 from django.test import RequestFactory
 logger = logging.getLogger(__name__)

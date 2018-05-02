@@ -913,7 +913,8 @@ class TestPkiServiceHandler(PkiTestCase):
         HostnamePortSslConfig.objects.all().delete()
 
     def test_handler_contains_header(self):
-        from geonode.services.serviceprocessors.handler import get_service_handler
+        from geonode.services.serviceprocessors.handler \
+            import get_service_handler
         test_key = 'test_key'
         test_header = {test_key: 'test_value'}
         service = get_service_handler(
@@ -939,7 +940,8 @@ class TestPkiServiceHandler(PkiTestCase):
         self.assertIn('Authorization', service.parsed_service.headers)
 
     def test_handler_contains_pki_url(self):
-        from geonode.services.serviceprocessors.handler import get_service_handler
+        from geonode.services.serviceprocessors.handler \
+            import get_service_handler
         wms_service = get_service_handler(self.mp_root, enumerations.WMS)
         self.assertIsNotNone(wms_service.pki_url)
         self.assertIsNotNone(wms_service.pki_proxy_url)
