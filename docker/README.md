@@ -49,7 +49,21 @@ when working off a different branch on one of the submodule, you may have to spe
 This can be done by specifying the branch name using the ```branch``` variable in ```.gitmodules```.  
 The branch the goenode submodule follows changes over time, but is currently set to ```exchange/1.4.x```. 
 
-#### Initial Docker Setup
+#### Makefile
+Easy commands to get started. These commands wrap the docker-compose commands and help to make sure all necessary components are built together in the right order. It is recommended to use these commands rather than directly using docker and docker-compose.
+
+```bash
+Boundless:exchange bex$ make
+  make lint     - run to lint (style check) repo
+  make html     - build sphinx documentation
+  make start    - start containers
+  make stop     - stop containers
+  make purge    - stop containers and prune volumes
+  make recreate - stop containers, prune volumes and recreate/build containers
+  make test     - run unit tests
+```
+
+#### Setup using docker and docker-compose directly
 This will run all the docker containers and display log output in the terminal
 
 ```bash
@@ -141,17 +155,3 @@ If you have any questions feel free to reach out in the following `Boundless` sl
 
 - `#exchange-dev` Exchange Development Team
 - `#qa-deployment` Exhange QA/Deployment (CI)
-
-#### Makefile
-Easy commands to get started
-
-```bash
-Boundless:exchange bex$ make
-  make lint     - run to lint (style check) repo
-  make html     - build sphinx documentation
-  make start    - start containers
-  make stop     - stop containers
-  make purge    - stop containers and prune volumes
-  make recreate - stop containers, prune volumes and recreate/build containers
-  make test     - run unit tests
-```
