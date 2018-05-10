@@ -398,9 +398,6 @@ class SslConfig(models.Model):
 
     def clean(self):
         # Validators
-        # TODO: Move these validation routines to a more common location,
-        #       so they can be used for pre-validation prior to connection
-
         val_mgs = {}
 
         if self.ssl_options:
