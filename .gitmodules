@@ -11,8 +11,10 @@
 	url = https://github.com/boundlessgeo/sphinx-theme
 [submodule "vendor/django-osgeo-importer"]
 	path = vendor/django-osgeo-importer
-	url = https://github.com/arhote/django-osgeo-importer.git #https://github.com/Geonode/django-osgeo-importer
-	branch = fgdb-test #angular-1.6
+	#url = https://github.com/Geonode/django-osgeo-importer
+	url = https://github.com/arhote/django-osgeo-importer.git 
+	#branch = angular-1.6
+	branch = fgdb-test
 [submodule "vendor/gsconfig"]
 	path = vendor/gsconfig
 	url = https://github.com/boundlessgeo/gsconfig.git
