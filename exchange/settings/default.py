@@ -372,6 +372,54 @@ if AUDIT_ENABLED:
 # Logging settings
 # 'DEBUG', 'INFO', 'WARNING', 'ERROR', or 'CRITICAL'
 DJANGO_LOG_LEVEL = os.getenv('DJANGO_LOG_LEVEL', 'ERROR')
+DJANGO_IGNORED_WARNINGS = {
+    'RemovedInDjango18Warning',
+    'RemovedInDjango19Warning',
+    'RuntimeWarning: DateTimeField',
+}
+
+
+def filter_django_warnings(record):
+    for ignored in DJANGO_IGNORED_WARNINGS:
+        if record.args and ignored in record.args[0]:
+            return False
+    return True
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format':
+                ('%(levelname)s %(asctime)s %(pathname)s %(process)d '
+                 '%(thread)d %(message)s'),
+        },
+    },
+    'handlers': {
+        'ssl_log': {
+            # log controlled internally by __init__.ssl_messages dict, so
+            # should always log via default DEBUG level
+            'level': 'DEBUG',
+            'class': 'exchange.pki.logger.SslLogHandler',
+            'formatter': 'verbose',
+        }
+    },
+    'filters': {
+        'ignore_django_warnings': {
+            '()': 'django.utils.log.CallbackFilter',
+            'callback': filter_django_warnings,
+        },
+    },
+    'loggers': {
+        'exchange.pki': {
+            'handlers': ['ssl_log'],
+            'level': 'DEBUG',
+            'filters': ['ignore_django_warnings', ],
+        },
+    },
+}
+
 # Commenting out logging until it can be modified to log errors correctly
 '''
 installed_apps_conf = {

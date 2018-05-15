@@ -18,6 +18,29 @@
 #
 #########################################################################
 
-default_app_config = 'exchange.pki.apps.PkiAppConfig'
+from logging import Handler
+from django.apps import apps
 
-ssl_messages = {'log': False}
+from . import ssl_messages
+
+
+class SslLogHandler(Handler, object):
+    """
+    Logs an SslLogEntry model to Django database and standard text stream.
+    """
+
+    def __init__(self):
+        super(SslLogHandler, self).__init__()
+
+    def emit(self, record):
+        if ssl_messages.get('log', False):
+            try:
+                entry_model = \
+                    apps.get_app_config('pki').get_model('SslLogEntry')
+            except LookupError:
+                return
+            log_entry = entry_model(
+                level=record.levelname,
+                message=self.format(record)
+            )
+            log_entry.save()
