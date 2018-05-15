@@ -25,8 +25,7 @@
         {% csrf_token %}
         <input type="submit" class="btn btn-primary" value="Refresh Log" onClick="window.location.reload()" />
     </form>
-    <br />
-    Note: log entries below appear in reverse chronological order (newest first). Exports are in chronological order.
+    <p style="color: grey;font-weight: 300;">Note: log entries below appear in reverse chronological order (newest first). Exports are in chronological order.</p>
 </div>
 {{ block.super }}
 {% endblock %}
