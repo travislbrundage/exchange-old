@@ -18,29 +18,44 @@
 #
 #########################################################################
 
+from datetime import timedelta
 from logging import Handler
+
 from django.apps import apps
+from django.utils import timezone
 
 from . import ssl_messages
 
 
 class SslLogHandler(Handler, object):
     """
-    Logs an SslLogEntry model to Django database and standard text stream.
+    Logs an SslLogEntry model to Django database.
     """
 
     def __init__(self):
         super(SslLogHandler, self).__init__()
 
     def emit(self, record):
-        if ssl_messages.get('log', False):
-            try:
-                entry_model = \
-                    apps.get_app_config('pki').get_model('SslLogEntry')
-            except LookupError:
-                return
-            log_entry = entry_model(
-                level=record.levelname,
-                message=self.format(record)
-            )
-            log_entry.save()
+        try:
+            entry_model = apps.get_app_config('pki').get_model('SslLogEntry')
+        except LookupError:
+            return
+
+        # Check elapse timer; log if still active
+        timer_dt = ssl_messages.get('timer', None)
+        if timer_dt is not None:
+            if timer_dt > timezone.now():
+                log_entry = entry_model(
+                    level=record.levelname,
+                    message=self.format(record)
+                )
+                log_entry.save()
+            else:
+                # Elapse the timer
+                ssl_messages['timer'] = None
+
+        # Clean up expired log records
+        expiry = ssl_messages.get('expiry', 0)
+        if expiry > 0:
+            entry_model.objects.filter(
+                time__lt=timezone.now() - timedelta(seconds=expiry)).delete()

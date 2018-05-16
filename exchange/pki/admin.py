@@ -19,7 +19,7 @@
 #########################################################################
 
 import warnings
-import datetime
+from datetime import datetime, timedelta
 
 from six import StringIO
 
@@ -28,7 +28,7 @@ from django.contrib import admin, messages
 from django.http import HttpResponse, HttpResponseRedirect
 from django import forms
 from ordered_model.admin import OrderedModelAdmin
-from django.utils.safestring import mark_safe
+from django.utils import safestring, timezone
 
 from .models import SslConfig, HostnamePortSslConfig, SslLogEntry
 from .validate import PkiValidationWarning
@@ -95,8 +95,9 @@ class SslConfigAdmin(admin.ModelAdmin):
                     msg = str(warn)
                 self.message_user(
                     request,
-                    mark_safe(u"Last saved {0} validation warnings:<br>{1}"
-                              .format(sslconfig_verbose_name, msg)),
+                    safestring.mark_safe(
+                        u"Last saved {0} validation warnings:<br>{1}"
+                        .format(sslconfig_verbose_name, msg)),
                     messages.WARNING)
 
             return tmpl_resp
@@ -212,9 +213,14 @@ class SslLogEntryAdmin(admin.ModelAdmin):
 
     def changelist_view(self, request, extra_context=None):
         extra_context = extra_context or {}
-        log_messages = ssl_messages.get('log')
-        extra_context['ssl_log_enabled'] = \
-            log_messages is not None and log_messages
+        log_messages = False
+        timer_dt = ssl_messages.get('timer', None)
+        if timer_dt is not None:
+            if timer_dt > timezone.now():
+                log_messages = True
+            else:
+                ssl_messages['timer'] = None
+        extra_context['ssl_log_enabled'] = log_messages
         return super(SslLogEntryAdmin, self).changelist_view(
             request, extra_context=extra_context)
 
@@ -222,15 +228,17 @@ class SslLogEntryAdmin(admin.ModelAdmin):
         return False
 
     def enable_log(self, request):
-        if ssl_messages.get('log') is not None:
-            ssl_messages['log'] = True
+        try:
+            timeout = int(ssl_messages.get('timeout', 600)) + 5  # buffer a bit
+            ssl_messages['timer'] = timezone.now() + timedelta(seconds=timeout)
             self.message_user(
                 request,
-                "IMPORTANT: Enable debug logging only for "
-                "VERY SHORT PERIODS OF TIME.",
+                safestring.mark_safe(
+                    "<b>IMPORTANT</b>: Debug logging will <b>ONLY BE ENABLED "
+                    "FOR {0} MINUTES.</b>".format((timeout - 5) / 60)),
                 messages.WARNING
             )
-        else:
+        except KeyError:
             self.message_user(
                 request,
                 "Could not enable debug logging.",
@@ -239,9 +247,9 @@ class SslLogEntryAdmin(admin.ModelAdmin):
         return HttpResponseRedirect("../")
 
     def disable_log(self, request):
-        if ssl_messages.get('log') is not None:
-            ssl_messages['log'] = False
-        else:
+        try:
+            ssl_messages['timer'] = None
+        except KeyError:
             self.message_user(
                 request,
                 "Could not disable debug logging.",
@@ -265,7 +273,7 @@ class SslLogEntryAdmin(admin.ModelAdmin):
         f = StringIO()
         f.writelines(msgs)
         f.seek(0)
-        tstamp = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+        tstamp = datetime.now().strftime('%Y%m%d-%H%M%S')
         response = HttpResponse(
             f, content_type='text/plain', charset='utf-8')
         response['Content-Disposition'] = \

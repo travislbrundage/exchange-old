@@ -398,7 +398,7 @@ LOGGING = {
     },
     'handlers': {
         'ssl_log': {
-            # log controlled internally by __init__.ssl_messages dict, so
+            # log controlled internally by pki.__init__.ssl_messages dict, so
             # should always log via default DEBUG level
             'level': 'DEBUG',
             'class': 'exchange.pki.logger.SslLogHandler',
@@ -551,6 +551,10 @@ ENFORCE_MAX_LENGTH = 1
 
 # IMPORTANT: this directory should not be within application or www roots
 PKI_DIRECTORY = os.getenv('PKI_DIRECTORY', '/usr/local/exchange-pki')
+# Length of time SSL/PKI logging can stay enabled
+PKI_SSL_LOG_TIMEOUT = 600  # in seconds
+# Length of time SSL/PKI log entries can stay in database before being removed
+PKI_SSL_LOG_ENTRY_EXPIRY = 86400  # in seconds; 0 = keep all (not recommended)
 
 # Custom default background used during thumbnail generation.
 # As of v1.4.8 (ps/pki branch), this service must support the following:
