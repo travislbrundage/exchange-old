@@ -19,6 +19,7 @@
 #########################################################################
 
 import os
+import tempfile
 
 from exchange import settings
 
@@ -36,6 +37,10 @@ def get_pki_dir():
 # TODO: Add .p12|.pfx regex support for cert_match
 CERT_MATCH = ".*\.(crt|CRT|pem|PEM)$"
 KEY_MATCH = ".*\.(key|KEY|pem|PEM)$"
+
+# File written to temp folder as file-based timer for debug logging
+SSL_LOGGING_TIMER = os.path.join(tempfile.gettempdir(),
+                                 "exchange_ssl-pki_logging")
 
 
 """

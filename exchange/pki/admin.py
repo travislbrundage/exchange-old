@@ -19,20 +19,25 @@
 #########################################################################
 
 import warnings
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from six import StringIO
 
+from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin, messages
 from django.http import HttpResponse, HttpResponseRedirect
 from django import forms
 from ordered_model.admin import OrderedModelAdmin
-from django.utils import safestring, timezone
+from django.utils import safestring
 
 from .models import SslConfig, HostnamePortSslConfig, SslLogEntry
 from .validate import PkiValidationWarning
-from . import ssl_messages
+from .utils import (
+    logging_timer_expired,
+    set_logging_timer,
+    remove_logging_timer,
+)
 
 
 class SslConfigAdminForm(forms.ModelForm):
@@ -213,14 +218,8 @@ class SslLogEntryAdmin(admin.ModelAdmin):
 
     def changelist_view(self, request, extra_context=None):
         extra_context = extra_context or {}
-        log_messages = False
-        timer_dt = ssl_messages.get('timer', None)
-        if timer_dt is not None:
-            if timer_dt > timezone.now():
-                log_messages = True
-            else:
-                ssl_messages['timer'] = None
-        extra_context['ssl_log_enabled'] = log_messages
+        extra_context['ssl_log_enabled'] = not logging_timer_expired()
+
         return super(SslLogEntryAdmin, self).changelist_view(
             request, extra_context=extra_context)
 
@@ -229,31 +228,31 @@ class SslLogEntryAdmin(admin.ModelAdmin):
 
     def enable_log(self, request):
         try:
-            timeout = int(ssl_messages.get('timeout', 600)) + 5  # buffer a bit
-            ssl_messages['timer'] = timezone.now() + timedelta(seconds=timeout)
+            set_logging_timer()
             self.message_user(
                 request,
                 safestring.mark_safe(
                     "<b>IMPORTANT</b>: Debug logging will <b>ONLY BE ENABLED "
-                    "FOR {0} MINUTES.</b>".format((timeout - 5) / 60)),
+                    "FOR {0} MINUTES.</b>".format(
+                        int(settings.PKI_SSL_LOG_TIMEOUT) / 60)),
                 messages.WARNING
             )
-        except KeyError:
+        except IOError:
             self.message_user(
                 request,
                 "Could not enable debug logging.",
-                messages.WARNING
+                messages.ERROR
             )
         return HttpResponseRedirect("../")
 
     def disable_log(self, request):
         try:
-            ssl_messages['timer'] = None
-        except KeyError:
+            remove_logging_timer()
+        except OSError:
             self.message_user(
                 request,
                 "Could not disable debug logging.",
-                messages.WARNING
+                messages.ERROR
             )
         return HttpResponseRedirect("../")
 

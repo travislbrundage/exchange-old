@@ -22,13 +22,14 @@ import os
 import re
 import logging
 
+from datetime import datetime, timedelta
 # noinspection PyCompatibility
 from urlparse import urlparse, urlsplit, urljoin
 from urllib import quote, unquote, quote_plus, unquote_plus
 
 from django.conf import settings
 
-from .settings import get_pki_dir
+from .settings import get_pki_dir, SSL_LOGGING_TIMER
 
 
 logger = logging.getLogger(__name__)
@@ -184,3 +185,27 @@ def file_readable(a_file):
 
 def pki_file(a_file):
     return os.path.join(get_pki_dir(), a_file)
+
+
+def logging_timer_exists():
+    return file_readable(SSL_LOGGING_TIMER)
+
+
+def set_logging_timer():
+    # 'touch' logging file
+    with open(SSL_LOGGING_TIMER, 'a'):
+        os.utime(SSL_LOGGING_TIMER, None)
+
+
+def remove_logging_timer():
+    if logging_timer_exists():
+        os.remove(SSL_LOGGING_TIMER)
+
+
+def logging_timer_expired():
+    if not logging_timer_exists():
+        return True
+    # Note: this is not timezone aware, but really doesn't need to be
+    mtime = datetime.fromtimestamp(os.path.getmtime(SSL_LOGGING_TIMER)) + \
+        timedelta(seconds=settings.PKI_SSL_LOG_TIMEOUT)
+    return datetime.now() > mtime

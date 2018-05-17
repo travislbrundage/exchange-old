@@ -18,13 +18,4 @@
 #
 #########################################################################
 
-from exchange import settings
-
 default_app_config = 'exchange.pki.apps.PkiAppConfig'
-
-# App-global object for managing SSL/PKI message logging
-ssl_messages = {
-    'timer': None,
-    'timeout': settings.PKI_SSL_LOG_TIMEOUT,
-    'expiry': settings.PKI_SSL_LOG_ENTRY_EXPIRY,
-}

@@ -22,9 +22,10 @@ from datetime import timedelta
 from logging import Handler
 
 from django.apps import apps
+from django.conf import settings
 from django.utils import timezone
 
-from . import ssl_messages
+from .utils import logging_timer_expired
 
 
 class SslLogHandler(Handler, object):
@@ -42,20 +43,16 @@ class SslLogHandler(Handler, object):
             return
 
         # Check elapse timer; log if still active
-        timer_dt = ssl_messages.get('timer', None)
-        if timer_dt is not None:
-            if timer_dt > timezone.now():
-                log_entry = entry_model(
-                    level=record.levelname,
-                    message=self.format(record)
-                )
-                log_entry.save()
-            else:
-                # Elapse the timer
-                ssl_messages['timer'] = None
+        if not logging_timer_expired():
+            log_entry = entry_model(
+                level=record.levelname,
+                message=self.format(record)
+            )
+            log_entry.save()
 
         # Clean up expired log records
-        expiry = ssl_messages.get('expiry', 0)
+        expiry = int(settings.PKI_SSL_LOG_ENTRY_EXPIRY)
         if expiry > 0:
             entry_model.objects.filter(
-                time__lt=timezone.now() - timedelta(seconds=expiry)).delete()
+                timestamp__lt=timezone.now() - timedelta(seconds=expiry)
+            ).delete()
