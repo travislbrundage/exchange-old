@@ -397,9 +397,14 @@ LOGGING = {
         },
     },
     'handlers': {
+        'console': {
+            'level': DJANGO_LOG_LEVEL,
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
         'ssl_log': {
-            # log controlled internally by pki.__init__.ssl_messages dict, so
-            # should always log via default DEBUG level
+            # logging is internally controlled, so should always log via
+            # default DEBUG level
             'level': 'DEBUG',
             'class': 'exchange.pki.logger.SslLogHandler',
             'formatter': 'verbose',
@@ -413,7 +418,7 @@ LOGGING = {
     },
     'loggers': {
         'exchange.pki': {
-            'handlers': ['ssl_log'],
+            'handlers': ['console', 'ssl_log'],
             'level': 'DEBUG',
             'filters': ['ignore_django_warnings', ],
         },
