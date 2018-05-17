@@ -22,3 +22,7 @@
 	path = vendor/arcrest
 	url = https://github.com/boundlessgeo/ArcREST.git
 	branch = ps/pki
+[submodule "vendor/django-logtailer"]
+	path = vendor/django-logtailer
+	url = https://dakcarto@github.com/dakcarto/django-logtailer.git
+	branch = ps/pki

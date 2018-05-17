@@ -200,6 +200,7 @@ INSTALLED_APPS = (
     'social_django',
     'ordered_model',
     'exchange.pki',
+    'logtailer',
 ) + ADDITIONAL_APPS + INSTALLED_APPS
 
 MIGRATION_MODULES = {
