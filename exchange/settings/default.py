@@ -75,9 +75,10 @@ CLASSIFICATION_BACKGROUND_COLOR = os.getenv(
 )
 CLASSIFICATION_LINK = os.getenv('CLASSIFICATION_LINK', None)
 
-#CLASSIFICATION_LEVELS = os.getenv('CLASSIFICATION_LEVELS', ['UNCLASSIFIED', ])
-#CAVEATS = os.getenv('CAVEATS', ['FOUO', ])
-classlevels = os.getenv('CLASSIFICATION_LEVELS', 'UNCLASSIFIED,' )
+# CLASSIFICATION_LEVELS = os.getenv('CLASSIFICATION_LEVELS',
+#                                   ['UNCLASSIFIED', ])
+# CAVEATS = os.getenv('CAVEATS', ['FOUO', ])
+classlevels = os.getenv('CLASSIFICATION_LEVELS', 'UNCLASSIFIED,')
 caveats = os.getenv('CAVEATS', 'FOUO,')
 
 CLASSIFICATION_LEVELS = []
