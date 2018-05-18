@@ -673,28 +673,3 @@ class HostnamePortSslConfig(OrderedModel):
         verbose_name_plural = 'Hostname:Port >> SSL Configs'
         # ordering = ["hostname_port"]  # now handled by OrderedModel
         unique_together = (("hostname_port", "ssl_config"),)
-
-
-class SslLogEntry(models.Model):
-    timestamp = models.DateTimeField(
-        "Timestamp",
-        blank=False,
-        null=False,
-        auto_now_add=True,
-    )
-    level = models.CharField(
-        "Level",
-        max_length=10,
-        blank=False,
-        null=False,
-    )
-    message = models.TextField(
-        "Message",
-        blank=False,
-        null=False,
-    )
-
-    class Meta:
-        verbose_name = 'SSL/PKI Log Entry'
-        verbose_name_plural = 'SSL/PKI Log Entries'
-        ordering = ["-timestamp"]

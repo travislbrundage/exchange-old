@@ -19,25 +19,14 @@
 #########################################################################
 
 import warnings
-from datetime import datetime
 
-from six import StringIO
-
-from django.conf import settings
-from django.conf.urls import url
 from django.contrib import admin, messages
-from django.http import HttpResponse, HttpResponseRedirect
 from django import forms
 from ordered_model.admin import OrderedModelAdmin
 from django.utils import safestring
 
-from .models import SslConfig, HostnamePortSslConfig, SslLogEntry
+from .models import SslConfig, HostnamePortSslConfig
 from .validate import PkiValidationWarning
-from .utils import (
-    logging_timer_expired,
-    set_logging_timer,
-    remove_logging_timer,
-)
 
 
 class SslConfigAdminForm(forms.ModelForm):
@@ -179,134 +168,7 @@ class HostnamePortSslConfigAdmin(OrderedModelAdmin):
     disable_proxy.short_description = "Disable proxy for selected mappings"
 
 
-class SslLogEntryAdminForm(forms.ModelForm):
-    class Meta:
-        model = SslLogEntry
-        fields = '__all__'
-
-
-class SslLogEntryAdmin(admin.ModelAdmin):
-    list_display = ('timestamp', 'level', 'message')
-    list_display_links = ('timestamp',)
-    list_filter = ('level',)
-    readonly_fields = ('timestamp', 'level', 'message')
-    form = SslLogEntryAdminForm
-
-    actions = [
-        'export_entries',
-    ]
-
-    def get_urls(self):
-        cur_urls = super(SslLogEntryAdmin, self).get_urls()
-        urlpatterns = [
-            url(r'^enable-log/$',
-                self.admin_site.admin_view(self.enable_log),
-                name="enable_log"
-                ),
-            url(r'^disable-log/$',
-                self.admin_site.admin_view(self.disable_log),
-                name="disable_log"
-                ),
-            url(r'^clear-log/$',
-                self.admin_site.admin_view(self.clear_log),
-                name="clear_log"),
-            url(r'^export-log/$',
-                self.admin_site.admin_view(self.export_log),
-                name="export_log"),
-        ]
-        return urlpatterns + cur_urls
-
-    def changelist_view(self, request, extra_context=None):
-        extra_context = extra_context or {}
-        extra_context['ssl_log_enabled'] = not logging_timer_expired()
-
-        return super(SslLogEntryAdmin, self).changelist_view(
-            request, extra_context=extra_context)
-
-    def has_add_permission(self, request):
-        return False
-
-    def enable_log(self, request):
-        try:
-            set_logging_timer()
-            self.message_user(
-                request,
-                safestring.mark_safe(
-                    "<b>IMPORTANT</b>: Debug logging will <b>ONLY BE ENABLED "
-                    "FOR {0} MINUTES.</b>".format(
-                        int(settings.PKI_SSL_LOG_TIMEOUT) / 60)),
-                messages.WARNING
-            )
-        except IOError:
-            self.message_user(
-                request,
-                "Could not enable debug logging.",
-                messages.ERROR
-            )
-        return HttpResponseRedirect("../")
-
-    def disable_log(self, request):
-        try:
-            remove_logging_timer()
-        except OSError:
-            self.message_user(
-                request,
-                "Could not disable debug logging.",
-                messages.ERROR
-            )
-        return HttpResponseRedirect("../")
-
-    def clear_log(self, request):
-        SslLogEntry.objects.all().delete()
-        self.message_user(
-            request,
-            "Debug log cleared."
-        )
-        return HttpResponseRedirect("../")
-
-    @staticmethod
-    def message_log_download(queryset):
-        # reorder in chronological order (newest last, like a log file)
-        msgs = [u"{0}\n".format(m.message) for m in reversed(queryset)]
-
-        f = StringIO()
-        f.writelines(msgs)
-        f.seek(0)
-        tstamp = datetime.now().strftime('%Y%m%d-%H%M%S')
-        response = HttpResponse(
-            f, content_type='text/plain', charset='utf-8')
-        response['Content-Disposition'] = \
-            'attachment; filename=ssl-debug-output_{0}.log'.format(tstamp)
-        return response
-
-    def export_log(self, request):
-        queryset = SslLogEntry.objects.all()
-        if queryset:
-            return self.message_log_download(queryset)
-        else:
-            self.message_user(
-                request,
-                "No log messages found to export.",
-                messages.WARNING
-            )
-        return HttpResponseRedirect("../")
-
-    def export_entries(self, request, queryset):
-        if queryset:
-            return self.message_log_download(queryset)
-        else:
-            self.message_user(
-                request,
-                "No log messages found to export.",
-                messages.WARNING
-            )
-
-    export_entries.short_description = "Export selected entries"
-
-
 admin.site.register(SslConfig,
                     SslConfigAdmin)
 admin.site.register(HostnamePortSslConfig,
                     HostnamePortSslConfigAdmin)
-admin.site.register(SslLogEntry,
-                    SslLogEntryAdmin)

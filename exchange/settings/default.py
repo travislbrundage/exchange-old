@@ -20,6 +20,7 @@
 
 import os
 import copy  # noqa
+import tempfile
 import dj_database_url
 from ast import literal_eval as le
 from geonode.settings import *  # noqa
@@ -387,6 +388,12 @@ def filter_django_warnings(record):
     return True
 
 
+installed_apps_conf = {
+    'handlers': ['console'],
+    'level': DJANGO_LOG_LEVEL,
+}
+
+# noinspection PyDictCreation
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -403,13 +410,6 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
-        'ssl_log': {
-            # logging is internally controlled, so should always log via
-            # default DEBUG level
-            'level': 'DEBUG',
-            'class': 'exchange.pki.logger.SslLogHandler',
-            'formatter': 'verbose',
-        }
     },
     'filters': {
         'ignore_django_warnings': {
@@ -418,53 +418,80 @@ LOGGING = {
         },
     },
     'loggers': {
-        'exchange.pki': {
-            'handlers': ['console', 'ssl_log'],
-            'level': 'DEBUG',
-            'filters': ['ignore_django_warnings', ],
-        },
+        # app: copy.deepcopy(installed_apps_conf) for app in INSTALLED_APPS
     },
 }
 
-# Commenting out logging until it can be modified to log errors correctly
-'''
-installed_apps_conf = {
-    'handlers': ['console'],
-    'level': DJANGO_LOG_LEVEL,
-}
+# LOGGING['root'] = {
+#     'handlers': ['console'],
+#     'level': DJANGO_LOG_LEVEL,
+#     'filters': ['ignore_django_warnings', ],
+# }
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format':
-                ('%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d'
-                 ' %(message)s'),
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': DJANGO_LOG_LEVEL,
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
-        }
-    },
-    'loggers': {
-        app: copy.deepcopy(installed_apps_conf) for app in INSTALLED_APPS
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': DJANGO_LOG_LEVEL
-    },
-}
+# LOGGING['loggers']['django.db.backends'] = {
+#     'handlers': ['console'],
+#     'propagate': False,
+#     'level': 'WARNING',  # Django SQL logging is too noisy at DEBUG
+# }
 
-LOGGING['loggers']['django.db.backends'] = {
-    'handlers': ['console'],
-    'propagate': False,
-    'level': 'WARNING',  # Django SQL logging is too noisy at DEBUG
-}
-'''
+if 'logtailer' in INSTALLED_APPS:
+    # Config for client (in Django admin panel) log parsing
+
+    LOGTAILER_LEVEL = os.getenv('LOGTAILER_LEVEL', 'DEBUG')
+
+    # How many lines to load when starting to tail an existing log
+    LOGTAILER_HISTORY_LINES = os.getenv('LOGTAILER_HISTORY_LINES', 200)
+    # Length of time client logging can stay enabled
+    LOGTAILER_TIMEOUT = os.getenv('LOGTAILER_TIMEOUT', 600)  # in seconds
+    # File-based timer for client logging
+    LOGTAILER_LOGGING_TIMER = os.path.join(tempfile.gettempdir(),
+                                           "logtailer-timer")
+    # Dir where client's logtailer is restricted to reading only its log files
+    log_dir = '/var/log/logtailer'
+    if not os.path.exists(log_dir):
+        try:
+            os.mkdir(log_dir)
+        except OSError:
+            log_dir = os.path.join(tempfile.gettempdir(), 'logtailer')
+            if not os.path.exists(log_dir):
+                os.mkdir(log_dir)
+    LOGTAILER_LOG_DIR = log_dir
+    # Client output log file
+    LOGTAILER_LOG_FILE = os.path.join(LOGTAILER_LOG_DIR, "exchange-app.log")
+    # Only files with these extensions will be parsed from LOGTAILER_LOG_DIR
+    LOGTAILER_LOG_FILE_EXTENSIONS = ".*\.(log)$"
+
+    LOGGING['formatters']['logtailer'] = {
+        'format':
+            ('%(levelname)s %(app)s %(asctime)s '
+             '%(pathname)s %(lineno)d: %(message)s'),
+    }
+    LOGGING['handlers']['logtailer'] = {
+        # logging ON/OFF is internally controlled, so should always log via
+        # default INFO level (customer-appropriate to avoid flooding log)
+        'level': LOGTAILER_LEVEL,
+        'class': 'logtailer.logger.LogTailerHandler',
+        'formatter': 'logtailer',
+        'filename': LOGTAILER_LOG_FILE,
+        'when': 'midnight',
+        'interval': 1,
+        'backupCount': 3,
+        'encoding': 'utf-8',
+        'app': 'celery' if os.getenv('VIA_CELERY', 0) else 'exchange'
+    }
+    LOGGING['loggers']['exchange'] = {
+        'handlers': ['logtailer'],
+        'level': LOGTAILER_LEVEL,
+        'propagate': True,
+        'filters': ['ignore_django_warnings', ],
+    }
+    # LOGGING['loggers']['geonode'] = {
+    #     'handlers': ['logtailer'],
+    #     'level': LOGTAILER_LEVEL,
+    #     'propagate': True,
+    #     'filters': ['ignore_django_warnings', ],
+    # }
+
 # Authentication Settings
 
 # ldap
@@ -557,10 +584,6 @@ ENFORCE_MAX_LENGTH = 1
 
 # IMPORTANT: this directory should not be within application or www roots
 PKI_DIRECTORY = os.getenv('PKI_DIRECTORY', '/usr/local/exchange-pki')
-# Length of time SSL/PKI logging can stay enabled
-PKI_SSL_LOG_TIMEOUT = 600  # in seconds
-# Length of time SSL/PKI log entries can stay in database before being removed
-PKI_SSL_LOG_ENTRY_EXPIRY = 86400  # in seconds; 0 = keep all (not recommended)
 
 # Custom default background used during thumbnail generation.
 # As of v1.4.8 (ps/pki branch), this service must support the following:
