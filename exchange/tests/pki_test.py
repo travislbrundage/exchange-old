@@ -55,7 +55,9 @@ from . import ExchangeTest
 from exchange.pki.settings import get_pki_dir, SSL_DEFAULT_CONFIG
 from exchange.pki.models import (
     SslConfig,
+    SslConfigManager,
     HostnamePortSslConfig,
+    HostnamePortSslConfigManager,
     hostnameport_pattern_cache,
     hostnameport_pattern_proxy_cache,
     rebuild_hostnameport_pattern_cache,
@@ -699,6 +701,182 @@ class TestHostnamePortSslConfig(PkiTestCase):
             for k in base_specs[i]:
                 base_specs[i][k] = False
         test_base_urls(base_urls, base_specs)
+
+    def test_clean(self):
+        pass
+
+
+class TestSslConfig(PkiTestCase):
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_ssl_op_opts(self):
+        pass
+
+    def test_ssl_protocols(self):
+        pass
+
+    def test_clean(self):
+        pass
+
+    def test_default_ssl_config(self):
+        pass
+
+    def test_to_dict(self):
+        pass
+
+    # TODO: DynamicFilePathFields to test - ca_custom_certs, client_cert, client_key
+    # TODO: EncryptedCharFields to test - client_key_pass
+
+
+class TestSslConfigManager(PkiTestCase):
+
+    def setUp(self):
+        self.login()
+
+        SslConfig.objects.all().delete()
+        self.assertEqual(SslConfig.objects.count(), 0)
+
+    def tearDown(self):
+        SslConfig.objects.all().delete()
+        self.assertEqual(SslConfig.objects.count(), 0)
+
+    @mock.patch("geonode.services.serviceprocessors.base.settings",
+                autospec=True)
+    def test_create_default(self, mock_settings):
+        self.assertEqual(SslConfig.objects.count(), 0)
+        # TODO: Does this mock work for create_default()?
+        mock_settings.SSL_DEFAULT_CONFIG = {
+            "name": "Mock: TLS-only",
+            "description": "Mock configuration, with good base security.",
+            "ca_custom_certs": '',
+            "ca_allow_invalid_certs": False,
+            "client_cert": '',
+            "client_key": '',
+            "client_key_pass": '',
+            "ssl_version": "PROTOCOL_SSLv23",
+            "ssl_verify_mode": "CERT_REQUIRED",
+            # "ssl_verify_flags": None,  # default flags are good enough
+            "ssl_options": "OP_NO_SSLv2,OP_NO_SSLv3,OP_NO_COMPRESSION",
+            "ssl_ciphers": '',
+            "https_retries": 3,
+            "https_redirects": 3,
+        }
+
+        SslConfigManager.create_default()
+        self.assertEqual(SslConfig.objects.count(), 1)
+        self.assertDictEqual(SslConfig.get(pk=1).to_dict(), mock_settings.SSL_DEFAULT_CONFIG)
+        mock_settings.SSL_DEFAULT_CONFIG["name"] = "Changed: TLS-only"
+        SslConfigManager.create_default()
+        self.assertEqual(SslConfig.objects.count(), 1)
+        self.assertNotEqual(SslConfig.get(pk=1).to_dict(), mock_settings.SSL_DEFAULT_CONFIG)
+        SslConfig.objects.all().delete()
+
+    @mock.patch("geonode.services.serviceprocessors.base.settings",
+                autospec=True)
+    def test_get_create_default(self):
+        self.assertEqual(SslConfig.objects.count(), 0)
+        # TODO: Does this mock work for create_default()?
+        mock_settings.SSL_DEFAULT_CONFIG = {
+            "name": "Mock: TLS-only",
+            "description": "Mock configuration, with good base security.",
+            "ca_custom_certs": '',
+            "ca_allow_invalid_certs": False,
+            "client_cert": '',
+            "client_key": '',
+            "client_key_pass": '',
+            "ssl_version": "PROTOCOL_SSLv23",
+            "ssl_verify_mode": "CERT_REQUIRED",
+            # "ssl_verify_flags": None,  # default flags are good enough
+            "ssl_options": "OP_NO_SSLv2,OP_NO_SSLv3,OP_NO_COMPRESSION",
+            "ssl_ciphers": '',
+            "https_retries": 3,
+            "https_redirects": 3,
+        }
+        default_ssl_config = SslConfigManager.get_create_default()
+        self.assertEqual(SslConfig.objects.count(), 1)
+        self.assertDictEqual(default_ssl_config, mock_settings.SSL_DEFAULT_CONFIG)
+        mock_settings.SSL_DEFAULT_CONFIG["name"] = "Changed: TLS-only"
+        default_ssl_config = SslConfigManager.get_create_default()
+        self.assertEqual(SslConfig.objects.count(), 1)
+        sefl.assertNotEqual(default_ssl_config, mock_settings.SSL_DEFAULT_CONFIG)
+        SslConfig.objects.all().delete()
+
+    @mock.patch("geonode.services.serviceprocessors.base.settings",
+                autospec=True)
+    def test_default_and_all(self):
+        self.assertEqual(SslConfig.objects.count(), 0)
+        # TODO: Does this mock work for create_default()?
+        mock_settings.SSL_DEFAULT_CONFIG = {
+            "name": "Mock: TLS-only",
+            "description": "Mock configuration, with good base security.",
+            "ca_custom_certs": '',
+            "ca_allow_invalid_certs": False,
+            "client_cert": '',
+            "client_key": '',
+            "client_key_pass": '',
+            "ssl_version": "PROTOCOL_SSLv23",
+            "ssl_verify_mode": "CERT_REQUIRED",
+            # "ssl_verify_flags": None,  # default flags are good enough
+            "ssl_options": "OP_NO_SSLv2,OP_NO_SSLv3,OP_NO_COMPRESSION",
+            "ssl_ciphers": '',
+            "https_retries": 3,
+            "https_redirects": 3,
+        }
+        all_ssl_configs = SslConfigManager.default_and_all()
+        self.assertEqual(SslConfig.objects.count(), 1)
+        self.assertDictEqual(all_ssl_configs[0], mock_settings.SSL_DEFAULT_CONFIG)
+        mock_ssl_config = {
+            "pk": 2,
+            "name": "Test SSL: TLS-only",
+            "description": "Test configuration, with good base security.",
+            "ca_custom_certs": '',
+            "ca_allow_invalid_certs": False,
+            "client_cert": '',
+            "client_key": '',
+            "client_key_pass": '',
+            "ssl_version": "PROTOCOL_SSLv23",
+            "ssl_verify_mode": "CERT_REQUIRED",
+            # "ssl_verify_flags": None,  # default flags are good enough
+            "ssl_options": "OP_NO_SSLv2,OP_NO_SSLv3,OP_NO_COMPRESSION",
+            "ssl_ciphers": '',
+            "https_retries": 3,
+            "https_redirects": 3,
+        }
+        SslConfig.objects.create(**mock_ssl_config)
+        all_ssl_configs = SslConfigManager.default_and_all()
+        self.assertEqual(SslConfig.objects.count(), 2)
+        self.assertDictEqual(all_ssl_configs[0], mock_settings.SSL_DEFAULT_CONFIG)
+        self.assertDictEqual(all_ssl_configs[1], mock_ssl_config)
+        SslConfig.objects.all().delete()
+
+
+class TestHostnamePortSslConfigManager(PkiTestCase):
+
+    def setUp(self):
+        self.login()
+
+        SslConfig.objects.all().delete()
+        self.assertEqual(SslConfig.objects.count(), 0)
+
+    def tearDown(self):
+        pass
+
+    def test_create_hostnameportsslconfig(self):
+        pass
+
+    def test_ensure_ssl_config(self):
+        pass
+
+    def test_hostnameport_patterns(self):
+        pass
+
+    def test_mapped_ssl_configs(self):
+        pass
 
 
 @pytest.mark.skip(reason="Because it can't auth to running exchange")
