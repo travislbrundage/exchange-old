@@ -19,5 +19,3 @@
 #########################################################################
 
 default_app_config = 'exchange.pki.apps.PkiAppConfig'
-
-ssl_messages = {'log': False}
