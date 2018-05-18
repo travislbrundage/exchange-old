@@ -461,11 +461,12 @@ if 'logtailer' in INSTALLED_APPS:
     log_dir = os.getenv('LOGTAILER_LOG_DIR', '/var/log/exchange/logtailer')
     if not os.path.exists(log_dir):
         try:
-            os.mkdir(log_dir)
+            os.makedirs(log_dir, 0o0755)
         except OSError:
-            log_dir = os.path.join(tempfile.gettempdir(), 'logtailer')
-            if not os.path.exists(log_dir):
-                os.mkdir(log_dir)
+            log_dir = tempfile.mkdtemp()
+    elif not (os.path.isdir(log_dir) and
+              os.access(log_dir, os.W_OK | os.X_OK)):
+        log_dir = tempfile.mkdtemp()
     LOGTAILER_LOG_DIR = log_dir
     # Client output log file
     LOGTAILER_LOG_FILE = os.path.join(LOGTAILER_LOG_DIR, "exchange-app.log")
