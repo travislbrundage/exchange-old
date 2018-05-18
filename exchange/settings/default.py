@@ -458,7 +458,7 @@ if 'logtailer' in INSTALLED_APPS:
     LOGTAILER_LOGGING_TIMER = os.path.join(tempfile.gettempdir(),
                                            "logtailer-timer")
     # Dir where client's logtailer is restricted to reading only its log files
-    log_dir = '/var/log/logtailer'
+    log_dir = os.getenv('LOGTAILER_LOG_DIR', '/var/log/exchange/logtailer')
     if not os.path.exists(log_dir):
         try:
             os.mkdir(log_dir)
