@@ -449,7 +449,7 @@ LOGGING = {
 if 'logtailer' in INSTALLED_APPS:
     # Config for client (in Django admin panel) log parsing
 
-    LOGTAILER_LEVEL = os.getenv('LOGTAILER_LEVEL', 'DEBUG')
+    LOGTAILER_LEVEL = os.getenv('LOGTAILER_LEVEL', 'INFO')
 
     # How many lines to load when starting to tail an existing log
     LOGTAILER_HISTORY_LINES = os.getenv('LOGTAILER_HISTORY_LINES', 200)
@@ -476,7 +476,7 @@ if 'logtailer' in INSTALLED_APPS:
 
     LOGGING['formatters']['logtailer'] = {
         'format':
-            ('%(levelname)s %(app)s %(asctime)s '
+            ('=== %(levelname)s %(app)s %(asctime)s '
              '%(pathname)s %(lineno)d: %(message)s'),
     }
     LOGGING['handlers']['logtailer'] = {

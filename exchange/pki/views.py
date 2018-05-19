@@ -18,6 +18,7 @@
 #
 #########################################################################
 
+import json
 import logging
 
 from urllib import unquote, urlencode
@@ -31,6 +32,11 @@ from django.http.request import validate_host
 from wsgiref import util as wsgiref_util
 
 from geonode.services import enumerations
+
+try:
+    from logtailer.utils import logging_timer_expired
+except ImportError:
+    logging_timer_expired = None
 
 from .ssl_session import https_client
 
@@ -57,7 +63,7 @@ def pki_request(request, resource_url=None):
         )
     else:
         req_host = req_host.split(':')[0]  # remove any port
-    logger.debug("req_host: {0}".format(req_host))
+    logger.debug("request host: {0}".format(req_host))
     site_url = urlsplit(settings.SITEURL)
     exch_url = urlsplit(settings.EXCHANGE_LOCAL_URL)
     allowed_hosts = [
@@ -77,9 +83,14 @@ def pki_request(request, resource_url=None):
                             status=400,
                             content_type='text/plain')
 
+    logger.info("PKI view starting with resource url: {0}"
+                .format(resource_url))
+
     # Manually copy over headers, skipping unwanted ones
-    logger.debug("pki request.COOKIES: {0}".format(request.COOKIES))
-    logger.debug("pki request.META: {0}".format(request.META))
+    logger.info("PKI view request.COOKIES: {0}"
+                .format(request.COOKIES))
+    logger.info("PKI view request.META: {0}"
+                .format(request.META))
     # IMPORTANT: Don't pass any cookies or OAuth2 headers to remote resource
     headers = {}
     if request.method in ("POST", "PUT") and "CONTENT_TYPE" in request.META:
@@ -98,10 +109,12 @@ def pki_request(request, resource_url=None):
     service_type = request.META['PKI_SERVICE_TYPE'] \
         if 'PKI_SERVICE_TYPE' in request.META else None
     if service_type == enumerations.REST or \
-            '/arcgis/rest' in unquote(resource_url).lower():
+            '/rest' in unquote(resource_url).lower():
         # TODO: [FIXME] Workaround for decompression error in arcrest,
         #       in arcrest.web._base._chunk()
         # Needed for both /proxy reroutes and arcrest pkg
+        logger.info("PKI view service type appears to ArcREST; "
+                    "setting Accept-Encoding to none")
         headers['Accept-Encoding'] = ''
 
     # TODO: Passthru HTTP_REFERER?
@@ -131,8 +144,11 @@ def pki_request(request, resource_url=None):
     # proxy path), assume https
     url = 'https://' + r_url + (('?' + query) if query else '')
 
+    logger.info("PKI view starting remote connection to url: {0}".format(url))
+
     # Do remote request
-    logger.debug("pki requests request headers: {0}".format(headers))
+    logger.info("PKI view 'requests' request headers:\n{0}"
+                .format(headers))
     req_res = https_client.request(
         method=request.method,
         url=url,
@@ -149,10 +165,13 @@ def pki_request(request, resource_url=None):
     # TODO: Capture errors and signal to web UI for reporting to user.
     #       Don't let errors just raise exceptions
 
-    logger.debug("pki requests response headers:\n{0}".format(req_res.headers))
+    logger.info("PKI view 'requests' response status code: {0}"
+                .format(req_res.status_code))
+    logger.info("PKI view 'requests' response headers:\n{0}"
+                .format(req_res.headers))
 
-    if query and 'f=pjson' in query:
-        # Sometimes arcrest servers doesn't return proper content type
+    if query and ('f=pjson' in query or 'f=json' in query):
+        # Sometimes arcrest servers don't return proper content type
         content_type = 'application/json'
     elif 'Content-Type' in req_res.headers:
         content_type = req_res.headers['Content-Type']
@@ -176,8 +195,15 @@ def pki_request(request, resource_url=None):
         txt_types = ['text', 'json', 'xml']
         if any([t in content_type.lower() for t in txt_types]):
             txt_content = req_res.content
-        logger.debug("pki requests response content:\n{0}"
-                     .format(txt_content))
+            # Format JSON as needed for client log output
+            if ('json' in content_type.lower() and
+                    logger.getEffectiveLevel() <= logging.INFO and
+                    callable(logging_timer_expired) and
+                    not logging_timer_expired()):
+                txt_content = json.dumps(json.loads(txt_content), indent=2)
+
+        logger.info("PKI view 'requests' response content:\n{0}"
+                    .format(txt_content))
 
         response = HttpResponse(
             content=req_res.content,
@@ -196,7 +222,7 @@ def pki_request(request, resource_url=None):
                 and h not in response:
             response[h] = v
 
-    logger.debug("pki django response headers:\n{0}"
-                 .format(response.serialize_headers()))
+    logger.info("PKI view Django response headers:\n{0}"
+                .format(response.serialize_headers()))
 
     return response

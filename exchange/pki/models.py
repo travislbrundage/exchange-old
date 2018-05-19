@@ -564,8 +564,8 @@ class HostnamePortSslConfigManager(models.Manager):
                          .format(config.to_dict()
                                  .get('name', '(name missing)')))
         else:
-            logger.debug("Missing SslConfig related record, "
-                         "reverting to default")
+            logger.warn("Missing SslConfig related record, "
+                        "reverting to default")
             mp.ssl_config = SslConfig.objects.get_create_default()
             mp.save()
 

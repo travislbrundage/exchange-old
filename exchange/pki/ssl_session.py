@@ -94,8 +94,8 @@ class SslContextSession(Session):
             #       whether pattern cache has been recently updated on host.
             if has_ssl_config(base_url, via_query=True):
                 self.mount(base_url, SslContextAdapter(base_url))
-                logger.debug(u'SslContext Session adapter add {0}'
-                             .format(base_url))
+                logger.info(u'SslContext Session adapter added for {0}'
+                            .format(base_url))
             else:
                 self.mount(base_url, HTTPAdapter())
                 logger.debug(u'Base HTTP session adapter add {0}'

@@ -92,7 +92,7 @@ def make_thumb_request(remote, baseurl, params=None):
         thumbnail_create_url = baseurl + p
         p = urlparse(thumbnail_create_url)
 
-        logger.debug(
+        logger.info(
             'Thumbnail: Requesting thumbnail for %s. ',
             thumbnail_create_url
         )
@@ -103,11 +103,11 @@ def make_thumb_request(remote, baseurl, params=None):
                     and has_ssl_config(thumbnail_create_url, via_query=True):
                 # has_ssl_config needs to query db, as call may be from task
                 # worker, whose hostnameport_pattern_cache may be out of sync
-                logger.debug('fetching %s with https_client'
-                             % thumbnail_create_url)
+                logger.info('Fetching %s with https_client'
+                            % thumbnail_create_url)
                 resp = https_client.get(thumbnail_create_url)
             else:
-                logger.debug('fetching %s with no auth' % thumbnail_create_url)
+                logger.info('Fetching %s with no auth' % thumbnail_create_url)
                 resp = http_client.get(thumbnail_create_url)
         else:
             # Log in to geoserver with token
@@ -122,9 +122,9 @@ def make_thumb_request(remote, baseurl, params=None):
             if 'ServiceException' not in resp.content:
                 return resp.content
 
-        logger.debug(
-            'Thumbnail: Encountered unexpected status code: %d.  '
-            'Aborting.',
+        logger.info(
+            'Thumbnail: Encountered service exception or unexpected '
+            'status code (%d).  Aborting.',
             resp.status_code)
         logger.debug('content: %s', resp.content)
     except Exception as e:
@@ -461,7 +461,7 @@ def generate_thumbnail_task(instance_id, class_name):
         logger.debug('Could not find instance')
         return
 
-    logger.debug(
+    logger.info(
         'Thumbnail: Generating thumbnail for \'%s\' of type %s.',
         instance_id, class_name)
     if(instance_id is not None and is_automatic(obj_type, instance_id)):
@@ -469,7 +469,7 @@ def generate_thumbnail_task(instance_id, class_name):
         thumb_png = get_thumbnails(instance)
 
         if(thumb_png is not None):
-            logger.debug(
+            logger.info(
                 'Thumbnail: Thumbnail successfully generated for \'%s\'.',
                 instance_id)
             if (hasattr(instance, 'storeType') and
