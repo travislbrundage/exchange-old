@@ -12,7 +12,7 @@
 [submodule "vendor/django-osgeo-importer"]
 	path = vendor/django-osgeo-importer
 	#url = https://github.com/Geonode/django-osgeo-importer
-	url = https://github.com/arhote/django-osgeo-importer.git 
+	url = https://github.com/arhote/django-osgeo-importer.git
 	#branch = angular-1.6
 	branch = fgdb-test
 [submodule "vendor/gsconfig"]
@@ -24,5 +24,5 @@
 	branch = ps/pki
 [submodule "vendor/django-logtailer"]
 	path = vendor/django-logtailer
-	url = https://dakcarto@github.com/dakcarto/django-logtailer.git
+	url = https://github.com/boundlessgeo/django-logtailer.git
 	branch = ps/pki
