@@ -472,7 +472,7 @@ if 'logtailer' in INSTALLED_APPS:
     # Client output log file
     LOGTAILER_LOG_FILE = os.path.join(LOGTAILER_LOG_DIR, "exchange-app.log")
     # Only files with these extensions will be parsed from LOGTAILER_LOG_DIR
-    LOGTAILER_LOG_FILE_EXTENSIONS = ".*\.(log)$"
+    LOGTAILER_LOG_FILE_EXTENSIONS = ".*\.(log).*$"
 
     LOGGING['formatters']['logtailer'] = {
         'format':
