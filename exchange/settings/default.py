@@ -434,17 +434,17 @@ LOGGING = {
     },
 }
 
-# LOGGING['root'] = {
-#     'handlers': ['console'],
-#     'level': DJANGO_LOG_LEVEL,
-#     'filters': ['ignore_django_warnings', ],
-# }
+LOGGING['root'] = {
+    'handlers': ['console'],
+    'level': DJANGO_LOG_LEVEL,
+    'filters': ['ignore_django_warnings', ],
+}
 
-# LOGGING['loggers']['django.db.backends'] = {
-#     'handlers': ['console'],
-#     'propagate': False,
-#     'level': 'WARNING',  # Django SQL logging is too noisy at DEBUG
-# }
+LOGGING['loggers']['django.db.backends'] = {
+    'handlers': ['console'],
+    'propagate': False,
+    'level': 'WARNING',  # Django SQL logging is too noisy at DEBUG
+}
 
 if 'logtailer' in INSTALLED_APPS:
     # Config for client (in Django admin panel) log parsing
@@ -493,9 +493,9 @@ if 'logtailer' in INSTALLED_APPS:
         'app': 'celery' if os.getenv('VIA_CELERY', 0) else 'exchange'
     }
     LOGGING['loggers']['exchange'] = {
-        'handlers': ['logtailer'],
+        'handlers': ['console', 'logtailer'],
         'level': LOGTAILER_LEVEL,
-        'propagate': True,
+        'propagate': False,
         'filters': ['ignore_django_warnings', ],
     }
     # LOGGING['loggers']['geonode'] = {
