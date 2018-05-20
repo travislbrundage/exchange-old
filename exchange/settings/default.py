@@ -470,7 +470,8 @@ if 'logtailer' in INSTALLED_APPS:
         log_dir = tempfile.mkdtemp()
     LOGTAILER_LOG_DIR = log_dir
     # Client output log file
-    LOGTAILER_LOG_FILE = os.path.join(LOGTAILER_LOG_DIR, "exchange-app.log")
+    LOGTAILER_LOG_NAME = os.getenv('LOGTAILER_LOG_NAME', "exchange-app.log")
+    LOGTAILER_LOG_FILE = os.path.join(LOGTAILER_LOG_DIR, LOGTAILER_LOG_NAME)
     # Only files with these extensions will be parsed from LOGTAILER_LOG_DIR
     LOGTAILER_LOG_FILE_EXTENSIONS = ".*\.(log).*$"
 
