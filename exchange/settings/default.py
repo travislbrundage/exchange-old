@@ -412,7 +412,8 @@ LOGGING = {
     'formatters': {
         'verbose': {
             'format':
-                ('%(levelname)s %(asctime)s %(pathname)s %(process)d '
+                ('%(levelname)s %(asctime)s %(name)s '
+                 '(%(filename)s %(lineno)d) %(process)d '
                  '%(thread)d %(message)s'),
         },
     },
@@ -478,7 +479,7 @@ if 'logtailer' in INSTALLED_APPS:
     LOGGING['formatters']['logtailer'] = {
         'format':
             ('=== %(levelname)s %(app)s %(asctime)s '
-             '%(pathname)s %(lineno)d: %(message)s'),
+             '%(name)s (%(filename)s %(lineno)d): %(message)s'),
     }
     LOGGING['handlers']['logtailer'] = {
         # logging ON/OFF is internally controlled, so should always log via
