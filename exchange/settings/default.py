@@ -19,6 +19,7 @@
 #########################################################################
 
 import os
+import sys
 import copy  # noqa
 import tempfile
 import dj_database_url
@@ -422,6 +423,7 @@ LOGGING = {
             'level': DJANGO_LOG_LEVEL,
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
+            'stream': sys.stdout
         },
     },
     'filters': {
