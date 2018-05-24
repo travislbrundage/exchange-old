@@ -188,7 +188,8 @@ class Map(ResourceBase, GXPMapBase):
 
         self.title = conf['about']['title']
         self.abstract = conf['about']['abstract']
-        self.refresh_interval = conf['about']['refresh_interval']
+        if 'refresh_interval' in conf['about']:
+            self.refresh_interval = conf['about']['refresh_interval']
 
         self.set_bounds_from_center_and_zoom(
             conf['map']['center'][0],
