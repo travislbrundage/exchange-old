@@ -333,7 +333,23 @@ if WGS84_MAP_CRS:
     DEFAULT_MAP_CRS = "EPSG:4326"
 
 # elasticsearch-dsl settings
-ES_URL = os.getenv('ES_URL', 'http://127.0.0.1:9200/')
+# Elasticsearch-dsl Backend Configuration. To enable,
+# Set ES_SEARCH to True
+# Run "python manage.py clear_haystack" (if upgrading from haystack)
+# Run "python manage.py rebuild_index"
+ES_SEARCH = strtobool(os.getenv('ES_SEARCH', 'False'))
+
+if ES_SEARCH:
+    INSTALLED_APPS = (
+        'elasticsearch_app',
+    ) + INSTALLED_APPS
+    ES_URL = os.getenv('ES_URL', 'http://127.0.0.1:9200/')
+    # Disable Haystack
+    HAYSTACK_SEARCH = False
+    # Avoid permissions prefiltering
+    SKIP_PERMS_FILTER = False
+    # Update facet counts from Haystack
+    HAYSTACK_FACET_COUNTS = False
 
 # amqp settings
 BROKER_URL = os.getenv('BROKER_URL', 'amqp://guest:guest@localhost:5672/')

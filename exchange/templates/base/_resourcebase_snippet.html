@@ -9,10 +9,12 @@
     <div class="col-xs-12 item-container" ng-if="item.detail_url">
       <div class="col-xs-12 profile-avatar">
         <div class="col-xs-4 item-thumb">
-          <a ng-if="item.detail_url.indexOf('/maps/') > -1" href="/maps/{{item.id}}/view"><img class="thumbnail" onerror="this.src='/static/geonode/img/missing_thumb.png'" ng-src="{{ cart.getThumbnailUrl(item) }}" /></a>
-          <a ng-if="item.detail_url.indexOf('/story/') > -1" href="/story/{{item.id}}"><img class="thumbnail" onerror="this.src='/static/geonode/img/missing_thumb.png'" ng-src="{{ cart.getThumbnailUrl(item) }}" /></a>
-          <a ng-if="item.detail_url.indexOf('/layers/') > -1" href="/maps/new?layer={{item.typename}}"><img class="thumbnail" onerror="this.src='/static/geonode/img/missing_thumb.png'" ng-src="{{ cart.getThumbnailUrl(item) }}" /></a>
-          <a ng-if="item.detail_url.indexOf('/story/') == -1 && item.detail_url.indexOf('/maps/') == -1 && item.detail_url.indexOf('/layers/') == -1" href="{{ item.detail_url }}"><img class="thumbnail" onerror="this.src='/static/geonode/img/missing_thumb.png'" ng-src="{{ cart.getThumbnailUrl(item) }}" /></a>
+            <a ng-if="item.type == 'layer'" href="/maps/new?layer={{item.typename}}">
+              <img class="thumbnail" onerror="this.src='/static/geonode/img/missing_thumb.png'" ng-src="/thumbnails/{{item.type}}s/{{item.typename}}"/>
+            </a>
+            <a ng-if="item.type != 'layer'" href="/{{item.type}}s/{{item.id}}/view">
+              <img class="thumbnail" onerror="this.src='/static/geonode/img/missing_thumb.png'" ng-src="/thumbnails/{{item.type}}s/{{item.typename}}"/>
+            </a>
         </div>
         <div class="col-xs-8 item-details">
           {% endverbatim %}
