@@ -637,3 +637,16 @@ MAP_CLIENT_USE_CROSS_ORIGIN_CREDENTIALS = str2bool(os.getenv(
 ))
 
 PROXY_URL = ''
+
+# Settings to change the WMS that is used for backgrounds on
+# Thumbnail generation.
+# Both Settings are required to change from default
+THUMBNAIL_BACKGROUND_WMS = os.getenv(
+    'THUMBNAIL_BACKGROUND_WMS',
+    'https://demo.boundlessgeo.com/geoserver/wms?'
+)
+
+THUMBNAIL_BACKGROUND_WMS_LAYER = os.getenv(
+    'THUMBNAIL_BACKGROUND_WMS_LAYER',
+    'ne:NE1_HR_LC_SR_W_DR'
+)
