@@ -76,20 +76,11 @@ CLASSIFICATION_BACKGROUND_COLOR = os.getenv(
 )
 CLASSIFICATION_LINK = os.getenv('CLASSIFICATION_LINK', None)
 
-# CLASSIFICATION_LEVELS = os.getenv('CLASSIFICATION_LEVELS',
-#                                   ['UNCLASSIFIED', ])
-# CAVEATS = os.getenv('CAVEATS', ['FOUO', ])
-classlevels = os.getenv('CLASSIFICATION_LEVELS', 'UNCLASSIFIED,')
-caveats = os.getenv('CAVEATS', 'FOUO,')
-
-CLASSIFICATION_LEVELS = []
-CAVEATS = []
-
-if classlevels:
-    CLASSIFICATION_LEVELS = classlevels.split(',')
-
-if caveats:
-    CAVEATS = caveats.split(',')
+CLASSIFICATION_LEVELS = {
+    "sample 1": ["cav1", "cav2"],
+    "sample 2": ["cav1", "cav3"],
+    "sample 3": ["cav4", "cav5"]
+}
 
 # MapLoom Styling Control
 LOOM_STYLING_ENABLED = str2bool(os.getenv('LOOM_STYLING_ENABLED', 'True'))
