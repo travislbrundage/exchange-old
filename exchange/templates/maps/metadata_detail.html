@@ -84,7 +84,7 @@
 
         {% if layer.category %}
         <dt>{% trans "Category" %}</dt>
-        <dd><a href="/search/?category__identifier__in={{ layer.category.identifier }}">{{ layer.category }}</a> {% if layer.category.description %}<a href="#category-more" data-toggle="collapse" data-target=".category-more"><i class="fa fa-info-circle"></i></a>{% endif %}</dd>
+        <dd><a href="/search/?category={{ layer.category.identifier }}">{{ layer.category }}</a> {% if layer.category.description %}<a href="#category-more" data-toggle="collapse" data-target=".category-more"><i class="fa fa-info-circle"></i></a>{% endif %}</dd>
         {% if layer.category.description %}
         <dd class="category-more collapse">
             {{ layer.category.description }}
