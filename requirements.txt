@@ -6,7 +6,7 @@
 -e ./vendor/django-logtailer
 git+https://github.com/MapStory/composer.git@93300659c4f1a02c4eb2f17713d38779c47cc4e1#composer
 git+https://github.com/boundlessgeo/sphinx@ad78538babd53a7a860fe297fffaed7abc11d0f5#egg=Sphinx
-git+https://github.com/venicegeo/nearsight@d0df8881ecd2422f3aa6647a3ed27e967c2d3967#egg=nearsight
+git+https://github.com/venicegeo/nearsight@d3cf9febec079742890ee7236d6720945a708533#egg=nearsight
 geonode-elasticsearch-app==0.2.1
 django-jsonfield==1.0.1
 django-jsonfield-compat==0.4.4
