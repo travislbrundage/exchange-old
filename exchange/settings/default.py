@@ -163,7 +163,7 @@ TEMPLATES = [
 # middleware
 MIDDLEWARE_CLASSES = (
     'whitenoise.middleware.WhiteNoiseMiddleware',
-) + MIDDLEWARE_CLASSES
+) + MIDDLEWARE_CLASSES + ('exchange.auth.middleware.GeoServerTokenMiddleware',)
 
 ADDITIONAL_APPS = os.getenv(
     'ADDITIONAL_APPS',
@@ -649,4 +649,10 @@ THUMBNAIL_BACKGROUND_WMS = os.getenv(
 THUMBNAIL_BACKGROUND_WMS_LAYER = os.getenv(
     'THUMBNAIL_BACKGROUND_WMS_LAYER',
     'ne:NE1_HR_LC_SR_W_DR'
+)
+
+
+ACCESS_TOKEN_NAME = os.getenv(
+    'ACCESS_TOKEN_NAME',
+    'x-token'
 )
