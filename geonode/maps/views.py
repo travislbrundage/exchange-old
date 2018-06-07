@@ -617,6 +617,8 @@ def new_map_config(request):
                         url = service.base_url+'?access_token='+access_token
                     else:
                         url = service.base_url
+                    if layer.alternate is not None:
+                        config["layerid"] = layer.alternate
                     maplayer = MapLayer(map=map_obj,
                                         name=layer.typename,
                                         ows_url=layer.ows_url,

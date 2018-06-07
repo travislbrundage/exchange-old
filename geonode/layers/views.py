@@ -250,6 +250,8 @@ def layer_detail(request, layername, template='layers/layer_detail.html'):
             "remote": True,
             "url": service.base_url,
             "name": service.name}
+        if layer.alternate is not None:
+            config["layerid"] = layer.alternate
         maplayer = GXPLayer(
             name=layer.typename,
             ows_url=layer.ows_url,
