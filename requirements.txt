@@ -24,7 +24,7 @@ django-flat-theme==1.1.4
 django-forms-bootstrap==3.1.0
 django-friendly-tag-loader==1.2.1
 django-geoexplorer==4.0.25
-django-geonode-client==1.0.0
+django-geonode-client==1.0.7
 django-guardian==1.4.9
 django-jsonfield-compat==0.4.4
 django-jsonfield==1.0.1
