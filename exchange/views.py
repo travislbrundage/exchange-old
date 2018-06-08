@@ -156,17 +156,25 @@ def capabilities(request):
         next = '?next=/anywhere' if capabilities["mobile"] else '?next=/'
 
         if settings.ENABLE_GEOAXIS_LOGIN:
-            options.append({'geoaxis': reverse('social:begin',
-                                               args=['geoaxis']) + next})
+            options.append({'url': reverse('social:begin',
+                            args=['geoaxis']) + next,
+                            'type': 'geoaxis',
+                            'name': 'GEOAxIS'})
         if settings.ENABLE_FACEBOOK_LOGIN:
-            options.append({'facebook': reverse('social:begin',
-                                                args=['facebook']) + next})
+            options.append({'url': reverse('social:begin',
+                            args=['facebook']) + next,
+                            'type': 'facebook',
+                            'name': 'Facebook'})
         if settings.ENABLE_GOOGLE_LOGIN:
-            options.append({'google': reverse('social:begin',
-                                              args=['google']) + next})
+            options.append({'url': reverse('social:begin',
+                            args=['google']) + next,
+                            'type': 'google',
+                            'name': 'Google'})
         if settings.ENABLE_AUTH0_LOGIN:
-            options.append({'auth0': reverse('social:begin',
-                                             args=['auth0']) + next})
+            options.append({'url': reverse('social:begin',
+                            args=['auth0']) + next,
+                            'type': 'auth0',
+                            'name': settings.AUTH0_APP_NAME})
         capabilities["auth_providers"] = options
     else:
         capabilities["auth_providers"] = None
