@@ -29,6 +29,7 @@ node {
       stage('Setup'){
         sh """
           docker pull 'quay.io/boundlessgeo/sonar-maven-py3-alpine'
+          docker pull 'quay.io/boundlessgeo/bex-nodejs-bower-grunt'
           docker-compose down
           docker system prune -f
         """
@@ -60,7 +61,7 @@ node {
       stage('Build Maploom'){
         bashDocker(
           'quay.io/boundlessgeo/bex-nodejs-bower-grunt',
-          '. docker/devops/helper.sh && build-maploom'
+          'rm -fr vendor/maploom/node_modules vendor/maploom/package-lock.json && . docker/devops/helper.sh && build-maploom'
         )
       }
 
