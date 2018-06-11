@@ -260,7 +260,6 @@ class TestSslContextSessionAdapter(PkiTestCase):
     def tearDown(self):
         pass
 
-    @pytest.mark.skip(reason="Fails due to missing fixtures")
     def testSslContextAdapter(self):
         config = self.ssl_config_4
         self.create_hostname_port_mapping(config, self.p1)
@@ -305,7 +304,6 @@ class TestSslContextSessionAdapter(PkiTestCase):
         resp = ssla.send(p_req)
         self.assertEqual(resp.status_code, 200)
 
-    @pytest.mark.skip(reason="Fails due to missing fixtures")
     def testSslContextSession(self):
         def clear_adapters():
             https_client.clear_https_adapters()
@@ -761,7 +759,6 @@ class TestPkiRequest(PkiTestCase):
         uaccdata = u'çéàè↓'
         self.assertEqual(c.decrypt(c.encrypt(uaccdata)), accdata)
 
-    @pytest.mark.skip(reason="Fails due to missing fixtures")
     def test_default_config(self):
         config_1 = SslConfig.objects.get(pk=1)
         self.assertEqual(config_1, SslConfig.default_ssl_config())
@@ -794,48 +791,41 @@ class TestPkiRequest(PkiTestCase):
         res = https_client.get('https://example.com')
         self.assertEqual(res.status_code, 200)
 
-    @pytest.mark.skip(reason="Fails due to missing fixtures")
     def test_no_client(self):
         self.create_hostname_port_mapping(2)
         res = https_client.get(self.mp_root)
         # Nginx non-standard status code 400 is for no client cert supplied
         self.assertEqual(res.status_code, 400)
 
-    @pytest.mark.skip(reason="Fails due to missing fixtures")
     def test_client_no_password(self):
         self.create_hostname_port_mapping(3)
         res = https_client.get(self.mp_root)
         self.assertEqual(res.status_code, 200)
         self.assertIn(self.mp_txt, res.content.decode("utf-8"))
 
-    @pytest.mark.skip(reason="Fails due to missing fixtures")
     def test_client_and_password(self):
         self.create_hostname_port_mapping(4)
         res = https_client.get(self.mp_root)
         self.assertEqual(res.status_code, 200)
         self.assertIn(self.mp_txt, res.content.decode("utf-8"))
 
-    @pytest.mark.skip(reason="Fails due to missing fixtures")
     def test_client_and_password_alt_root(self):
         self.create_hostname_port_mapping(5)
         res = https_client.get(self.mp_root)
         self.assertEqual(res.status_code, 200)
         self.assertIn(self.mp_txt, res.content.decode("utf-8"))
 
-    @pytest.mark.skip(reason="Fails due to missing fixtures")
     def test_client_and_password_tls12_only(self):
         self.create_hostname_port_mapping(6)
         res = https_client.get(self.mp_root)
         self.assertEqual(res.status_code, 200)
         self.assertIn(self.mp_txt, res.content.decode("utf-8"))
 
-    @pytest.mark.skip(reason="Fails due to missing fixtures")
     def test_no_client_no_validation(self):
         self.create_hostname_port_mapping(7)
         res = https_client.get(self.mp_root)
         self.assertEqual(res.status_code, 200)
 
-    @pytest.mark.skip(reason="Fails due to missing fixtures")
     def test_client_no_password_tls12_only_ssl_opts(self):
         self.create_hostname_port_mapping(8)
         res = https_client.get(self.mp_root)
@@ -998,7 +988,6 @@ class TestPkiUtils(PkiTestCase):
         logging.debug("pki_site_url: {0}".format(self.pki_site_url))
         logging.debug("proxy_url: {0}".format(self.proxy_url))
 
-    @pytest.mark.skip(reason="Fails due to missing fixtures")
     def test_routes(self):
         # has
         self.assertTrue(has_pki_prefix(pki_prefix()))
@@ -1049,7 +1038,6 @@ class TestPkiUtils(PkiTestCase):
             self.base_url,
             proxy_route_reverse(pki_to_proxy_route(pki_route(self.base_url))))
 
-    @pytest.mark.skip(reason="Fails due to missing fixtures")
     def test_urls(self):
         self.assertTrue(protocol_relative_url(self.protocol_relative_url))
         self.assertEqual(
@@ -1076,7 +1064,6 @@ class TestPkiUtils(PkiTestCase):
 
 class TestPkiValidation(TestCase):
 
-    @pytest.mark.skip(reason="Fails due to missing fixtures")
     def test_pki_functions(self):
         # pki_dir_path
         for k in (
@@ -1191,7 +1178,6 @@ MPrd0MBerM5NERa+58Jn87K7a3h0TgSIQ5N8ypXHTi3H
         ):
             self.assertFalse(is_client_cert(pki_file_contents(k)))
 
-    @pytest.mark.skip(reason="Fails due to missing fixtures")
     def test_pki_load_functions(self):
         # load_certs
         certs = load_certs(
@@ -1288,7 +1274,6 @@ MPrd0MBerM5NERa+58Jn87K7a3h0TgSIQ5N8ypXHTi3H
                 pki_dir_path('bad_jane-key.pem')
             )
 
-    @pytest.mark.skip(reason="Fails due to missing fixtures")
     def test_pki_validations(self):
         # validate_cert_matches_private_key
         validate_cert_matches_private_key(
