@@ -1,6 +1,7 @@
 from . import ExchangeTest
 import mock
 import json
+import pytest
 
 
 class DefaultMapConfigTest(ExchangeTest):
