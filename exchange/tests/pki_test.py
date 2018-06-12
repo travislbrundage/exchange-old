@@ -831,23 +831,20 @@ class TestPkiRequest(PkiTestCase):
         res = https_client.get(self.mp_root)
         self.assertEqual(res.status_code, 200)
 
-    @pytest.mark.skip(reason="Fails")
+    #@pytest.mark.skip(reason="Fails")
     def test_pki_request_correct_url(self):
         # client and password to access mapproxy
         self.create_hostname_port_mapping(4)
         response = self.client.get(pki_route(self.mp_root))
         self.assertEqual(response.status_code, 200)
-        default_mp_response = '<ServiceException>unknown WMS request type'
+        default_mp_response = 'Welcome to MapProxy'
         self.assertIn(default_mp_response, response.content.decode("utf-8"))
 
-    @pytest.mark.skip(reason="Fails")
+    #@pytest.mark.skip(reason="Fails")
     def test_pki_request_incorrect_url(self):
         incorrect_url = 'https://mapproxy.boundless.test:8044/service'
-        # TODO: Use raise from pytest rather than expecting failure
-        response = None
-        response = self.client.get(pki_route(incorrect_url))
-        # The get should fail, so response remains None
-        self.assertIsNone(response)
+        with pytest.raises(Exception) as exception_info:
+            response = self.client.get(pki_route(incorrect_url))
 
     def test_pki_request_missing_url(self):
         pki_root = '/pki/'
@@ -874,14 +871,12 @@ class TestGeoNodeProxy(PkiTestCase):
         default_mp_response = '<ServiceException>unknown WMS request type'
         self.assertIn(default_mp_response, response.content.decode("utf-8"))
 
-    @pytest.mark.skip(reason="Fails")
+    #@pytest.mark.skip(reason="Fails")
     def test_proxy_request_incorrect_url(self):
         proxy_root = '/proxy/?url='
         incorrect_url = 'https://mapproxy.boundless.test:8044/service'
-        response = None
-        response = self.client.get(proxy_root + quote(incorrect_url))
-        # The get should fail, so response remains None
-        self.assertIsNone(response)
+        with pytest.raises(Exception) as exception_info:
+            self.client.get(proxy_root + quote(incorrect_url))
 
     # TODO: Check this mock patch works as expected (tests pass)
     # Patch pki_request so we can tell if proxy rerouted to it
@@ -896,8 +891,10 @@ class TestGeoNodeProxy(PkiTestCase):
         proxy_root = '/proxy/?url='
         response = self.client.get(proxy_root + quote(self.mp_root))
         # response should have gotten the mock_pki_request response
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.content, "Mock pki request response")
+        self.assertEqual(response.status_code,
+                         mock_pki_request.return_value.status_code)
+        self.assertEqual(response.content,
+                         mock_pki_request.return_value.content)
 
     @mock.patch("exchange.pki.views.pki_request", side_effect=mock_pki_request)
     def test_proxy_no_reroute(self, mock_pki_request):
