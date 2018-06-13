@@ -842,8 +842,8 @@ class TestPkiRequest(PkiTestCase):
 
     def test_pki_request_incorrect_url(self):
         incorrect_url = 'https://mapproxy.boundless.test:8044/service'
-        with pytest.raises(Exception) as exception_info:
-            response = self.client.get(pki_route(incorrect_url))
+        with pytest.raises(Exception):
+            self.client.get(pki_route(incorrect_url))
 
     def test_pki_request_missing_url(self):
         pki_root = '/pki/'
@@ -871,7 +871,7 @@ class TestGeoNodeProxy(PkiTestCase):
     def test_proxy_request_incorrect_url(self):
         proxy_root = '/proxy/?url='
         incorrect_url = 'https://mapproxy.boundless.test:8044/service'
-        with pytest.raises(Exception) as exception_info:
+        with pytest.raises(Exception):
             self.client.get(proxy_root + quote(incorrect_url))
 
     # Patch pki_request so we can tell if proxy rerouted to it
