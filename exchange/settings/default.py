@@ -170,7 +170,7 @@ TEMPLATES = [
 # middleware
 MIDDLEWARE_CLASSES = (
     'whitenoise.middleware.WhiteNoiseMiddleware',
-) + MIDDLEWARE_CLASSES
+) + MIDDLEWARE_CLASSES + ('exchange.auth.middleware.GeoServerTokenMiddleware',)
 
 ADDITIONAL_APPS = os.getenv(
     'ADDITIONAL_APPS',
@@ -738,3 +738,8 @@ MAP_CLIENT_USE_CROSS_ORIGIN_CREDENTIALS = str2bool(os.getenv(
 ))
 
 PROXY_URL = '/proxy/?url='
+
+ACCESS_TOKEN_NAME = os.getenv(
+    'ACCESS_TOKEN_NAME',
+    'x-token'
+)
