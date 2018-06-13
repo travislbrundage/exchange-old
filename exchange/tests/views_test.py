@@ -94,28 +94,10 @@ class LayerDetailTest(ViewTestCase):
         )
         self.url = '/layers/geonode:testlayer'
         self.service_name = 'data-test'
-        from geonode.services.models import Service
-        mock_service = Service()
-        mock_service.base_url = u'https://maPproxy.Boundless.test:8344/'
-        mock_service.type = 'OWS'
-        mock_service.name = self.service_name
-        self.layer.service = mock_service
-        self.layer.storeType = 'remoteStore'
+        # TODO: Ingest from a remote service rather than file upload here
 
     def test(self):
         self.doit()
-
-    # Mock the Service model and assign it to self.layer
-    # @mock.patch("geonode.services.models.Service", autospec=True)
-#    def mock_resolve_layer(self, *args):
-        # mock a service
-#        return self.layer
-#    @mock.patch("geonode.layers.views._resolve_layer",
-#                side_effect=mock_resolve_layer)
-#    def mock_get_template():
-#        return Template('{{ viewer|safe }}')
-#    @mock.patch("geonode.layers.views.get_template",
-#                side_effect=mock_get_template)
 
     def mock_render_to_response(template, request_context):
         # request_context will be a request_context object with our context
@@ -128,24 +110,21 @@ class LayerDetailTest(ViewTestCase):
     @mock.patch("geonode.layers.views.render_to_response",
                 side_effect=mock_render_to_response)
     def test_use_proxy_exists(self, mock_render_to_response):
-        #layer_name = 'geonode:testlayer'
-        #layer_template = os.path.join(TESTDIR, 'mock_layer_detail.html')
-        # TODO: TESTDIR may need brackets around it?
-        #settings.TEMPLATES[0]['DIRS'].extend([TESTDIR])
-        # mock the request object
-        #request = RequestFactory().get(self.url)
-        #request.user = self.admin_user
-        #request.session = []
-        #from geonode.layers.views import layer_detail
-        # TODO: Does response need to be reformatted into dict? json.loads()?
+        # mock up a layer to return
+        mock_layer = self.layer
+        mock_layer.storeType = 'remoteStore'
+        from geonode.services.models import Service
+        from django.shortcuts import get_object_or_404
+        mock_layer.service = get_object_or_404(Service, name=self.service_name)
 
-        # layer detail view get
-        # TODO: If still don't work, use a pdb and examine
-        response = self.client.get(self.url)
+        with mock.patch("geonode.layers.views._resolve_layer") \
+                as mock_resolve_layer:
+            mock_resolve_layer.return_value = mock_layer
+            # layer detail view get
+            response = self.client.get(self.url)
+
         found_service = False
         sources = response.viewer['sources']
-        import pdb
-        pdb.set_trace()
         for source in sources:
             if ('name' in sources[source] and
                     self.service_name == sources[source]['name']):
@@ -154,25 +133,6 @@ class LayerDetailTest(ViewTestCase):
                 self.assertFalse(sources[source]['use_proxy'])
                 break
         self.assertTrue(found_service)
-
-        # layer_detail(request, layer_name)
-        # TODO: is self.layer correct here? Try that first
-        # self.assertEqual(self.layer.storageType, 'remoteStore')
-        # TODO: Is this correct examination?
-        # Go through sources and find the mock service
-        # self.assertEqual(response.layer.service_name, self.layer)
-        '''
-        found_service = False
-        sources = json.loads(response.viewer)['sources']
-        for source in sources:
-            if ('name' in sources[source] and
-                    self.service_name == sources[source]['name']):
-                found_service = True
-                self.assertIn('use_proxy', sources[source])
-                self.assertFalse(sources[source]['use_proxy'])
-                break
-        self.assertTrue(found_service)
-        '''
 
 
 class LayerMetadataDetailTest(ViewTestCase):
@@ -239,53 +199,42 @@ class NewMapConfigTest(ViewTestCase):
             os.path.join(TESTDIR, 'test_point.shp'),
             name='testlayer'
         )
-        from geonode.maps.models import Map
-        self.map = Map.objects.create(
-            owner=self.admin_user,
-            zoom=0,
-            center_x=0,
-            center_y=0
-        )
         self.url = '/layers/geonode:testlayer'
         self.service_name = 'data-test'
+        # TODO: Ingest from a remote service rather than file upload here
 
     def test(self):
         self.doit()
 
-    # Mock the Service model and assign it to self.layer
-    @mock.patch("geonode.services.models.Service", autospec=True)
-    def mock_resolve_layer(self, mock_service):
-        # mock a service
-        mock_service.base_url = u'https://maPproxy.Boundless.test:8344/'
-        mock_service.ptype = 'gxp_wmscsource'
-        mock_service.name = self.service_name
-        self.layer.service = mock_service
-        self.layer.storageType = 'remoteStore'
-        return self.layer
+    def test_use_proxy_exists(self):
+        # mock up a layer to return
+        mock_layer = self.layer
+        mock_layer.storeType = 'remoteStore'
+        from geonode.services.models import Service
+        from django.shortcuts import get_object_or_404
+        mock_layer.service = get_object_or_404(Service, name=self.service_name)
 
-    @pytest.mark.skip(reason="Fails")
-    @mock.patch("geonode.layers.views._resolve_layer",
-                side_effect=mock_resolve_layer)
-    def test_use_proxy_exists(self, mock_resolve_layer):
-        layer_name = 'geonode:testlayer'
-        # mock request
-        request = RequestFactory().get(
-            self.url,
-            data={'layer': [layer_name]}
-        )
-        request.user = self.admin_user
-        request.session = []
-        from geonode.maps.views import new_map_config
-        response = json.loads(new_map_config(request))
-        # TODO: Is this correct examination?
-        # Go through sources and find the mock service
+        with mock.patch("geonode.maps.views._resolve_layer") \
+                as mock_resolve_layer:
+            mock_resolve_layer.return_value = mock_layer
+            # mock a request to send
+            layer_name = 'geonode:testlayer'
+            request = RequestFactory().get(
+                self.url,
+                data={'layer': [layer_name]}
+            )
+            request.user = self.admin_user
+            request.session = []
+            from geonode.maps.views import new_map_config
+            response = json.loads(new_map_config(request))
+
         found_service = False
-        for config in response['sources']:
-            if ('name' in response['sources'][config] and
-                    self.service_name == response['sources'][config]['name']):
+        for source in response['sources']:
+            if ('name' in response['sources'][source] and
+                    self.service_name == response['sources'][source]['name']):
                 found_service = True
-                self.assertIn('use_proxy', response['sources'][config])
-                self.assertFalse(response['sources'][config]['use_proxy'])
+                self.assertIn('use_proxy', response['sources'][source])
+                self.assertFalse(response['sources'][source]['use_proxy'])
         self.assertTrue(found_service)
 
 
