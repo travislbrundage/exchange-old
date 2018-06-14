@@ -151,7 +151,33 @@ def capabilities(request):
     # check that the OAuth application has been created
     client_enabled = len(Application.objects.filter(client_id='anywhere')) > 0
     capabilities["mobile"] = settings.ANYWHERE_ENABLED and client_enabled
+    if settings.ENABLE_SOCIAL_LOGIN:
+        options = []
+        next = '?next=/anywhere' if capabilities["mobile"] else '?next=/'
 
+        if settings.ENABLE_GEOAXIS_LOGIN:
+            options.append({'url': reverse('social:begin',
+                            args=['geoaxis']) + next,
+                            'type': 'geoaxis',
+                            'name': 'GEOAxIS'})
+        if settings.ENABLE_FACEBOOK_LOGIN:
+            options.append({'url': reverse('social:begin',
+                            args=['facebook']) + next,
+                            'type': 'facebook',
+                            'name': 'Facebook'})
+        if settings.ENABLE_GOOGLE_LOGIN:
+            options.append({'url': reverse('social:begin',
+                            args=['google']) + next,
+                            'type': 'google',
+                            'name': 'Google'})
+        if settings.ENABLE_AUTH0_LOGIN:
+            options.append({'url': reverse('social:begin',
+                            args=['auth0']) + next,
+                            'type': 'auth0',
+                            'name': settings.AUTH0_APP_NAME})
+        capabilities["auth_providers"] = options
+    else:
+        capabilities["auth_providers"] = None
     current_site = get_current_site(request)
     capabilities["site_name"] = current_site.name
 

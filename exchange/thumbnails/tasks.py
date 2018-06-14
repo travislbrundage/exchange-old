@@ -4,6 +4,7 @@ from celery.task import task
 import datetime
 
 from django.db.models.signals import post_save
+from django.conf import settings
 from geonode.layers.models import Layer
 from geonode.maps.models import Map
 from geonode.geoserver.helpers import ogc_server_settings
@@ -23,6 +24,18 @@ try:
     xrange
 except NameError:
     xrange = range
+
+THUMBNAIL_BACKGROUND_WMS = getattr(
+    settings,
+    'THUMBNAIL_BACKGROUND_WMS',
+    'https://demo.boundlessgeo.com/geoserver/wms?'
+)
+
+THUMBNAIL_BACKGROUND_WMS_LAYER = getattr(
+    settings,
+    'THUMBNAIL_BACKGROUND_WMS_LAYER',
+    'ne:NE1_HR_LC_SR_W_DR'
+)
 
 logger = logging.getLogger(__name__)
 
@@ -217,8 +230,8 @@ def get_wms_thumbnail(instance=None, layers=None, bbox=None,
         if bbox is None or height is None:
             return None
         remote = True
-        layers = 'ne:NE1_HR_LC_SR_W_DR'
-        baseurl = 'https://demo.boundlessgeo.com/geoserver/wms?'
+        layers = THUMBNAIL_BACKGROUND_WMS_LAYER
+        baseurl = THUMBNAIL_BACKGROUND_WMS
 
     elif (hasattr(instance, 'storeType') and
             instance.storeType == 'remoteStore'):

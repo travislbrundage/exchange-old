@@ -209,7 +209,7 @@
 
             // TODO: Refactor args into a config object.
             $scope.open = function (layer, templateUrl, modalImage, staticUrl, default_config, appendTo, shapefile_link, csv_link) {
-                checkForSimilar(layer).then(function() {
+                //checkForSimilar(layer).then(function() {
                     // TODO: the confirm message should be translated,
                     //        this module is missing a lot of translation directives.
                     var modalInstance = $uibModal.open({
@@ -247,7 +247,7 @@
                     }, function () {
                         $log.info('Modal dismissed at: ' + new Date());
                     });
-                });
+                //});
 
             };
 

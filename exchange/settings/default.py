@@ -163,7 +163,7 @@ TEMPLATES = [
 # middleware
 MIDDLEWARE_CLASSES = (
     'whitenoise.middleware.WhiteNoiseMiddleware',
-) + MIDDLEWARE_CLASSES
+) + MIDDLEWARE_CLASSES + ('exchange.auth.middleware.GeoServerTokenMiddleware',)
 
 ADDITIONAL_APPS = os.getenv(
     'ADDITIONAL_APPS',
@@ -190,6 +190,7 @@ INSTALLED_APPS = (
     'geonode',
     'geonode.contrib.geogig',
     'geonode.contrib.slack',
+    'geonode.contrib.createlayer',
     'django_classification_banner',
     'exchange.maploom',
     'solo',
@@ -333,7 +334,23 @@ if WGS84_MAP_CRS:
     DEFAULT_MAP_CRS = "EPSG:4326"
 
 # elasticsearch-dsl settings
-ES_URL = os.getenv('ES_URL', 'http://127.0.0.1:9200/')
+# Elasticsearch-dsl Backend Configuration. To enable,
+# Set ES_SEARCH to True
+# Run "python manage.py clear_haystack" (if upgrading from haystack)
+# Run "python manage.py rebuild_index"
+ES_SEARCH = strtobool(os.getenv('ES_SEARCH', 'False'))
+
+if ES_SEARCH:
+    INSTALLED_APPS = (
+        'elasticsearch_app',
+    ) + INSTALLED_APPS
+    ES_URL = os.getenv('ES_URL', 'http://127.0.0.1:9200/')
+    # Disable Haystack
+    HAYSTACK_SEARCH = False
+    # Avoid permissions prefiltering
+    SKIP_PERMS_FILTER = False
+    # Update facet counts from Haystack
+    HAYSTACK_FACET_COUNTS = False
 
 # amqp settings
 BROKER_URL = os.getenv('BROKER_URL', 'amqp://guest:guest@localhost:5672/')
@@ -620,3 +637,22 @@ MAP_CLIENT_USE_CROSS_ORIGIN_CREDENTIALS = str2bool(os.getenv(
 ))
 
 PROXY_URL = ''
+
+# Settings to change the WMS that is used for backgrounds on
+# Thumbnail generation.
+# Both Settings are required to change from default
+THUMBNAIL_BACKGROUND_WMS = os.getenv(
+    'THUMBNAIL_BACKGROUND_WMS',
+    'https://demo.boundlessgeo.com/geoserver/wms?'
+)
+
+THUMBNAIL_BACKGROUND_WMS_LAYER = os.getenv(
+    'THUMBNAIL_BACKGROUND_WMS_LAYER',
+    'ne:NE1_HR_LC_SR_W_DR'
+)
+
+
+ACCESS_TOKEN_NAME = os.getenv(
+    'ACCESS_TOKEN_NAME',
+    'x-token'
+)

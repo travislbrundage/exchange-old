@@ -2,10 +2,10 @@
 -e ./vendor/geonode
 -e ./vendor/gsconfig
 -e ./vendor/django-osgeo-importer
+-e ./vendor/geonode-elasticsearch
 git+https://github.com/MapStory/composer.git@master#composer
 git+https://github.com/boundlessgeo/sphinx@bex#egg=Sphinx
 git+https://github.com/venicegeo/nearsight@master#egg=nearsight
-geonode-elasticsearch-app==0.2.1
 django-jsonfield==1.0.1
 django-jsonfield-compat==0.4.4
 numpy==1.13.3
