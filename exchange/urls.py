@@ -54,6 +54,7 @@ urlpatterns = patterns(
 
     url(r'^about/', views.about_page, name='about'),
     url(r'^capabilities/', views.capabilities, name='capabilities'),
+    url(r'^logout/', views.logout, name='exchange_logout'),
 )
 
 if settings.ENABLE_SOCIAL_LOGIN is True:

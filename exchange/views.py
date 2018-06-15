@@ -134,6 +134,14 @@ def about_page(request, template='about.html'):
     }))
 
 
+def logout(request):
+    redirect_to = reverse('account_logout')
+    if settings.ENABLE_AUTH0_LOGIN:
+        from exchange.auth.backends.auth0 import AuthZeroOAuth2
+        redirect_to = AuthZeroOAuth2.LOGOUT_URL
+    return HttpResponseRedirect(redirect_to)
+
+
 def capabilities(request):
     """
     The capabilities view is like the about page, but for consumption
@@ -151,33 +159,23 @@ def capabilities(request):
     # check that the OAuth application has been created
     client_enabled = len(Application.objects.filter(client_id='anywhere')) > 0
     capabilities["mobile"] = settings.ANYWHERE_ENABLED and client_enabled
-    if settings.ENABLE_SOCIAL_LOGIN:
+    if settings.ENABLE_SOCIAL_LOGIN and settings.ANYWHERE_ENABLED:
         options = []
-        next = '?next=/anywhere' if capabilities["mobile"] else '?next=/'
 
         if settings.ENABLE_GEOAXIS_LOGIN:
-            options.append({'url': reverse('social:begin',
-                            args=['geoaxis']) + next,
+            options.append({'url': 'https://%s' %
+                            settings.SOCIAL_AUTH_GEOAXIS_HOST,
+                            'client': settings.SOCIAL_AUTH_GEOAXIS_KEY,
                             'type': 'geoaxis',
                             'name': 'GEOAxIS'})
-        if settings.ENABLE_FACEBOOK_LOGIN:
-            options.append({'url': reverse('social:begin',
-                            args=['facebook']) + next,
-                            'type': 'facebook',
-                            'name': 'Facebook'})
-        if settings.ENABLE_GOOGLE_LOGIN:
-            options.append({'url': reverse('social:begin',
-                            args=['google']) + next,
-                            'type': 'google',
-                            'name': 'Google'})
         if settings.ENABLE_AUTH0_LOGIN:
-            options.append({'url': reverse('social:begin',
-                            args=['auth0']) + next,
+            options.append({'url': 'https://%s' %
+                            settings.SOCIAL_AUTH_AUTH0_HOST,
+                            'client': settings.SOCIAL_AUTH_AUTH0_KEY,
                             'type': 'auth0',
                             'name': settings.AUTH0_APP_NAME})
         capabilities["auth_providers"] = options
-    else:
-        capabilities["auth_providers"] = None
+
     current_site = get_current_site(request)
     capabilities["site_name"] = current_site.name
 

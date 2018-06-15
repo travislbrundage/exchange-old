@@ -163,7 +163,7 @@ TEMPLATES = [
 # middleware
 MIDDLEWARE_CLASSES = (
     'whitenoise.middleware.WhiteNoiseMiddleware',
-) + MIDDLEWARE_CLASSES + ('exchange.auth.middleware.GeoServerTokenMiddleware',)
+) + MIDDLEWARE_CLASSES
 
 ADDITIONAL_APPS = os.getenv(
     'ADDITIONAL_APPS',
@@ -567,6 +567,8 @@ if ENABLE_SOCIAL_LOGIN:
     SOCIAL_AUTH_AUTH0_SECRET = os.getenv('OAUTH_AUTH0_SECRET', None)
     SOCIAL_AUTH_AUTH0_HOST = os.getenv('OAUTH_AUTH0_HOST', None)
     ENABLE_AUTH0_LOGIN = isValid(SOCIAL_AUTH_AUTH0_KEY)
+    if ENABLE_AUTH0_LOGIN:
+        DEFAULT_SOCIAL_PROVIDER = 'auth0'
     AUTH0_APP_NAME = os.getenv('AUTH0_APP_NAME', 'Connect')
     OAUTH_AUTH0_ADMIN_ROLES = os.getenv(
         'OAUTH_AUTH0_ADMIN_ROLES',
