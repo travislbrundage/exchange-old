@@ -571,12 +571,12 @@
             return false;
           });
 
-    {% if resource.get_legend.link_type == 'json' %}
+    {% if resource.get_legend.link_type == 'data' %}
     $.getJSON('{{resource.get_legend_url}}', function (data) {
         var legend = data.layers[0].legend;
         var items = [];
         $.each(legend, function (key, dvalue) {
-            items.push('<li><img src="data:image/png;base64,' + dvalue.imageData + '">'+dvalue.label+'</li>');
+            items.push('<li class="text-align:left"><img src="data:image/png;base64,' + dvalue.imageData + '">'+dvalue.label+'</li>');
         });
 
         $('<ul/>', {
