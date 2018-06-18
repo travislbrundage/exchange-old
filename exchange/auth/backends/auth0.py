@@ -14,6 +14,10 @@ class AuthZeroOAuth2(BaseOAuth2):
     ID_KEY = 'user_id'
     AUTHORIZATION_URL = 'https://{domain}/authorize'.format(domain=HOST)
     ACCESS_TOKEN_URL = 'https://{domain}/oauth/token'.format(domain=HOST)
+    LOGOUT_URL = 'https://{domain}/v2/logout' \
+        '?returnTo={returnTo}account/logout' \
+        '&client_id={client}'.format(returnTo=settings.SITEURL,
+                                     domain=HOST, client=CLIENT_KEY)
     USER_INFO_URL = 'https://{domain}/userinfo?access_token={access_token}'
     REDIRECT_STATE = False
     ACCESS_TOKEN_METHOD = 'POST'
@@ -27,6 +31,7 @@ class AuthZeroOAuth2(BaseOAuth2):
         ('email', 'email'),
         ('nickname', 'nickname'),
         ('picture', 'picture'),
+        ('expires_in', 'expires'),
         ('groups', 'groups'),
         ('email_verified', 'email_verified'),
     ]
