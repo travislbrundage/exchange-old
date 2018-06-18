@@ -28,6 +28,13 @@ node {
         """
       }
 
+      // TODO: Move changes to core config
+      stage('M-BEx Edits'){
+        sh """
+          cat managed-services/exchange-entrypoint.sh > docker/exchange/entrypoint.sh
+        """
+      }
+
       stage('Setup'){
         sh """
           docker pull 'quay.io/boundlessgeo/sonar-maven-py3-alpine'
