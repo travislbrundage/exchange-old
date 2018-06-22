@@ -1,0 +1,725 @@
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Coverage report</title>
+    <link rel="stylesheet" href="style.css" type="text/css">
+    
+    <script type="text/javascript" src="jquery.min.js"></script>
+    <script type="text/javascript" src="jquery.ba-throttle-debounce.min.js"></script>
+    <script type="text/javascript" src="jquery.tablesorter.min.js"></script>
+    <script type="text/javascript" src="jquery.hotkeys.js"></script>
+    <script type="text/javascript" src="coverage_html.js"></script>
+    <script type="text/javascript">
+        jQuery(document).ready(coverage.index_ready);
+    </script>
+</head>
+<body class="indexfile">
+
+<div id="header">
+    <div class="content">
+        <h1>Coverage report:
+            <span class="pc_cov">67%</span>
+        </h1>
+
+        <img id="keyboard_icon" src="keybd_closed.png" alt="Show keyboard shortcuts" />
+
+        <form id="filter_container">
+            <input id="filter" type="text" value="" placeholder="filter..." />
+        </form>
+    </div>
+</div>
+
+<div class="help_panel">
+    <img id="panel_icon" src="keybd_open.png" alt="Hide keyboard shortcuts" />
+    <p class="legend">Hot-keys on this page</p>
+    <div>
+    <p class="keyhelp">
+        <span class="key">n</span>
+        <span class="key">s</span>
+        <span class="key">m</span>
+        <span class="key">x</span>
+        
+        <span class="key">c</span> &nbsp; change column sorting
+    </p>
+    </div>
+</div>
+
+<div id="index">
+    <table class="index">
+        <thead>
+            
+            <tr class="tablehead" title="Click to sort">
+                <th class="name left headerSortDown shortkey_n">Module</th>
+                <th class="shortkey_s">statements</th>
+                <th class="shortkey_m">missing</th>
+                <th class="shortkey_x">excluded</th>
+                
+                <th class="right shortkey_c">coverage</th>
+            </tr>
+        </thead>
+        
+        <tfoot>
+            <tr class="total">
+                <td class="name left">Total</td>
+                <td>2577</td>
+                <td>858</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="1719 2577">67%</td>
+            </tr>
+        </tfoot>
+        <tbody>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange___init___py.html">exchange/__init__.py</a></td>
+                <td>4</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="4 4">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_account___init___py.html">exchange/account/__init__.py</a></td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="0 0">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_audit___init___py.html">exchange/audit/__init__.py</a></td>
+                <td>1</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="1 1">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_audit_admin_py.html">exchange/audit/admin.py</a></td>
+                <td>17</td>
+                <td>1</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="16 17">94%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_audit_apps_py.html">exchange/audit/apps.py</a></td>
+                <td>6</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="6 6">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_audit_models_py.html">exchange/audit/models.py</a></td>
+                <td>18</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="18 18">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_audit_settings_py.html">exchange/audit/settings.py</a></td>
+                <td>3</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="3 3">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_audit_signals_py.html">exchange/audit/signals.py</a></td>
+                <td>109</td>
+                <td>33</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="76 109">70%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_audit_utils_py.html">exchange/audit/utils.py</a></td>
+                <td>49</td>
+                <td>2</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="47 49">96%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_auth___init___py.html">exchange/auth/__init__.py</a></td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="0 0">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_auth_backends___init___py.html">exchange/auth/backends/__init__.py</a></td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="0 0">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_auth_backends_auth0_py.html">exchange/auth/backends/auth0.py</a></td>
+                <td>36</td>
+                <td>6</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="30 36">83%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_auth_backends_geoaxis_py.html">exchange/auth/backends/geoaxis.py</a></td>
+                <td>27</td>
+                <td>2</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="25 27">93%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_auth_middleware_py.html">exchange/auth/middleware.py</a></td>
+                <td>5</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="5 5">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_celery_app_py.html">exchange/celery_app.py</a></td>
+                <td>7</td>
+                <td>7</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="0 7">0%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_core___init___py.html">exchange/core/__init__.py</a></td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="0 0">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_core_context_processors_py.html">exchange/core/context_processors.py</a></td>
+                <td>14</td>
+                <td>3</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="11 14">79%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_core_forms_py.html">exchange/core/forms.py</a></td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="0 0">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_core_models_py.html">exchange/core/models.py</a></td>
+                <td>87</td>
+                <td>9</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="78 87">90%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_elasticsearchapp___init___py.html">exchange/elasticsearchapp/__init__.py</a></td>
+                <td>1</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="1 1">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_elasticsearchapp_apps_py.html">exchange/elasticsearchapp/apps.py</a></td>
+                <td>5</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="5 5">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_elasticsearchapp_management___init___py.html">exchange/elasticsearchapp/management/__init__.py</a></td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="0 0">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_elasticsearchapp_management_commands___init___py.html">exchange/elasticsearchapp/management/commands/__init__.py</a></td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="0 0">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_elasticsearchapp_management_commands_clear_index_py.html">exchange/elasticsearchapp/management/commands/clear_index.py</a></td>
+                <td>11</td>
+                <td>11</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="0 11">0%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_elasticsearchapp_management_commands_rebuild_index_py.html">exchange/elasticsearchapp/management/commands/rebuild_index.py</a></td>
+                <td>8</td>
+                <td>8</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="0 8">0%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_elasticsearchapp_management_commands_update_index_py.html">exchange/elasticsearchapp/management/commands/update_index.py</a></td>
+                <td>30</td>
+                <td>30</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="0 30">0%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_elasticsearchapp_search_py.html">exchange/elasticsearchapp/search.py</a></td>
+                <td>168</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="168 168">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_elasticsearchapp_signals_py.html">exchange/elasticsearchapp/signals.py</a></td>
+                <td>20</td>
+                <td>3</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="17 20">85%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_fileservice___init___py.html">exchange/fileservice/__init__.py</a></td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="0 0">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_fileservice_api_py.html">exchange/fileservice/api.py</a></td>
+                <td>115</td>
+                <td>13</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="102 115">89%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_fileservice_helpers_py.html">exchange/fileservice/helpers.py</a></td>
+                <td>18</td>
+                <td>1</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="17 18">94%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_fileservice_urls_py.html">exchange/fileservice/urls.py</a></td>
+                <td>4</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="4 4">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_importer___init___py.html">exchange/importer/__init__.py</a></td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="0 0">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_importer_geonode_postimport_handler_py.html">exchange/importer/geonode_postimport_handler.py</a></td>
+                <td>15</td>
+                <td>8</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="7 15">47%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_importer_geonode_timeextent_handler_py.html">exchange/importer/geonode_timeextent_handler.py</a></td>
+                <td>48</td>
+                <td>5</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="43 48">90%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_tasks_py.html">exchange/tasks.py</a></td>
+                <td>63</td>
+                <td>47</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="16 63">25%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_tests___init___py.html">exchange/tests/__init__.py</a></td>
+                <td>37</td>
+                <td>3</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="34 37">92%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_tests_audit_test_py.html">exchange/tests/audit_test.py</a></td>
+                <td>20</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="20 20">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_tests_auth_test_py.html">exchange/tests/auth_test.py</a></td>
+                <td>41</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="41 41">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_tests_celery_test_py.html">exchange/tests/celery_test.py</a></td>
+                <td>10</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="10 10">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_tests_core_test_py.html">exchange/tests/core_test.py</a></td>
+                <td>24</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="24 24">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_tests_elasticsearchapp_test_py.html">exchange/tests/elasticsearchapp_test.py</a></td>
+                <td>32</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="32 32">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_tests_fileservice_test_py.html">exchange/tests/fileservice_test.py</a></td>
+                <td>47</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="47 47">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_tests_osgeo_importer_upload_test_py.html">exchange/tests/osgeo_importer_upload_test.py</a></td>
+                <td>72</td>
+                <td>12</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="60 72">83%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_tests_test_get_version_py.html">exchange/tests/test_get_version.py</a></td>
+                <td>5</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="5 5">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_tests_themes_test_py.html">exchange/tests/themes_test.py</a></td>
+                <td>71</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="71 71">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_tests_thumbnail_test_py.html">exchange/tests/thumbnail_test.py</a></td>
+                <td>58</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="58 58">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_tests_upload_test_py.html">exchange/tests/upload_test.py</a></td>
+                <td>100</td>
+                <td>67</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="33 100">33%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_tests_views_test_py.html">exchange/tests/views_test.py</a></td>
+                <td>418</td>
+                <td>228</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="190 418">45%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_themes___init___py.html">exchange/themes/__init__.py</a></td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="0 0">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_themes_admin_py.html">exchange/themes/admin.py</a></td>
+                <td>10</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="10 10">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_themes_fields_py.html">exchange/themes/fields.py</a></td>
+                <td>9</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="9 9">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_themes_management___init___py.html">exchange/themes/management/__init__.py</a></td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="0 0">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_themes_management_commands___init___py.html">exchange/themes/management/commands/__init__.py</a></td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="0 0">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_themes_management_commands_list_themes_py.html">exchange/themes/management/commands/list_themes.py</a></td>
+                <td>9</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="9 9">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_themes_management_commands_set_active_theme_by_id_py.html">exchange/themes/management/commands/set_active_theme_by_id.py</a></td>
+                <td>17</td>
+                <td>3</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="14 17">82%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_themes_management_commands_set_active_theme_by_name_py.html">exchange/themes/management/commands/set_active_theme_by_name.py</a></td>
+                <td>17</td>
+                <td>3</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="14 17">82%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_themes_models_py.html">exchange/themes/models.py</a></td>
+                <td>80</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="80 80">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_themes_templatetags___init___py.html">exchange/themes/templatetags/__init__.py</a></td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="0 0">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_themes_templatetags_base_tags_exchange_py.html">exchange/themes/templatetags/base_tags_exchange.py</a></td>
+                <td>68</td>
+                <td>68</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="0 68">0%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_themes_templatetags_theme_tags_py.html">exchange/themes/templatetags/theme_tags.py</a></td>
+                <td>9</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="9 9">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_themes_widgets_py.html">exchange/themes/widgets.py</a></td>
+                <td>14</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="14 14">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_thumbnails___init___py.html">exchange/thumbnails/__init__.py</a></td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="0 0">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_thumbnails_models_py.html">exchange/thumbnails/models.py</a></td>
+                <td>25</td>
+                <td>5</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="20 25">80%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_thumbnails_tasks_py.html">exchange/thumbnails/tasks.py</a></td>
+                <td>85</td>
+                <td>52</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="33 85">39%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_thumbnails_urls_py.html">exchange/thumbnails/urls.py</a></td>
+                <td>5</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="5 5">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_thumbnails_views_py.html">exchange/thumbnails/views.py</a></td>
+                <td>30</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="30 30">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_urls_py.html">exchange/urls.py</a></td>
+                <td>36</td>
+                <td>2</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="34 36">94%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_version_py.html">exchange/version.py</a></td>
+                <td>12</td>
+                <td>0</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="12 12">100%</td>
+            </tr>
+            
+            <tr class="file">
+                <td class="name left"><a href="exchange_views_py.html">exchange/views.py</a></td>
+                <td>327</td>
+                <td>226</td>
+                <td>0</td>
+                
+                <td class="right" data-ratio="101 327">31%</td>
+            </tr>
+            
+        </tbody>
+    </table>
+
+    <p id="no_rows">
+        No items found using the specified filter.
+    </p>
+</div>
+
+<div id="footer">
+    <div class="content">
+        <p>
+            <a class="nav" href="https://coverage.readthedocs.io">coverage.py v4.4.2</a>,
+            created at 2017-12-01 20:12
+        </p>
+    </div>
+</div>
+
+</body>
+</html>
