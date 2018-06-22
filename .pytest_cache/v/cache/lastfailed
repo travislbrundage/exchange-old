@@ -1,0 +1,21 @@
+{
+  "exchange/tests/pki_test.py::TestPkiRequest::test_client_and_password": true, 
+  "exchange/tests/pki_test.py::TestPkiRequest::test_client_and_password_alt_root": true, 
+  "exchange/tests/pki_test.py::TestPkiRequest::test_client_and_password_tls12_only": true, 
+  "exchange/tests/pki_test.py::TestPkiRequest::test_client_no_password": true, 
+  "exchange/tests/pki_test.py::TestPkiRequest::test_client_no_password_tls12_only_ssl_opts": true, 
+  "exchange/tests/pki_test.py::TestPkiRequest::test_default_config": true, 
+  "exchange/tests/pki_test.py::TestPkiRequest::test_no_client": true, 
+  "exchange/tests/pki_test.py::TestPkiRequest::test_no_client_no_validation": true, 
+  "exchange/tests/pki_test.py::TestPkiServiceHandler::test_handler_contains_header": true, 
+  "exchange/tests/pki_test.py::TestPkiServiceHandler::test_handler_contains_pki_url": true, 
+  "exchange/tests/pki_test.py::TestPkiServiceHandler::test_non_pki_handler_contains_bearer_token": true, 
+  "exchange/tests/pki_test.py::TestPkiUtils::test_routes": true, 
+  "exchange/tests/pki_test.py::TestPkiUtils::test_urls": true, 
+  "exchange/tests/pki_test.py::TestPkiValidation::test_pki_functions": true, 
+  "exchange/tests/pki_test.py::TestPkiValidation::test_pki_load_functions": true, 
+  "exchange/tests/pki_test.py::TestPkiValidation::test_pki_validations": true, 
+  "exchange/tests/pki_test.py::TestSslContextSessionAdapter::testSslContextAdapter": true, 
+  "exchange/tests/pki_test.py::TestSslContextSessionAdapter::testSslContextSession": true, 
+  "exchange/tests/views_test.py::LayerDetailTest::testUseProxyExists": true
+}
