@@ -221,7 +221,7 @@ def capabilities(request):
         if settings.ENABLE_AUTH0_LOGIN:
             options.append({'url': 'https://%s' %
                             settings.SOCIAL_AUTH_AUTH0_HOST,
-                            'client': settings.SOCIAL_AUTH_AUTH0_KEY,
+                            'client': settings.SOCIAL_AUTH_AUTH0_MOBILE_KEY,
                             'type': 'auth0',
                             'name': settings.AUTH0_APP_NAME})
         capabilities["auth_providers"] = options
