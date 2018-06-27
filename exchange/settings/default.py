@@ -229,7 +229,8 @@ if isinstance(ADDITIONAL_AUTH_EXEMPT_URLS, str):
     ADDITIONAL_AUTH_EXEMPT_URLS = tuple(map(
         str.strip, ADDITIONAL_AUTH_EXEMPT_URLS.split(',')))
 
-AUTH_EXEMPT_URLS = ('/capabilities', '/complete/*', '/login/*',
+AUTH_EXEMPT_URLS = ('/capabilities', '/register-by-token/*',
+                    '/complete/*', '/login/*',
                     '/api/o/*', '/api/roles', '/api/adminRole',
                     '/api/users', '/o/token/*', '/o/authorize/*',
                     ) + ADDITIONAL_AUTH_EXEMPT_URLS

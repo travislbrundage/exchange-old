@@ -16,9 +16,56 @@ from exchange.tasks import create_record, delete_record
 from django.core.urlresolvers import reverse
 from oauth2_provider.models import Application
 from django.contrib.sites.shortcuts import get_current_site
+from django.contrib.auth import login
+from social_django.utils import psa
 
 
 logger = logging.getLogger(__name__)
+
+
+# This is convenient workaround to certian customer constraints.
+# The url definition will only be enabled when anywhere
+# and social auth are enabled.
+#
+#   url(r'^register-by-token/(?P<backend>[^/]+)/$',
+#       'register_by_access_token')
+
+@psa('social:complete')
+def register_by_access_token(request, backend):
+    provider = request.backend
+    user = None
+    error_message = {'error': 'Invalid Token'}
+    try:
+        if 'code' in request.GET:
+            code = request.GET.get('code')
+            data = {'grant_type': 'authorization_code',
+                    'redirect_uri': 'com.boundlessgeo.anywhere://exchange',
+                    'code': code}
+            credentials = provider.auth_complete_credentials()
+            method = provider.ACCESS_TOKEN_METHOD
+            headers = provider.auth_headers()
+            token = provider.request_access_token(provider.ACCESS_TOKEN_URL,
+                                                  data=data,
+                                                  params=None,
+                                                  headers=headers,
+                                                  auth=credentials,
+                                                  method=method)
+            token = token['access_token']
+        else:
+            token = request.GET.get('access_token')
+
+        user = provider.do_auth(token)
+
+        if user:
+            login(request, user)
+            return JsonResponse({'access_token':
+                                 request.session['access_token']})
+        else:
+            return JsonResponse(error_message)
+
+    except Exception as e:
+        logger.error(e)
+        return JsonResponse(error_message)
 
 
 def home_screen(request):
@@ -163,9 +210,12 @@ def capabilities(request):
         options = []
 
         if settings.ENABLE_GEOAXIS_LOGIN:
+            from exchange.auth.backends.geoaxis import GeoAxisOAuth2
+            provider = GeoAxisOAuth2()
             options.append({'url': 'https://%s' %
-                            settings.SOCIAL_AUTH_GEOAXIS_HOST,
-                            'client': settings.SOCIAL_AUTH_GEOAXIS_KEY,
+                            provider.HOST,
+                            'client': provider.CLIENT_KEY,
+                            'authorization_url': provider.AUTHORIZATION_URL,
                             'type': 'geoaxis',
                             'name': 'GEOAxIS'})
         if settings.ENABLE_AUTH0_LOGIN:

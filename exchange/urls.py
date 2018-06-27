@@ -62,6 +62,12 @@ if settings.ENABLE_SOCIAL_LOGIN is True:
         url('', include('social_django.urls', namespace='social'))
     ]
 
+if settings.ENABLE_SOCIAL_LOGIN is True and settings.ANYWHERE_ENABLED is True:
+    urlpatterns += [
+        url(r'^register-by-token/(?P<backend>[^/]+)/$',
+            views.register_by_access_token)
+    ]
+
 # If django-osgeo-importer is enabled...
 if 'osgeo_importer' in settings.INSTALLED_APPS:
     # Replace the default Exchange 'layers/upload'
