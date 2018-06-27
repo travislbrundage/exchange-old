@@ -19,6 +19,7 @@
 #########################################################################
 
 import os
+import copy
 import dj_database_url
 from ast import literal_eval as le
 from geonode.settings import *  # noqa
@@ -384,8 +385,7 @@ if AUDIT_ENABLED:
 # Logging settings
 # 'DEBUG', 'INFO', 'WARNING', 'ERROR', or 'CRITICAL'
 DJANGO_LOG_LEVEL = os.getenv('DJANGO_LOG_LEVEL', 'ERROR')
-# Commenting out logging until it can be modified to log errors correctly
-'''
+
 installed_apps_conf = {
     'handlers': ['console'],
     'level': DJANGO_LOG_LEVEL,
@@ -422,7 +422,7 @@ LOGGING['loggers']['django.db.backends'] = {
     'propagate': False,
     'level': 'WARNING',  # Django SQL logging is too noisy at DEBUG
 }
-'''
+
 # Authentication Settings
 
 # ldap
