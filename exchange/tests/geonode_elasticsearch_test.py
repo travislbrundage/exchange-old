@@ -85,6 +85,9 @@ class GeonodeElasticsearchTest(ExchangeTest):
             "profile": {
                 "type": "keyword"
             },
+            "profile_detail_url": {
+                "type": "text"
+            },
             "type": {
                 "type": "keyword",
                 "fields": {
@@ -108,6 +111,9 @@ class GeonodeElasticsearchTest(ExchangeTest):
             'group-index']['mappings']['doc']['properties']
         group_properties = {
             "description": {
+                "type": "text"
+            },
+            "detail_url": {
                 "type": "text"
             },
             "id": {
