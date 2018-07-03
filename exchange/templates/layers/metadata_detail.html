@@ -155,7 +155,11 @@
 
         <dt>{% trans "Identification Image" %}</dt>
         <dd>
+            {% if layer.storeType != "remoteStore" %}
             <img onerror="this.src='/static/geonode/img/missing_thumb.png'" src="/thumbnails/layers/{{ layer.typename }}"/>
+            {% else %}
+            <img id="thumbnail" class="thumbnail" onerror="this.src='/static/geonode/img/missing_thumb.png'" src="/thumbnails/layers/{{ layer.service_typename }}"/>
+            {% endif %}
         </dd>
     </dl>
 
