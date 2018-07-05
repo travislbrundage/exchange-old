@@ -29,7 +29,6 @@ supervisor-stdout==0.1.1
 python-resize-image==1.1.11
 django-flat-theme==1.1.4
 flake8==3.5.0
-elasticsearch-dsl==6.1.0
 social-auth-app-django==1.2.0
 mock==2.0.0
 Django==1.8.18
