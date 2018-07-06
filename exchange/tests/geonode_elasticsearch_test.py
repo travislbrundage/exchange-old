@@ -27,7 +27,6 @@ class GeonodeElasticsearchTest(ExchangeTest):
         self.assertTrue('map-index' in mappings)
         self.assertTrue('document-index' in mappings)
         self.assertTrue('group-index' in mappings)
-        self.assertTrue('story-index' in mappings)
 
         # Call the clear command and ensure the indices have been wiped
         call_command('clear_index')
@@ -37,7 +36,6 @@ class GeonodeElasticsearchTest(ExchangeTest):
         self.assertFalse('map-index' in mappings)
         self.assertFalse('document-index' in mappings)
         self.assertFalse('group-index' in mappings)
-        self.assertFalse('story-index' in mappings)
 
         # Rebuild the indices and ensure they return to our mappings
         call_command('rebuild_index')
@@ -47,7 +45,6 @@ class GeonodeElasticsearchTest(ExchangeTest):
         self.assertTrue('map-index' in mappings)
         self.assertTrue('document-index' in mappings)
         self.assertTrue('group-index' in mappings)
-        self.assertTrue('story-index' in mappings)
 
     def test_mappings(self):
         # We only want to test mappings because the rest should be covered
@@ -662,166 +659,3 @@ class GeonodeElasticsearchTest(ExchangeTest):
             }
         }
         self.assertDictEqual(map_mappings, map_properties)
-
-        story_mappings = mappings[
-            'story-index']['mappings']['doc']['properties']
-        story_properties = {
-            "abstract": {
-                "fields": {
-                    "english": {
-                        "analyzer": "english",
-                        "type": "text"
-                    },
-                    "pattern": {
-                        "analyzer": "pattern_analyzer",
-                        "type": "text"
-                    }
-                },
-                "type": "text"
-            },
-            "bbox_bottom": {
-                "type": "float"
-            },
-            "bbox_left": {
-                "type": "float"
-            },
-            "bbox_right": {
-                "type": "float"
-            },
-            "bbox_top": {
-                "type": "float"
-            },
-            "category": {
-                "fields": {
-                    "english": {
-                        "analyzer": "english",
-                        "type": "text"
-                    },
-                    "text": {
-                        "type": "text"
-                    }
-                },
-                "type": "keyword"
-            },
-            "category__gn_description": {
-                "type": "text"
-            },
-            "date": {
-                "type": "date"
-            },
-            "detail_url": {
-                "type": "keyword"
-            },
-            "distribution_description": {
-                "type": "text"
-            },
-            "distribution_url": {
-                "type": "keyword"
-            },
-            "featured": {
-                "type": "boolean"
-            },
-            "id": {
-                "type": "integer"
-            },
-            "is_published": {
-                "type": "boolean"
-            },
-            "keywords": {
-                "fields": {
-                    "english": {
-                        "analyzer": "english",
-                        "type": "text"
-                    },
-                    "text": {
-                        "type": "text"
-                    }
-                },
-                "type": "keyword"
-            },
-            "num_chapters": {
-                "type": "integer"
-            },
-            "num_comments": {
-                "type": "integer"
-            },
-            "num_ratings": {
-                "type": "integer"
-            },
-            "owner__first_name": {
-                "type": "text"
-            },
-            "owner__last_name": {
-                "type": "text"
-            },
-            "owner__username": {
-                "fields": {
-                    "text": {
-                        "type": "text"
-                    }
-                },
-                "type": "keyword"
-            },
-            "popular_count": {
-                "type": "integer"
-            },
-            "rating": {
-                "type": "integer"
-            },
-            "regions": {
-                "fields": {
-                    "english": {
-                        "analyzer": "english",
-                        "type": "text"
-                    },
-                    "text": {
-                        "type": "text"
-                    }
-                },
-                "type": "keyword"
-            },
-            "share_count": {
-                "type": "integer"
-            },
-            "temporal_extent_end": {
-                "type": "date"
-            },
-            "temporal_extent_start": {
-                "type": "date"
-            },
-            "thumbnail_url": {
-                "type": "keyword"
-            },
-            "title": {
-                "fields": {
-                    "english": {
-                        "analyzer": "english",
-                        "type": "text"
-                    },
-                    "pattern": {
-                        "analyzer": "pattern_analyzer",
-                        "type": "text"
-                    }
-                },
-                "type": "text"
-            },
-            "title_sortable": {
-                "type": "keyword"
-            },
-            "type": {
-                "fields": {
-                    "english": {
-                        "analyzer": "english",
-                        "type": "text"
-                    },
-                    "text": {
-                        "type": "text"
-                    }
-                },
-                "type": "keyword"
-            },
-            "uuid": {
-                "type": "keyword"
-            }
-        }
-        self.assertDictEqual(story_mappings, story_properties)
