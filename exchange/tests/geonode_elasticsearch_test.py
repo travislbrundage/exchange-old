@@ -155,525 +155,525 @@ class GeonodeElasticsearchTest(ExchangeTest):
         document_mappings = mappings[
             'document-index']['mappings']['doc']['properties']
         document_properties = {
-               "abstract": {
-                  "type": "text",
-                  "fields": {
-                     "english": {
+            "abstract": {
+                "type": "text",
+                "fields": {
+                    "english": {
                         "type": "text",
                         "analyzer": "english"
-                     },
-                     "pattern": {
+                    },
+                    "pattern": {
                         "type": "text",
                         "analyzer": "pattern_analyzer"
-                     }
-                  }
-               },
-               "bbox_bottom": {
-                  "type": "float"
-               },
-               "bbox_left": {
-                  "type": "float"
-               },
-               "bbox_right": {
-                  "type": "float"
-               },
-               "bbox_top": {
-                  "type": "float"
-               },
-               "category": {
-                  "type": "keyword",
-                  "fields": {
-                     "english": {
+                    }
+                }
+            },
+            "bbox_bottom": {
+                "type": "float"
+            },
+            "bbox_left": {
+                "type": "float"
+            },
+            "bbox_right": {
+                "type": "float"
+            },
+            "bbox_top": {
+                "type": "float"
+            },
+            "category": {
+                "type": "keyword",
+                "fields": {
+                    "english": {
                         "type": "text",
                         "analyzer": "english"
-                     },
-                     "text": {
+                    },
+                    "text": {
                         "type": "text"
-                     }
-                  }
-               },
-               "category__gn_description": {
-                  "type": "text"
-               },
-               "csw_type": {
-                  "type": "keyword"
-               },
-               "csw_wkt_geometry": {
-                  "type": "keyword"
-               },
-               "date": {
-                  "type": "date"
-               },
-               "detail_url": {
-                  "type": "keyword"
-               },
-               "id": {
-                  "type": "integer"
-               },
-               "keywords": {
-                  "type": "keyword",
-                  "fields": {
-                     "english": {
+                    }
+                }
+            },
+            "category__gn_description": {
+                "type": "text"
+            },
+            "csw_type": {
+                "type": "keyword"
+            },
+            "csw_wkt_geometry": {
+                "type": "keyword"
+            },
+            "date": {
+                "type": "date"
+            },
+            "detail_url": {
+                "type": "keyword"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "keywords": {
+                "type": "keyword",
+                "fields": {
+                    "english": {
                         "type": "text",
                         "analyzer": "english"
-                     },
-                     "text": {
+                    },
+                    "text": {
                         "type": "text"
-                     }
-                  }
-               },
-               "num_comments": {
-                  "type": "integer"
-               },
-               "num_ratings": {
-                  "type": "integer"
-               },
-               "owner__username": {
-                  "type": "keyword",
-                  "fields": {
-                     "text": {
+                    }
+                }
+            },
+            "num_comments": {
+                "type": "integer"
+            },
+            "num_ratings": {
+                "type": "integer"
+            },
+            "owner__username": {
+                "type": "keyword",
+                "fields": {
+                    "text": {
                         "type": "text"
-                     }
-                  }
-               },
-               "popular_count": {
-                  "type": "integer"
-               },
-               "rating": {
-                  "type": "integer"
-               },
-               "regions": {
-                  "type": "keyword",
-                  "fields": {
-                     "english": {
+                    }
+                }
+            },
+            "popular_count": {
+                "type": "integer"
+            },
+            "rating": {
+                "type": "integer"
+            },
+            "regions": {
+                "type": "keyword",
+                "fields": {
+                    "english": {
                         "type": "text",
                         "analyzer": "english"
-                     },
-                     "text": {
+                    },
+                    "text": {
                         "type": "text"
-                     }
-                  }
-               },
-               "share_count": {
-                  "type": "integer"
-               },
-               "srid": {
-                  "type": "keyword"
-               },
-               "supplemental_information": {
-                  "type": "text"
-               },
-               "temporal_extent_end": {
-                  "type": "date"
-               },
-               "temporal_extent_start": {
-                  "type": "date"
-               },
-               "thumbnail_url": {
-                  "type": "keyword"
-               },
-               "title": {
-                  "type": "text",
-                  "fields": {
-                     "english": {
+                    }
+                }
+            },
+            "share_count": {
+                "type": "integer"
+            },
+            "srid": {
+                "type": "keyword"
+            },
+            "supplemental_information": {
+                "type": "text"
+            },
+            "temporal_extent_end": {
+                "type": "date"
+            },
+            "temporal_extent_start": {
+                "type": "date"
+            },
+            "thumbnail_url": {
+                "type": "keyword"
+            },
+            "title": {
+                "type": "text",
+                "fields": {
+                    "english": {
                         "type": "text",
                         "analyzer": "english"
-                     },
-                     "pattern": {
+                    },
+                    "pattern": {
                         "type": "text",
                         "analyzer": "pattern_analyzer"
-                     }
-                  }
-               },
-               "title_sortable": {
-                  "type": "keyword"
-               },
-               "type": {
-                  "type": "keyword",
-                  "fields": {
-                     "english": {
+                    }
+                }
+            },
+            "title_sortable": {
+                "type": "keyword"
+            },
+            "type": {
+                "type": "keyword",
+                "fields": {
+                    "english": {
                         "type": "text",
                         "analyzer": "english"
-                     },
-                     "text": {
+                    },
+                    "text": {
                         "type": "text"
-                     }
-                  }
-               },
-               "uuid": {
-                  "type": "keyword"
-               }
+                    }
+                }
+            },
+            "uuid": {
+                "type": "keyword"
             }
+        }
         self.assertDictEqual(document_mappings, document_properties)
 
         layer_mappings = mappings[
             'layer-index']['mappings']['doc']['properties']
         layer_properties = {
-           "abstract": {
-              "type": "text",
-              "fields": {
-                 "english": {
-                    "type": "text",
-                    "analyzer": "english"
-                 },
-                 "pattern": {
-                    "type": "text",
-                    "analyzer": "pattern_analyzer"
-                 }
-              }
-           },
-           "bbox_bottom": {
-              "type": "float"
-           },
-           "bbox_left": {
-              "type": "float"
-           },
-           "bbox_right": {
-              "type": "float"
-           },
-           "bbox_top": {
-              "type": "float"
-           },
-           "category": {
-              "type": "keyword",
-              "fields": {
-                 "english": {
-                    "type": "text",
-                    "analyzer": "english"
-                 },
-                 "text": {
-                    "type": "text"
-                 }
-              }
-           },
-           "category__gn_description": {
-              "type": "text"
-           },
-           "csw_type": {
-              "type": "keyword"
-           },
-           "csw_wkt_geometry": {
-              "type": "keyword"
-           },
-           "date": {
-              "type": "date"
-           },
-           "detail_url": {
-              "type": "keyword"
-           },
-           "featured": {
-              "type": "boolean"
-           },
-           "geogig_link": {
-              "type": "keyword"
-           },
-           "has_time": {
-              "type": "boolean"
-           },
-           "id": {
-              "type": "integer"
-           },
-           "is_published": {
-              "type": "boolean"
-           },
-           "keywords": {
-              "type": "keyword",
-              "fields": {
-                 "english": {
-                    "type": "text",
-                    "analyzer": "english"
-                 },
-                 "text": {
-                    "type": "text"
-                 }
-              }
-           },
-           "num_comments": {
-              "type": "integer"
-           },
-           "num_ratings": {
-              "type": "integer"
-           },
-           "owner__first_name": {
-              "type": "text"
-           },
-           "owner__last_name": {
-              "type": "text"
-           },
-           "owner__username": {
-              "type": "keyword",
-              "fields": {
-                 "text": {
-                    "type": "text"
-                 }
-              }
-           },
-           "popular_count": {
-              "type": "integer"
-           },
-           "rating": {
-              "type": "integer"
-           },
-           "references": {
-              "properties": {
-                 "name": {
-                    "type": "keyword",
-                    "fields": {
-                       "text": {
-                          "type": "text"
-                       }
+            "abstract": {
+                "type": "text",
+                "fields": {
+                    "english": {
+                        "type": "text",
+                        "analyzer": "english"
+                    },
+                    "pattern": {
+                        "type": "text",
+                        "analyzer": "pattern_analyzer"
                     }
-                 },
-                 "scheme": {
-                    "type": "keyword",
-                    "fields": {
-                       "pattern": {
-                          "type": "text",
-                          "analyzer": "pattern_analyzer"
-                       },
-                       "text": {
-                          "type": "text"
-                       }
+                }
+            },
+            "bbox_bottom": {
+                "type": "float"
+            },
+            "bbox_left": {
+                "type": "float"
+            },
+            "bbox_right": {
+                "type": "float"
+            },
+            "bbox_top": {
+                "type": "float"
+            },
+            "category": {
+                "type": "keyword",
+                "fields": {
+                    "english": {
+                        "type": "text",
+                        "analyzer": "english"
+                    },
+                    "text": {
+                        "type": "text"
                     }
-                 },
-                 "url": {
-                    "type": "text"
-                 }
-              }
-           },
-           "regions": {
-              "type": "keyword",
-              "fields": {
-                 "english": {
-                    "type": "text",
-                    "analyzer": "english"
-                 },
-                 "text": {
-                    "type": "text"
-                 }
-              }
-           },
-           "share_count": {
-              "type": "integer"
-           },
-           "source_host": {
-              "type": "keyword",
-              "fields": {
-                 "text": {
-                    "type": "text"
-                 }
-              }
-           },
-           "srid": {
-              "type": "keyword"
-           },
-           "subtype": {
-              "type": "keyword",
-              "fields": {
-                 "text": {
-                    "type": "text"
-                 }
-              }
-           },
-           "supplemental_information": {
-              "type": "text"
-           },
-           "temporal_extent_end": {
-              "type": "date"
-           },
-           "temporal_extent_start": {
-              "type": "date"
-           },
-           "thumbnail_url": {
-              "type": "keyword"
-           },
-           "title": {
-              "type": "text",
-              "fields": {
-                 "english": {
-                    "type": "text",
-                    "analyzer": "english"
-                 },
-                 "pattern": {
-                    "type": "text",
-                    "analyzer": "pattern_analyzer"
-                 }
-              }
-           },
-           "title_sortable": {
-              "type": "keyword"
-           },
-           "type": {
-              "type": "keyword",
-              "fields": {
-                 "english": {
-                    "type": "text",
-                    "analyzer": "english"
-                 },
-                 "text": {
-                    "type": "text"
-                 }
-              }
-           },
-           "typename": {
-              "type": "keyword"
-           },
-           "uuid": {
-              "type": "keyword"
-           }
+                }
+            },
+            "category__gn_description": {
+                "type": "text"
+            },
+            "csw_type": {
+                "type": "keyword"
+            },
+            "csw_wkt_geometry": {
+                "type": "keyword"
+            },
+            "date": {
+                "type": "date"
+            },
+            "detail_url": {
+                "type": "keyword"
+            },
+            "featured": {
+                "type": "boolean"
+            },
+            "geogig_link": {
+                "type": "keyword"
+            },
+            "has_time": {
+                "type": "boolean"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "is_published": {
+                "type": "boolean"
+            },
+            "keywords": {
+                "type": "keyword",
+                "fields": {
+                    "english": {
+                        "type": "text",
+                        "analyzer": "english"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                }
+            },
+            "num_comments": {
+                "type": "integer"
+            },
+            "num_ratings": {
+                "type": "integer"
+            },
+            "owner__first_name": {
+                "type": "text"
+            },
+            "owner__last_name": {
+                "type": "text"
+            },
+            "owner__username": {
+                "type": "keyword",
+                "fields": {
+                    "text": {
+                        "type": "text"
+                    }
+                }
+            },
+            "popular_count": {
+                "type": "integer"
+            },
+            "rating": {
+                "type": "integer"
+            },
+            "references": {
+                "properties": {
+                    "name": {
+                        "type": "keyword",
+                        "fields": {
+                            "text": {
+                                "type": "text"
+                            }
+                        }
+                    },
+                    "scheme": {
+                        "type": "keyword",
+                        "fields": {
+                            "pattern": {
+                                "type": "text",
+                                "analyzer": "pattern_analyzer"
+                            },
+                            "text": {
+                                "type": "text"
+                            }
+                        }
+                    },
+                    "url": {
+                        "type": "text"
+                    }
+                }
+            },
+            "regions": {
+                "type": "keyword",
+                "fields": {
+                    "english": {
+                        "type": "text",
+                        "analyzer": "english"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                }
+            },
+            "share_count": {
+                "type": "integer"
+            },
+            "source_host": {
+                "type": "keyword",
+                "fields": {
+                    "text": {
+                        "type": "text"
+                    }
+                }
+            },
+            "srid": {
+                "type": "keyword"
+            },
+            "subtype": {
+                "type": "keyword",
+                "fields": {
+                    "text": {
+                        "type": "text"
+                    }
+                }
+            },
+            "supplemental_information": {
+                "type": "text"
+            },
+            "temporal_extent_end": {
+                "type": "date"
+            },
+            "temporal_extent_start": {
+                "type": "date"
+            },
+            "thumbnail_url": {
+                "type": "keyword"
+            },
+            "title": {
+                "type": "text",
+                "fields": {
+                    "english": {
+                        "type": "text",
+                        "analyzer": "english"
+                    },
+                    "pattern": {
+                        "type": "text",
+                        "analyzer": "pattern_analyzer"
+                    }
+                }
+            },
+            "title_sortable": {
+                "type": "keyword"
+            },
+            "type": {
+                "type": "keyword",
+                "fields": {
+                    "english": {
+                        "type": "text",
+                        "analyzer": "english"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                }
+            },
+            "typename": {
+                "type": "keyword"
+            },
+            "uuid": {
+                "type": "keyword"
+            }
         }
         self.assertDictEqual(layer_mappings, layer_properties)
 
         map_mappings = mappings[
             'map-index']['mappings']['doc']['properties']
         map_properties = {
-           "abstract": {
-              "type": "text",
-              "fields": {
-                 "english": {
-                    "type": "text",
-                    "analyzer": "english"
-                 },
-                 "pattern": {
-                    "type": "text",
-                    "analyzer": "pattern_analyzer"
-                 }
-              }
-           },
-           "bbox_bottom": {
-              "type": "float"
-           },
-           "bbox_left": {
-              "type": "float"
-           },
-           "bbox_right": {
-              "type": "float"
-           },
-           "bbox_top": {
-              "type": "float"
-           },
-           "category": {
-              "type": "keyword",
-              "fields": {
-                 "english": {
-                    "type": "text",
-                    "analyzer": "english"
-                 },
-                 "text": {
-                    "type": "text"
-                 }
-              }
-           },
-           "category__gn_description": {
-              "type": "text"
-           },
-           "csw_type": {
-              "type": "keyword"
-           },
-           "csw_wkt_geometry": {
-              "type": "keyword"
-           },
-           "date": {
-              "type": "date"
-           },
-           "detail_url": {
-              "type": "keyword"
-           },
-           "id": {
-              "type": "integer"
-           },
-           "keywords": {
-              "type": "keyword",
-              "fields": {
-                 "english": {
-                    "type": "text",
-                    "analyzer": "english"
-                 },
-                 "text": {
-                    "type": "text"
-                 }
-              }
-           },
-           "num_comments": {
-              "type": "integer"
-           },
-           "num_ratings": {
-              "type": "integer"
-           },
-           "owner__username": {
-              "type": "keyword",
-              "fields": {
-                 "text": {
-                    "type": "text"
-                 }
-              }
-           },
-           "popular_count": {
-              "type": "integer"
-           },
-           "rating": {
-              "type": "integer"
-           },
-           "regions": {
-              "type": "keyword",
-              "fields": {
-                 "english": {
-                    "type": "text",
-                    "analyzer": "english"
-                 },
-                 "text": {
-                    "type": "text"
-                 }
-              }
-           },
-           "share_count": {
-              "type": "integer"
-           },
-           "srid": {
-              "type": "keyword"
-           },
-           "supplemental_information": {
-              "type": "text"
-           },
-           "temporal_extent_end": {
-              "type": "date"
-           },
-           "temporal_extent_start": {
-              "type": "date"
-           },
-           "thumbnail_url": {
-              "type": "keyword"
-           },
-           "title": {
-              "type": "text",
-              "fields": {
-                 "english": {
-                    "type": "text",
-                    "analyzer": "english"
-                 },
-                 "pattern": {
-                    "type": "text",
-                    "analyzer": "pattern_analyzer"
-                 }
-              }
-           },
-           "title_sortable": {
-              "type": "keyword"
-           },
-           "type": {
-              "type": "keyword",
-              "fields": {
-                 "english": {
-                    "type": "text",
-                    "analyzer": "english"
-                 },
-                 "text": {
-                    "type": "text"
-                 }
-              }
-           },
-           "uuid": {
-              "type": "keyword"
-           }
+            "abstract": {
+                "type": "text",
+                "fields": {
+                    "english": {
+                        "type": "text",
+                        "analyzer": "english"
+                    },
+                    "pattern": {
+                        "type": "text",
+                        "analyzer": "pattern_analyzer"
+                    }
+                }
+            },
+            "bbox_bottom": {
+                "type": "float"
+            },
+            "bbox_left": {
+                "type": "float"
+            },
+            "bbox_right": {
+                "type": "float"
+            },
+            "bbox_top": {
+                "type": "float"
+            },
+            "category": {
+                "type": "keyword",
+                "fields": {
+                    "english": {
+                        "type": "text",
+                        "analyzer": "english"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                }
+            },
+            "category__gn_description": {
+                "type": "text"
+            },
+            "csw_type": {
+                "type": "keyword"
+            },
+            "csw_wkt_geometry": {
+                "type": "keyword"
+            },
+            "date": {
+                "type": "date"
+            },
+            "detail_url": {
+                "type": "keyword"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "keywords": {
+                "type": "keyword",
+                "fields": {
+                    "english": {
+                        "type": "text",
+                        "analyzer": "english"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                }
+            },
+            "num_comments": {
+                "type": "integer"
+            },
+            "num_ratings": {
+                "type": "integer"
+            },
+            "owner__username": {
+                "type": "keyword",
+                "fields": {
+                    "text": {
+                        "type": "text"
+                    }
+                }
+            },
+            "popular_count": {
+                "type": "integer"
+            },
+            "rating": {
+                "type": "integer"
+            },
+            "regions": {
+                "type": "keyword",
+                "fields": {
+                    "english": {
+                        "type": "text",
+                        "analyzer": "english"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                }
+            },
+            "share_count": {
+                "type": "integer"
+            },
+            "srid": {
+                "type": "keyword"
+            },
+            "supplemental_information": {
+                "type": "text"
+            },
+            "temporal_extent_end": {
+                "type": "date"
+            },
+            "temporal_extent_start": {
+                "type": "date"
+            },
+            "thumbnail_url": {
+                "type": "keyword"
+            },
+            "title": {
+                "type": "text",
+                "fields": {
+                    "english": {
+                        "type": "text",
+                        "analyzer": "english"
+                    },
+                    "pattern": {
+                        "type": "text",
+                        "analyzer": "pattern_analyzer"
+                    }
+                }
+            },
+            "title_sortable": {
+                "type": "keyword"
+            },
+            "type": {
+                "type": "keyword",
+                "fields": {
+                    "english": {
+                        "type": "text",
+                        "analyzer": "english"
+                    },
+                    "text": {
+                        "type": "text"
+                    }
+                }
+            },
+            "uuid": {
+                "type": "keyword"
+            }
         }
         self.assertDictEqual(map_mappings, map_properties)
