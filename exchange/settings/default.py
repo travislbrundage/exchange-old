@@ -486,7 +486,8 @@ if 'logtailer' in INSTALLED_APPS:
         'interval': 1,
         'backupCount': 3,
         'encoding': 'utf-8',
-        'app': 'celery' if os.getenv('VIA_CELERY', 0) else 'exchange'
+        'appcallback':
+            lambda: 'celery' if os.getenv('VIA_CELERY', 0) else 'exchange'
     }
     LOGGING['loggers']['exchange'] = {
         'handlers': ['console', 'logtailer'],
