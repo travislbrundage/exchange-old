@@ -106,6 +106,7 @@ class LayerDetailTest(ViewTestCase):
         response.viewer = json.loads(request_context.get('viewer'))
         return response
 
+    @pytest.mark.skip(reason='default data-test service no longer exists')
     @mock.patch("geonode.layers.views.render_to_response",
                 side_effect=mock_render_to_response)
     def test_use_proxy_exists(self, mock_render_to_response):
@@ -205,6 +206,7 @@ class NewMapConfigTest(ViewTestCase):
     def test(self):
         self.doit()
 
+    @pytest.mark.skip(reason='default data-test service no longer exists')
     def test_use_proxy_exists(self):
         # mock up a layer to return
         mock_layer = self.layer
