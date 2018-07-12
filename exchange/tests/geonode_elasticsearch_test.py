@@ -122,6 +122,9 @@ class GeonodeElasticsearchTest(ExchangeTest):
             "json": {
                 "type": "text"
             },
+            "slug": {
+                "type": "text"
+            },
             "title": {
                 "fields": {
                     "english": {
