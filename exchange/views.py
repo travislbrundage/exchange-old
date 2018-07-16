@@ -183,7 +183,7 @@ def about_page(request, template='about.html'):
 
 def logout(request):
     redirect_to = reverse('account_logout')
-    if settings.ENABLE_AUTH0_LOGIN:
+    if hasattr(settings, 'ENABLE_AUTH0_LOGIN') and settings.ENABLE_AUTH0_LOGIN:
         from exchange.auth.backends.auth0 import AuthZeroOAuth2
         redirect_to = AuthZeroOAuth2.LOGOUT_URL
     return HttpResponseRedirect(redirect_to)
