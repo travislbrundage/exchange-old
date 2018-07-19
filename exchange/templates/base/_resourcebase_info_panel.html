@@ -50,7 +50,7 @@
     <dt>{% trans "Keywords" %}</dt>
     <dd itemprop="keywords">
       {% for keyword in resource.keywords.all %}
-  <a itemscope itemtype="http://schema.org/Text" href="{% url "search" %}?keywords__slug__in={{ keyword.slug }}" >
+  <a itemscope itemtype="http://schema.org/Text" href="{% url "search" %}?keywords={{ keyword.slug }}" >
           {{ keyword.name }}
         </a>
         {% if not forloop.last %},{% endif %}
@@ -72,7 +72,7 @@
     <dt>{% trans "Regions" %}</dt>
     <dd itemprop="keywords">
       {% for region in resource.regions.all %}
-        <a itemscope itemtype="http://schema.org/Text" href="{% url "search" %}?regions__name__in={{ region.name }}">
+        <a itemscope itemtype="http://schema.org/Text" href="{% url "search" %}?regions={{ region.name }}">
           {{ region.name }}
         </a>
         {% if not forloop.last %},{% endif %}
