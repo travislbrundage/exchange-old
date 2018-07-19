@@ -565,10 +565,16 @@ if ENABLE_SOCIAL_LOGIN:
     )
 
     SOCIAL_AUTH_AUTH0_KEY = os.getenv('OAUTH_AUTH0_KEY', None)
+    SOCIAL_AUTH_AUTH0_OIDC_CONFORMANT = str2bool(os.getenv(
+        'OAUTH_AUTH0_OIDC_CONFORMANT', 'False'))
     SOCIAL_AUTH_AUTH0_MOBILE_KEY = os.getenv('OAUTH_AUTH0_MOBILE_KEY', None)
     SOCIAL_AUTH_AUTH0_SECRET = os.getenv('OAUTH_AUTH0_SECRET', None)
     SOCIAL_AUTH_AUTH0_HOST = os.getenv('OAUTH_AUTH0_HOST', None)
     ENABLE_AUTH0_LOGIN = isValid(SOCIAL_AUTH_AUTH0_KEY)
+    SOCIAL_AUTH_AUTH0_SCOPE = ['sub', 'nickname', 'email',
+                               'profile', 'picture', 'email_verfied',
+                               'name', 'openid', 'given_name',
+                               'family_name', 'preferred_username']
     if ENABLE_AUTH0_LOGIN:
         DEFAULT_SOCIAL_PROVIDER = 'auth0'
     AUTH0_APP_NAME = os.getenv('AUTH0_APP_NAME', 'Connect')

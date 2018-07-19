@@ -1,9 +1,12 @@
 """
 Auth0 OAuth2 backend:
 """
+import logging
 from social_core.backends.oauth import BaseOAuth2
 
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 
 class AuthZeroOAuth2(BaseOAuth2):
@@ -11,6 +14,8 @@ class AuthZeroOAuth2(BaseOAuth2):
     HOST = getattr(settings, 'SOCIAL_AUTH_AUTH0_HOST', 'auth0.com')
     CLIENT_KEY = getattr(settings, 'SOCIAL_AUTH_AUTH0_KEY', '')
     CLIENT_SECRET = getattr(settings, 'SOCIAL_AUTH_AUTH0_SECRET', '')
+    OIDC_CONFORMANT = getattr(settings,
+                              'SOCIAL_AUTH_AUTH0_OIDC_CONFORMANT', False)
     ID_KEY = 'user_id'
     AUTHORIZATION_URL = 'https://{domain}/authorize'.format(domain=HOST)
     ACCESS_TOKEN_URL = 'https://{domain}/oauth/token'.format(domain=HOST)
@@ -20,6 +25,7 @@ class AuthZeroOAuth2(BaseOAuth2):
                                      domain=HOST, client=CLIENT_KEY)
     USER_INFO_URL = 'https://{domain}/userinfo?access_token={access_token}'
     REDIRECT_STATE = False
+    ROLES_NAMESPACE = 'https://bex.boundlessgeo.io/roles'
     ACCESS_TOKEN_METHOD = 'POST'
     admin_roles = getattr(settings, 'AUTH0_ADMIN_ROLES', [])
     allowed_roles = getattr(settings, 'AUTH0_ALLOWED_ROLES', [])
@@ -27,50 +33,76 @@ class AuthZeroOAuth2(BaseOAuth2):
     EXTRA_DATA = [
         ('refresh_token', 'refresh_token', True),
         ('user_id', 'user_id'),
+        ('sub', 'sub'),
         ('name', 'name'),
+        ('given_name', 'given_name'),
+        ('middle_name', 'middle_name'),
+        ('family_name', 'family_name'),
         ('email', 'email'),
         ('nickname', 'nickname'),
         ('picture', 'picture'),
         ('expires_in', 'expires'),
-        ('groups', 'groups'),
+        ('preferred_username', 'preferred_username'),
         ('email_verified', 'email_verified'),
     ]
 
+    def get_user_id(self, details, response):
+        """ user_id property is sent as sub """
+        if self.OIDC_CONFORMANT:
+            return response['sub']
+        else:
+            return details['user_id']
+
+    def compliance_check(self, response):
+        details = {}
+        if self.OIDC_CONFORMANT:
+            details['user_roles'] = response.get(self.ROLES_NAMESPACE)
+        else:
+            user_metadata = response.get('user_metadata')
+            app_metadata = response.get('app_metadata')
+            fullname, first_name, last_name = self.get_user_names(
+                user_metadata.get('name'),
+                user_metadata.get('firstName'),
+                user_metadata.get('lastName'))
+            details['organization'] = user_metadata.get('organization')
+            details['fullname'] = fullname
+            details['first_name'] = first_name
+            details['last_name'] = last_name
+            details['user_roles'] = app_metadata.get('SiteRole').split(',')
+
+        details['username'] = response.get('nickname')
+        details['email'] = response.get('email')
+
+        return details
+
     def get_user_details(self, response):
         """Return user details from Auth0 account"""
-        user_metadata = response.get('user_metadata')
-        app_metadata = response.get('app_metadata')
-        fullname, first_name, last_name = self.get_user_names(
-            user_metadata.get('name'),
-            user_metadata.get('firstName'),
-            user_metadata.get('lastName'))
-        user_roles = app_metadata.get('SiteRole').split(',')
+        details = self.compliance_check(response)
+
         superuser = False
         staff = False
+        active = False
 
-        if any(role in self.admin_roles for role in user_roles):
+        if any(role in self.admin_roles for role in details['user_roles']):
             superuser = True
             staff = True
 
-        active = False
         if self.allowed_roles:
-            if any(role in self.allowed_roles for role in user_roles):
+            if any(role in self.allowed_roles
+                   for role in details['user_roles']):
                 active = True
         else:
             active = True
 
         user_info = {
-            'username': response.get('nickname'),
-            'email': response.get('email'),
-            'fullname': fullname,
-            'first_name': first_name,
-            'last_name': last_name,
-            'organization': user_metadata.get('organization'),
             'is_superuser': superuser,
             'is_staff': staff,
             'is_active': active
         }
 
+        user_info.update(details)
+
+        logger.debug(user_info)
         return user_info
 
     def user_data(self, access_token, *args, **kwargs):
