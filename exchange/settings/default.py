@@ -205,7 +205,6 @@ INSTALLED_APPS = (
     'social_django',
     'ordered_model',
     'exchange.pki',
-    'logtailer',
 ) + ADDITIONAL_APPS + INSTALLED_APPS
 
 MIGRATION_MODULES = {
@@ -440,67 +439,6 @@ LOGGING['loggers']['django.db.backends'] = {
     'propagate': False,
     'level': 'WARNING',  # Django SQL logging is too noisy at DEBUG
 }
-
-if 'logtailer' in INSTALLED_APPS:
-    # Config for client (in Django admin panel) log parsing
-
-    LOGTAILER_LEVEL = os.getenv('LOGTAILER_LEVEL', 'INFO')
-
-    # How many lines to load when starting to tail an existing log
-    LOGTAILER_HISTORY_LINES = os.getenv('LOGTAILER_HISTORY_LINES', 200)
-    # Length of time client logging can stay enabled
-    LOGTAILER_TIMEOUT = os.getenv('LOGTAILER_TIMEOUT', 600)  # in seconds
-    # File-based timer for client logging
-    LOGTAILER_LOGGING_TIMER = os.path.join(tempfile.gettempdir(),
-                                           "logtailer-timer")
-    # Dir where client's logtailer is restricted to reading only its log files
-    log_dir = os.getenv('LOGTAILER_LOG_DIR', '/var/log/exchange/logtailer')
-    if not os.path.exists(log_dir):
-        try:
-            os.makedirs(log_dir, 0o0755)
-        except OSError:
-            log_dir = tempfile.mkdtemp()
-    elif not (os.path.isdir(log_dir) and
-              os.access(log_dir, os.W_OK | os.X_OK)):
-        log_dir = tempfile.mkdtemp()
-    LOGTAILER_LOG_DIR = log_dir
-    # Client output log file
-    LOGTAILER_LOG_NAME = os.getenv('LOGTAILER_LOG_NAME', "exchange-app.log")
-    LOGTAILER_LOG_FILE = os.path.join(LOGTAILER_LOG_DIR, LOGTAILER_LOG_NAME)
-    # Only files with these extensions will be parsed from LOGTAILER_LOG_DIR
-    LOGTAILER_LOG_FILE_EXTENSIONS = ".*\.(log).*$"
-
-    LOGGING['formatters']['logtailer'] = {
-        'format':
-            ('=== %(levelname)s %(app)s %(asctime)s '
-             '%(name)s (%(filename)s %(lineno)d): %(message)s'),
-    }
-    LOGGING['handlers']['logtailer'] = {
-        # logging ON/OFF is internally controlled, so should always log via
-        # default INFO level (customer-appropriate to avoid flooding log)
-        'level': LOGTAILER_LEVEL,
-        'class': 'logtailer.logger.LogTailerHandler',
-        'formatter': 'logtailer',
-        'filename': LOGTAILER_LOG_FILE,
-        'when': 'midnight',
-        'interval': 1,
-        'backupCount': 3,
-        'encoding': 'utf-8',
-        'appcallback':
-            lambda: 'celery' if os.getenv('VIA_CELERY', 0) else 'exchange'
-    }
-    LOGGING['loggers']['exchange'] = {
-        'handlers': ['console', 'logtailer'],
-        'level': LOGTAILER_LEVEL,
-        'propagate': False,
-        'filters': ['ignore_django_warnings', ],
-    }
-    # LOGGING['loggers']['geonode'] = {
-    #     'handlers': ['logtailer'],
-    #     'level': LOGTAILER_LEVEL,
-    #     'propagate': True,
-    #     'filters': ['ignore_django_warnings', ],
-    # }
 
 # Authentication Settings
 
