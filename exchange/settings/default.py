@@ -203,8 +203,6 @@ INSTALLED_APPS = (
     'exchange.storyscapes',
     'composer',
     'social_django',
-    'ordered_model',
-    'exchange.pki',
 ) + ADDITIONAL_APPS + INSTALLED_APPS
 
 MIGRATION_MODULES = {
@@ -442,6 +440,23 @@ LOGGING['loggers']['django.db.backends'] = {
 
 # Authentication Settings
 
+# ssl_pki
+SSL_PKI_ENABLED = str2bool(os.getenv('SSL_PKI_ENABLED', 'True'))
+if SSL_PKI_ENABLED:
+    INSTALLED_APPS = INSTALLED_APPS + (
+        'ordered_model',
+        'ssl_pki',
+        'exchange.pki',
+    )
+
+    # Force max length validation on encrypted password fields
+    ENFORCE_MAX_LENGTH = 1
+
+    # IMPORTANT: this directory should not be within application or www roots
+    PKI_DIRECTORY = os.getenv('PKI_DIRECTORY', '/usr/local/exchange-pki')
+
+    # TODO: add back logtailer setup, if needed
+
 # ldap
 AUTH_LDAP_SERVER_URI = os.getenv('AUTH_LDAP_SERVER_URI', None)
 LDAP_SEARCH_DN = os.getenv('LDAP_SEARCH_DN', None)
@@ -526,12 +541,6 @@ FILESERVICE_CONFIG = {
     'types_allowed': ['.jpg', '.jpeg', '.png'],
     'streaming_supported': False
 }
-
-# Force max length validation on encrypted password fields (used by pki app)
-ENFORCE_MAX_LENGTH = 1
-
-# IMPORTANT: this directory should not be within application or www roots
-PKI_DIRECTORY = os.getenv('PKI_DIRECTORY', '/usr/local/exchange-pki')
 
 # Custom default background used during thumbnail generation.
 # As of v1.4.8 (ps/pki branch), this service must support the following:

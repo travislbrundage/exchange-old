@@ -22,3 +22,6 @@
 	path = vendor/arcrest
 	url = https://github.com/boundlessgeo/ArcREST.git
 	branch = ps/pki
+[submodule "vendor/django-ssl-pki"]
+	path = vendor/django-ssl-pki
+	url = https://github.com/boundlessgeo/django-ssl-pki.git
