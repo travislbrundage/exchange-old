@@ -573,7 +573,7 @@ if ENABLE_SOCIAL_LOGIN:
     ENABLE_AUTH0_LOGIN = isValid(SOCIAL_AUTH_AUTH0_KEY)
     SOCIAL_AUTH_AUTH0_SCOPE = ['sub', 'nickname', 'email',
                                'profile', 'picture', 'email_verfied',
-                               'name', 'openid', 'given_name',
+                               'name', 'openid', 'given_name', 'user_id',
                                'family_name', 'preferred_username']
     if ENABLE_AUTH0_LOGIN:
         DEFAULT_SOCIAL_PROVIDER = 'auth0'

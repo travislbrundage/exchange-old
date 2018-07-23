@@ -56,7 +56,7 @@ class AuthZeroOAuth2(BaseOAuth2):
     def compliance_check(self, response):
         details = {}
         if self.OIDC_CONFORMANT:
-            details['user_roles'] = response.get(self.ROLES_NAMESPACE)
+            details['user_roles'] = response.get(self.ROLES_NAMESPACE) or []
         else:
             user_metadata = response.get('user_metadata')
             app_metadata = response.get('app_metadata')
