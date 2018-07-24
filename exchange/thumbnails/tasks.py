@@ -17,8 +17,8 @@ from PIL import Image
 import io
 from urlparse import urlparse
 
-from exchange.pki.models import has_ssl_config
-from exchange.pki.ssl_session import https_client
+from ssl_pki.models import has_ssl_config
+from ssl_pki.ssl_session import https_client
 
 
 try:

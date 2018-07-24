@@ -10,7 +10,7 @@ from six import iteritems
 
 from geonode.base.models import TopicCategory
 try:
-    from exchange.pki.models import uses_proxy_route
+    from ssl_pki.models import uses_proxy_route
 except ImportError:
     uses_proxy_route = None
 

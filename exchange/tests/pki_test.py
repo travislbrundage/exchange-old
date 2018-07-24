@@ -52,8 +52,8 @@ from geonode.services.models import Service
 
 from . import ExchangeTest
 
-from exchange.pki.settings import get_pki_dir, SSL_DEFAULT_CONFIG
-from exchange.pki.models import (
+from ssl_pki.settings import get_pki_dir, SSL_DEFAULT_CONFIG
+from ssl_pki.models import (
     SslConfig,
     HostnamePortSslConfig,
     hostnameport_pattern_cache,
@@ -64,8 +64,8 @@ from exchange.pki.models import (
     hostnameport_pattern_for_url,
     uses_proxy_route,
 )
-from exchange.pki.crypto import Crypto
-from exchange.pki.validate import (
+from ssl_pki.crypto import Crypto
+from ssl_pki.validate import (
     PkiValidationError,
     pki_dir_path,
     pki_file_exists_readable,
@@ -85,9 +85,9 @@ from exchange.pki.validate import (
     validate_client_cert,
     validate_client_key,
 )
-from exchange.pki.ssl_adapter import SslContextAdapter
-from exchange.pki.ssl_session import SslContextSession, https_client
-from exchange.pki.utils import (
+from ssl_pki.ssl_adapter import SslContextAdapter
+from ssl_pki.ssl_session import SslContextSession, https_client
+from ssl_pki.utils import (
     protocol_relative_url,
     protocol_relative_to_scheme,
     relative_to_absolute_url,
@@ -881,7 +881,7 @@ class TestGeoNodeProxy(PkiTestCase):
                             content_type="text/plain")
 
     @pytest.mark.skip(reason="Because it's fixture loading needs fixed")
-    @mock.patch("exchange.pki.views.pki_request", side_effect=mock_pki_request)
+    @mock.patch("ssl_pki.views.pki_request", side_effect=mock_pki_request)
     def test_proxy_reroute(self, mock_pki_request):
         proxy_root = '/proxy/?url='
         response = self.client.get(proxy_root + quote(self.mp_root))
@@ -891,7 +891,7 @@ class TestGeoNodeProxy(PkiTestCase):
         self.assertEqual(response.content,
                          mock_pki_request.return_value.content)
 
-    @mock.patch("exchange.pki.views.pki_request", side_effect=mock_pki_request)
+    @mock.patch("ssl_pki.views.pki_request", side_effect=mock_pki_request)
     def test_proxy_no_reroute(self, mock_pki_request):
         proxy_root = '/proxy/?url='
         response = self.client.get(proxy_root + quote(self.mp_root_http))

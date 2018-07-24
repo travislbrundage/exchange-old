@@ -4,10 +4,11 @@
 -e ./vendor/django-osgeo-importer
 -e ./vendor/arcrest/src
 -e ./vendor/django-logtailer
+-e ./vendor/django-ssl-pki
 git+https://github.com/MapStory/composer.git@93300659c4f1a02c4eb2f17713d38779c47cc4e1#composer
 git+https://github.com/boundlessgeo/sphinx@ad78538babd53a7a860fe297fffaed7abc11d0f5#egg=Sphinx
 git+https://github.com/venicegeo/nearsight@d3cf9febec079742890ee7236d6720945a708533#egg=nearsight
-geonode-elasticsearch-app==0.2.1
+geonode-elasticsearch-app==0.2.3
 django-jsonfield==1.0.1
 django-jsonfield-compat==0.4.4
 numpy==1.13.3
@@ -31,7 +32,7 @@ supervisor-stdout==0.1.1
 python-resize-image==1.1.11
 django-flat-theme==1.1.4
 flake8==3.5.0
-elasticsearch-dsl>=6.0.0,<7.0.0
+elasticsearch-dsl==6.1.0
 social-auth-app-django==1.2.0
 mock==2.0.0
 Django==1.8.18
