@@ -197,6 +197,7 @@ INSTALLED_APPS = (
     'geonode',
     'geonode.contrib.geogig',
     'geonode.contrib.slack',
+    'geonode.contrib.createlayer',
     'django_classification_banner',
     'exchange.maploom',
     'solo',
@@ -346,9 +347,6 @@ if WGS84_MAP_CRS:
     DEFAULT_MAP_CRS = "EPSG:4326"
 
 # elasticsearch-dsl settings
-ES_URL = os.getenv('ES_URL', 'http://127.0.0.1:9200/')
-
-# elasticsearch-dsl settings
 # Elasticsearch-dsl Backend Configuration. To enable,
 # Set ES_SEARCH to True
 # Run "python manage.py clear_haystack" (if upgrading from haystack)
@@ -444,7 +442,7 @@ LOGGING = {
         },
     },
     'loggers': {
-        # app: copy.deepcopy(installed_apps_conf) for app in INSTALLED_APPS
+        app: copy.deepcopy(installed_apps_conf) for app in INSTALLED_APPS
     },
 }
 
@@ -685,9 +683,18 @@ if ENABLE_SOCIAL_LOGIN:
     )
 
     SOCIAL_AUTH_AUTH0_KEY = os.getenv('OAUTH_AUTH0_KEY', None)
+    SOCIAL_AUTH_AUTH0_OIDC_CONFORMANT = str2bool(os.getenv(
+        'OAUTH_AUTH0_OIDC_CONFORMANT', 'False'))
+    SOCIAL_AUTH_AUTH0_MOBILE_KEY = os.getenv('OAUTH_AUTH0_MOBILE_KEY', None)
     SOCIAL_AUTH_AUTH0_SECRET = os.getenv('OAUTH_AUTH0_SECRET', None)
     SOCIAL_AUTH_AUTH0_HOST = os.getenv('OAUTH_AUTH0_HOST', None)
     ENABLE_AUTH0_LOGIN = isValid(SOCIAL_AUTH_AUTH0_KEY)
+    SOCIAL_AUTH_AUTH0_SCOPE = ['sub', 'nickname', 'email',
+                               'profile', 'picture', 'email_verfied',
+                               'name', 'openid', 'given_name', 'user_id',
+                               'family_name', 'preferred_username']
+    if ENABLE_AUTH0_LOGIN:
+        DEFAULT_SOCIAL_PROVIDER = 'auth0'
     AUTH0_APP_NAME = os.getenv('AUTH0_APP_NAME', 'Connect')
     OAUTH_AUTH0_ADMIN_ROLES = os.getenv(
         'OAUTH_AUTH0_ADMIN_ROLES',
@@ -758,6 +765,25 @@ MAP_CLIENT_USE_CROSS_ORIGIN_CREDENTIALS = str2bool(os.getenv(
 ))
 
 PROXY_URL = '/proxy/?url='
+
+ACCESS_TOKEN_NAME = os.getenv(
+    'ACCESS_TOKEN_NAME',
+    'x-token'
+)
+
+# Settings to change the WMS that is used for backgrounds on
+# Thumbnail generation.
+# Both Settings are required to change from default
+THUMBNAIL_BACKGROUND_WMS = os.getenv(
+    'THUMBNAIL_BACKGROUND_WMS',
+    'https://demo.boundlessgeo.com/geoserver/wms?'
+)
+
+THUMBNAIL_BACKGROUND_WMS_LAYER = os.getenv(
+    'THUMBNAIL_BACKGROUND_WMS_LAYER',
+    'ne:NE1_HR_LC_SR_W_DR'
+)
+
 
 ACCESS_TOKEN_NAME = os.getenv(
     'ACCESS_TOKEN_NAME',

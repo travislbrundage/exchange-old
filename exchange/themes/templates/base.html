@@ -63,6 +63,7 @@
                   <li><a href="{% url "document_browse" %}">{% trans "Documents" %}</a></li>
                   <li role="separator" class="divider"></li>
                   <li><a href="{% url "layer_upload" %}">{% trans "Upload Layer" %}</a></li>
+                  <li><a href="{% url "layer_create" %}">{% trans "Create Layer" %}</a></li>
                   <li><a href="{% url "document_upload" %}">{% trans "Upload Document" %}</a></li>
                   <li role="separator" class="divider"></li>
                   <li><a href="{% url "services" %}">{% trans "Manage Remote Services" %}</a></li>
@@ -128,7 +129,7 @@
                     <li><a href="{% url "help" %}">{% trans "Help" %}</a></li>
                     <li role="separator" class="divider"></li>
                     {% if not GEOAXIS_ENABLED %}
-                      <li><a href="/account/logout/">Logout</a></li>
+                      <li><a href="{% url "exchange_logout" %}">Logout</a></li>
                     {% endif %}
                   </ul>
                 </li>

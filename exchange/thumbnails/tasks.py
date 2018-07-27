@@ -26,6 +26,18 @@ try:
 except NameError:
     xrange = range
 
+THUMBNAIL_BACKGROUND_WMS = getattr(
+    settings,
+    'THUMBNAIL_BACKGROUND_WMS',
+    'https://demo.boundlessgeo.com/geoserver/wms?'
+)
+
+THUMBNAIL_BACKGROUND_WMS_LAYER = getattr(
+    settings,
+    'THUMBNAIL_BACKGROUND_WMS_LAYER',
+    'ne:NE1_HR_LC_SR_W_DR'
+)
+
 logger = logging.getLogger(__name__)
 
 # setup requests client with max retries
@@ -115,7 +127,7 @@ def make_thumb_request(remote, baseurl, params=None):
             thumbnail_create_url = '%s&access_token=%s' % (
                 thumbnail_create_url,
                 token)
-            logger.debug('fetching %s with token' % thumbnail_create_url)
+            logger.info('fetching %s with token' % thumbnail_create_url)
             resp = http_client.get(thumbnail_create_url)
 
         if 200 <= resp.status_code <= 299:
@@ -123,8 +135,8 @@ def make_thumb_request(remote, baseurl, params=None):
                 return resp.content
 
         logger.info(
-            'Thumbnail: Encountered service exception or unexpected '
-            'status code (%d).  Aborting.',
+            'Thumbnail: Encountered unexpected status code: %d.  '
+            'Aborting.',
             resp.status_code)
         logger.debug('content: %s', resp.content)
     except Exception as e:
@@ -217,9 +229,8 @@ def get_wms_thumbnail(instance=None, layers=None, bbox=None,
         if bbox is None or height is None:
             return None
         remote = True
-        layers = settings.THUMBNAIL_BACKGROUND_LAYER['layers']\
-            .strip().replace(' ', '')
-        baseurl = settings.THUMBNAIL_BACKGROUND_LAYER['url'].strip() + '?'
+        layers = THUMBNAIL_BACKGROUND_WMS_LAYER
+        baseurl = THUMBNAIL_BACKGROUND_WMS
 
     elif (hasattr(instance, 'storeType') and
             instance.storeType == 'remoteStore'):

@@ -1,11 +1,10 @@
 [submodule "vendor/geonode"]
 	path = vendor/geonode
 	url = https://github.com/boundlessgeo/geonode.git
-	branch = ps/pki
+	branch = exchange/1.4.x
 [submodule "vendor/maploom"]
 	path = vendor/maploom
 	url = https://github.com/boundlessgeo/MapLoom.git
-	branch = ps/pki
 [submodule "vendor/sphinx-theme"]
 	path = vendor/sphinx-theme
 	url = https://github.com/boundlessgeo/sphinx-theme
@@ -29,3 +28,6 @@
 [submodule "vendor/django-ssl-pki"]
 	path = vendor/django-ssl-pki
 	url = https://github.com/boundlessgeo/django-ssl-pki.git
+[submodule "vendor/geonode-elasticsearch"]
+	path = vendor/geonode-elasticsearch
+	url = https://github.com/boundlessgeo/geonode-elasticsearch
