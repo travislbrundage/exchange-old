@@ -1,8 +1,10 @@
 # quay.io/boundlessgeo/bex-nodejs-bower-grunt
 # docker build -t bex-nodejs-bower-grunt .
-FROM node:9.4.0-stretch
+FROM node:10-slim
 LABEL maintainer="Daniel Berry <dberry@boundlessgeo.com>"
 
-RUN npm install -g bower grunt-cli karma
+RUN npm install -g bower grunt-cli karma && \
+  apt-get update && \
+  apt-get install -y python
 
 CMD ["/bin/bash"]
