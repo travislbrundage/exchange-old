@@ -6,6 +6,7 @@ COPY . .
 
 COPY requirements.txt /app/requirements.txt
 
+# trying to keep the images lean, so no gcc in base image
 RUN sed -i "/GDAL/d" /app/requirements.txt \
     && sed -i "/numpy/d" /app/requirements.txt \
     && sed -i "/python-ldap/d" /app/requirements.txt \

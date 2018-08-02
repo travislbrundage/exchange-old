@@ -2,6 +2,10 @@
 
 set -e
 
+# trying to keep the images lean
+apt-get update -y
+apt-get install -y gcc
+
 pushd /code
 pip install pytest-cov
 export DJANGO_SETTINGS_MODULE='exchange.settings'

@@ -5,6 +5,6 @@ LABEL maintainer="Daniel Berry <dberry@boundlessgeo.com>"
 
 RUN npm install -g bower grunt-cli karma && \
   apt-get update && \
-  apt-get install -y python
+  apt-get install -y python bzip2 git
 
 CMD ["/bin/bash"]
