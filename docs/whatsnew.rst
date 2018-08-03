@@ -1,31 +1,20 @@
-What’s New in Boundless Exchange v 1.4.10
+What’s New in Boundless Exchange v1.4.11
 =========================================
 
-Welcome to the latest update of Boundless Exchange! This release includes improvements to the Create Layer feature, as well as fixes for some of the search functions.
+Welcome to the latest update of Boundless Exchange! This release includes OAuth authentication improvements, bounding box updates in MapLoom, and numerous bug fixes.
 
-Create Layer
-^^^^^^^^^^^^
+Authentication
+^^^^^^^^^^^^^^
 
-New layers can be created in Exchange through the :ref:`create a new layer <createlayers>` function. This release provides a few additions, which will improve the user experience.
+Boundless Exchange uses OAuth to grant users and applications access to shared information, without giving access to the passwords. This release provides the following changes:
 
- * When creating a layer, users can specify the layer geometry type as point, line, or polygon. 
+ * It is now possible for Boundless Anywhere to use the configured GeoAxis or Auth0 authentication provider in Exchange for secure token exchange and validation.
 
- * Individual attributes can be added to a layer for string, float, date or integer type attributes. 
+ * Support for Auth0 OpenID Connect (OIDC) conformity.
  
- * A status wheel now indicates when layer creation is complete. 
+ * Federated logout of third-party authentication providers.
 
-Search Fixes
-^^^^^^^^^^^^
-
-Previous issues with searches within Exchange have been fixed.
-
- * An issue with searching for individual users by name now returns the expected results.
-
- * Group searches now return the expected results. 
-
- * Issues relating to Explore Maps and Explore Documents filters not functioning properly have been fixed.
-
-Additional Fixes
+MapLoom
 ^^^^^^^^^^^^^^^^
 
- * Missing thumbnails have been restored for user resources.
+ * Layer bounding boxes are now automatically recalculated when editing vector features in MapLoom.
