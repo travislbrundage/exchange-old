@@ -2,6 +2,7 @@
 Auth0 OAuth2 backend:
 """
 import logging
+from urlparse import urlparse
 from social_core.backends.oauth import BaseOAuth2
 
 from django.conf import settings
@@ -26,6 +27,7 @@ class AuthZeroOAuth2(BaseOAuth2):
     USER_INFO_URL = 'https://{domain}/userinfo?access_token={access_token}'
     REDIRECT_STATE = False
     ROLES_NAMESPACE = 'https://bex.boundlessgeo.io/roles'
+    ENV_NAMESPACE = 'https://environments.boundlessgeo.io/roles'
     ACCESS_TOKEN_METHOD = 'POST'
     admin_roles = getattr(settings, 'AUTH0_ADMIN_ROLES', [])
     allowed_roles = getattr(settings, 'AUTH0_ALLOWED_ROLES', [])
@@ -111,3 +113,21 @@ class AuthZeroOAuth2(BaseOAuth2):
             self.USER_INFO_URL.format(
                 domain=self.HOST, access_token=access_token))
         return response
+
+    def auth_allowed(self, response, details):
+        """Return True if the user should be allowed to authenticate, by
+        checking SITE_URL against the enviornment whitelist"""
+
+        allowed = False
+
+        allowed_environments = response.get(self.ENV_NAMESPACE)
+
+        for environment_url in allowed_environments:
+            site_url = urlparse(settings.SITEURL)
+            env_url = urlparse(environment_url)
+            if env_url.scheme == site_url.scheme:
+                if env_url.hostname == site_url.hostname:
+                    allowed = True
+                    break
+
+        return allowed
