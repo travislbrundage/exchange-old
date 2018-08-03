@@ -548,6 +548,7 @@ if ENABLE_SOCIAL_LOGIN:
         'social_core.backends.google.GoogleOAuth2',
         'social_core.backends.facebook.FacebookOAuth2',
         'exchange.auth.backends.auth0.AuthZeroOAuth2',
+        'social_core.backends.azuread.AzureADOAuth2',
     )
 
     DEFAULT_AUTH_PIPELINE = (
@@ -564,6 +565,7 @@ if ENABLE_SOCIAL_LOGIN:
         'social_core.pipeline.user.user_details'
     )
 
+    # Auth0
     SOCIAL_AUTH_AUTH0_KEY = os.getenv('OAUTH_AUTH0_KEY', None)
     SOCIAL_AUTH_AUTH0_OIDC_CONFORMANT = str2bool(os.getenv(
         'OAUTH_AUTH0_OIDC_CONFORMANT', 'False'))
@@ -593,6 +595,24 @@ if ENABLE_SOCIAL_LOGIN:
         AUTH0_ALLOWED_ROLES = map(
             str.strip, OAUTH_AUTH0_ALLOWED_ROLES.split(','))
 
+    # Microsoft Azure Active Directory
+    SOCIAL_AUTH_AZUREAD_OAUTH2_KEY = os.getenv('OAUTH_AZUREAD_KEY', None)
+    SOCIAL_AUTH_AZUREAD_OAUTH2_SECRET = os.getenv('OAUTH_AZUREAD_SECRET', None)
+    SOCIAL_AUTH_AZUREAD_OAUTH2_RESOURCE = os.getenv('OAUTH_AZUREAD_RESOURCE',
+                                                    'https://graph.microsoft.com/')  # noqa
+    ENABLE_MICROSOFT_AZURE_LOGIN = isValid(SOCIAL_AUTH_AZUREAD_OAUTH2_KEY)
+
+    # Microsoft Azure Active Directory Tenant Support
+    SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_KEY = os.getenv('OAUTH_AZUREAD_TENANT_KEY',  # noqa
+                                                      None)
+    SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_SECRET = os.getenv('OAUTH_AZUREAD_TENANT_SECRET',  # noqa
+                                                         None)
+    SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_TENANT_ID = os.getenv('OAUTH_AZUREAD_TENANT_ID',  # noqa
+                                                            None)
+    SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_RESOURCE = os.getenv('OAUTH_AZUREAD_TENANT_RESOURCE',  # noqa
+                                                           'https://graph.microsoft.com/')  # noqa
+
+    # Facebook
     SOCIAL_AUTH_FACEBOOK_KEY = os.getenv('OAUTH_FACEBOOK_KEY', None)
     SOCIAL_AUTH_FACEBOOK_SECRET = os.getenv('OAUTH_FACEBOOK_SECRET', None)
     OAUTH_FACEBOOK_SCOPES = os.getenv('OAUTH_FACEBOOK_SCOPES', 'email')
@@ -604,10 +624,12 @@ if ENABLE_SOCIAL_LOGIN:
     }
     ENABLE_FACEBOOK_LOGIN = isValid(SOCIAL_AUTH_FACEBOOK_KEY)
 
+    # Google
     SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv('OAUTH_GOOGLE_KEY', None)
     SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('OAUTH_GOOGLE_SECRET', None)
     ENABLE_GOOGLE_LOGIN = isValid(SOCIAL_AUTH_GOOGLE_OAUTH2_KEY)
 
+    # GeoAxis
     SOCIAL_AUTH_GEOAXIS_KEY = os.getenv('OAUTH_GEOAXIS_KEY', None)
     SOCIAL_AUTH_GEOAXIS_SECRET = os.getenv('OAUTH_GEOAXIS_SECRET', None)
     SOCIAL_AUTH_GEOAXIS_HOST = os.getenv('OAUTH_GEOAXIS_HOST', None)
