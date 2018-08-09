@@ -18,24 +18,4 @@
 #
 #########################################################################
 
-from django.apps import AppConfig
-
-
-class PkiAppConfig(AppConfig):
-    name = 'exchange.pki'
-    label = 'pki'
-    verbose_name = 'SSL/PKI'
-
-    def ready(self):
-        # noinspection PyUnresolvedReferences
-        from . import signals  # noqa
-
-
-class PkiTestAppConfig(AppConfig):
-    name = 'pki'
-    label = 'pki'
-    verbose_name = 'SSL/PKI'
-
-    def ready(self):
-        # noinspection PyUnresolvedReferences
-        from . import signals  # noqa
+default_app_config = 'exchange.sslpki.pki.apps.PkiAppConfig'

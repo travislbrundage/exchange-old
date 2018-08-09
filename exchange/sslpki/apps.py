@@ -18,32 +18,14 @@
 #
 #########################################################################
 
-from __future__ import unicode_literals
-
-from django.db import migrations
-
-from ..settings import SSL_DEFAULT_CONFIG
+from django.apps import AppConfig
 
 
-def load_default_config(apps, schema_editor):
-    sslconfig = apps.get_model('pki', 'SslConfig')
-    db_alias = schema_editor.connection.alias
-    ssl_config = sslconfig(**SSL_DEFAULT_CONFIG)
-    ssl_config.save(using=db_alias)
+class SslPkiAppSupportConfig(AppConfig):
+    name = 'exchange.sslpki'
+    label = 'sslpki_support'
+    verbose_name = 'SSL/PKI Support'
 
-
-def delete_default_config(apps, schema_editor):
-    sslconfig = apps.get_model('pki', 'SslConfig')
-    db_alias = schema_editor.connection.alias
-    sslconfig.objects.using(db_alias).get(pk=1).delete()
-
-
-class Migration(migrations.Migration):
-
-    dependencies = [
-        ('pki', '0001_initial'),
-    ]
-
-    operations = [
-        migrations.RunPython(load_default_config, delete_default_config),
-    ]
+    def ready(self):
+        # noinspection PyUnresolvedReferences
+        from . import signals  # noqa

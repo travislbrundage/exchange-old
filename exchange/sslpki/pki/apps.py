@@ -18,9 +18,10 @@
 #
 #########################################################################
 
-from django.conf.urls import patterns, url
-from .views import pki_request
+from django.apps import AppConfig
 
-urlpatterns = patterns(
-    '',
-    url(r'^pki/(?P<resource_url>.*)$', pki_request, name="pki_request"),)
+
+class PkiAppConfig(AppConfig):
+    name = 'exchange.pki'
+    label = 'pki'
+    verbose_name = 'SSL/PKI'

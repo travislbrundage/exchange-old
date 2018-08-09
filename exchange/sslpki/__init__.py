@@ -18,4 +18,4 @@
 #
 #########################################################################
 
-default_app_config = 'exchange.pki.apps.PkiAppConfig'
+default_app_config = 'exchange.sslpki.apps.SslPkiAppSupportConfig'

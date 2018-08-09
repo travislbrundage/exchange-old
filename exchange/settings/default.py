@@ -446,7 +446,7 @@ if SSL_PKI_ENABLED:
     INSTALLED_APPS = INSTALLED_APPS + (
         'ordered_model',
         'ssl_pki',
-        'exchange.pki',
+        'exchange.sslpki',
     )
 
     # Force max length validation on encrypted password fields
