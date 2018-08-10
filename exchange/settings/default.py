@@ -455,6 +455,9 @@ if SSL_PKI_ENABLED:
     # IMPORTANT: this directory should not be within application or www roots
     PKI_DIRECTORY = os.getenv('PKI_DIRECTORY', '/usr/local/exchange-pki')
 
+    # ssl_pki app expects a generic setting for EXCHANGE_LOCAL_URL
+    SITE_LOCAL_URL = EXCHANGE_LOCAL_URL
+
     # TODO: add back logtailer setup, if needed
 
 # ldap
