@@ -43,7 +43,7 @@ services:
       - task_queue
     volumes:
       - $PWD:/code:rw  # needed for running tests and coverage
-      - django_media:/app/data/media
+      - bex_data:/app/data
   geoserver:
     container_name: geoserver
     build: ./docker/geoserver
@@ -58,7 +58,7 @@ services:
     depends_on:
       - db
     volumes:
-      - geoserver_data:/usr/local/tomcat/webapps/geoserver/data:rw
+      - bex_data:/app/data:rw
   mapproxy:
     container_name: mapproxy
     build: ./docker/mapproxy
@@ -100,7 +100,7 @@ services:
       - db_data:/var/lib/postgresql/data
   task_queue:
     container_name: task_queue
-    image: rabbitmq:3.6-management-alpine
+    image: rabbitmq:3.7-management-alpine
     ports:
       - 5672:5672
       - 15672:15672  # rabbitmq management plugin
@@ -137,8 +137,7 @@ services:
     volumes:
       - queue_data:/usr/share/elasticsearch/data/elasticsearch
 volumes:  # volumes with no displayed path/relationship to the host
-  django_media:
-  geoserver_data:
+  bex_data:
   mapproxy_data:
   db_data:
   search_data:

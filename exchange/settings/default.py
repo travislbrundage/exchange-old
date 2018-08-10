@@ -197,6 +197,7 @@ INSTALLED_APPS = (
     'geonode',
     'geonode.contrib.geogig',
     'geonode.contrib.slack',
+    'geonode.contrib.createlayer',
     'django_classification_banner',
     'exchange.maploom',
     'solo',
@@ -346,7 +347,23 @@ if WGS84_MAP_CRS:
     DEFAULT_MAP_CRS = "EPSG:4326"
 
 # elasticsearch-dsl settings
-ES_URL = os.getenv('ES_URL', 'http://127.0.0.1:9200/')
+# Elasticsearch-dsl Backend Configuration. To enable,
+# Set ES_SEARCH to True
+# Run "python manage.py clear_haystack" (if upgrading from haystack)
+# Run "python manage.py rebuild_index"
+ES_SEARCH = str2bool(os.getenv('ES_SEARCH', 'False'))
+
+if ES_SEARCH:
+    INSTALLED_APPS = (
+        'elasticsearch_app',
+    ) + INSTALLED_APPS
+    ES_URL = os.getenv('ES_URL', 'http://127.0.0.1:9200/')
+    # Disable Haystack
+    HAYSTACK_SEARCH = False
+    # Avoid permissions prefiltering
+    SKIP_PERMS_FILTER = False
+    # Update facet counts from Haystack
+    HAYSTACK_FACET_COUNTS = False
 
 # amqp settings
 BROKER_URL = os.getenv('BROKER_URL', 'amqp://guest:guest@localhost:5672/')
@@ -650,6 +667,7 @@ if ENABLE_SOCIAL_LOGIN:
         'social_core.backends.google.GoogleOAuth2',
         'social_core.backends.facebook.FacebookOAuth2',
         'exchange.auth.backends.auth0.AuthZeroOAuth2',
+        'social_core.backends.azuread.AzureADOAuth2',
     )
 
     DEFAULT_AUTH_PIPELINE = (
@@ -666,10 +684,20 @@ if ENABLE_SOCIAL_LOGIN:
         'social_core.pipeline.user.user_details'
     )
 
+    # Auth0
     SOCIAL_AUTH_AUTH0_KEY = os.getenv('OAUTH_AUTH0_KEY', None)
+    SOCIAL_AUTH_AUTH0_OIDC_CONFORMANT = str2bool(os.getenv(
+        'OAUTH_AUTH0_OIDC_CONFORMANT', 'False'))
+    SOCIAL_AUTH_AUTH0_MOBILE_KEY = os.getenv('OAUTH_AUTH0_MOBILE_KEY', None)
     SOCIAL_AUTH_AUTH0_SECRET = os.getenv('OAUTH_AUTH0_SECRET', None)
     SOCIAL_AUTH_AUTH0_HOST = os.getenv('OAUTH_AUTH0_HOST', None)
     ENABLE_AUTH0_LOGIN = isValid(SOCIAL_AUTH_AUTH0_KEY)
+    SOCIAL_AUTH_AUTH0_SCOPE = ['sub', 'nickname', 'email',
+                               'profile', 'picture', 'email_verfied',
+                               'name', 'openid', 'given_name', 'user_id',
+                               'family_name', 'preferred_username']
+    if ENABLE_AUTH0_LOGIN:
+        DEFAULT_SOCIAL_PROVIDER = 'auth0'
     AUTH0_APP_NAME = os.getenv('AUTH0_APP_NAME', 'Connect')
     OAUTH_AUTH0_ADMIN_ROLES = os.getenv(
         'OAUTH_AUTH0_ADMIN_ROLES',
@@ -686,6 +714,24 @@ if ENABLE_SOCIAL_LOGIN:
         AUTH0_ALLOWED_ROLES = map(
             str.strip, OAUTH_AUTH0_ALLOWED_ROLES.split(','))
 
+    # Microsoft Azure Active Directory
+    SOCIAL_AUTH_AZUREAD_OAUTH2_KEY = os.getenv('OAUTH_AZUREAD_KEY', None)
+    SOCIAL_AUTH_AZUREAD_OAUTH2_SECRET = os.getenv('OAUTH_AZUREAD_SECRET', None)
+    SOCIAL_AUTH_AZUREAD_OAUTH2_RESOURCE = os.getenv('OAUTH_AZUREAD_RESOURCE',
+                                                    'https://graph.microsoft.com/')  # noqa
+    ENABLE_MICROSOFT_AZURE_LOGIN = isValid(SOCIAL_AUTH_AZUREAD_OAUTH2_KEY)
+
+    # Microsoft Azure Active Directory Tenant Support
+    SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_KEY = os.getenv('OAUTH_AZUREAD_TENANT_KEY',  # noqa
+                                                      None)
+    SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_SECRET = os.getenv('OAUTH_AZUREAD_TENANT_SECRET',  # noqa
+                                                         None)
+    SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_TENANT_ID = os.getenv('OAUTH_AZUREAD_TENANT_ID',  # noqa
+                                                            None)
+    SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_RESOURCE = os.getenv('OAUTH_AZUREAD_TENANT_RESOURCE',  # noqa
+                                                           'https://graph.microsoft.com/')  # noqa
+
+    # Facebook
     SOCIAL_AUTH_FACEBOOK_KEY = os.getenv('OAUTH_FACEBOOK_KEY', None)
     SOCIAL_AUTH_FACEBOOK_SECRET = os.getenv('OAUTH_FACEBOOK_SECRET', None)
     OAUTH_FACEBOOK_SCOPES = os.getenv('OAUTH_FACEBOOK_SCOPES', 'email')
@@ -697,10 +743,12 @@ if ENABLE_SOCIAL_LOGIN:
     }
     ENABLE_FACEBOOK_LOGIN = isValid(SOCIAL_AUTH_FACEBOOK_KEY)
 
+    # Google
     SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv('OAUTH_GOOGLE_KEY', None)
     SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('OAUTH_GOOGLE_SECRET', None)
     ENABLE_GOOGLE_LOGIN = isValid(SOCIAL_AUTH_GOOGLE_OAUTH2_KEY)
 
+    # GeoAxis
     SOCIAL_AUTH_GEOAXIS_KEY = os.getenv('OAUTH_GEOAXIS_KEY', None)
     SOCIAL_AUTH_GEOAXIS_SECRET = os.getenv('OAUTH_GEOAXIS_SECRET', None)
     SOCIAL_AUTH_GEOAXIS_HOST = os.getenv('OAUTH_GEOAXIS_HOST', None)
@@ -744,4 +792,17 @@ PROXY_URL = '/proxy/?url='
 ACCESS_TOKEN_NAME = os.getenv(
     'ACCESS_TOKEN_NAME',
     'x-token'
+)
+
+# Settings to change the WMS that is used for backgrounds on
+# Thumbnail generation.
+# Both Settings are required to change from default
+THUMBNAIL_BACKGROUND_WMS = os.getenv(
+    'THUMBNAIL_BACKGROUND_WMS',
+    'https://demo.boundlessgeo.com/geoserver/wms?'
+)
+
+THUMBNAIL_BACKGROUND_WMS_LAYER = os.getenv(
+    'THUMBNAIL_BACKGROUND_WMS_LAYER',
+    'ne:NE1_HR_LC_SR_W_DR'
 )

@@ -74,6 +74,11 @@
             <i class="fa fa-google"></i> Log In with Google
         </a>
         {% endif %}
+        {% if ENABLE_MICROSOFT_AZURE_LOGIN %}
+        <a class="btn-microsoft btn-social btn bg-ms btn-block" href="{% url 'social:begin' 'azuread-oauth2' %}?{{ redirect_field_name }}={{ redirect_field_value }}">
+            <i class="fa fa-windows"></i> Log In with Microsoft Azure
+        </a>
+        {% endif %}
         {% if ENABLE_GEOAXIS_LOGIN %}
         <a class="btn-geoaxis btn-social btn bg-ms btn-block" href="{% url 'social:begin' 'geoaxis' %}?{{ redirect_field_name }}={{ redirect_field_value }}">
             <i class="fa fa-lock"></i> Log In with GeoAxis

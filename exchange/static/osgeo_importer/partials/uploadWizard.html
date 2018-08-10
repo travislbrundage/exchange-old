@@ -99,7 +99,7 @@
             <wz-step title="Temporal Info" wz-disabled="{{!timeEnabled(true)}}">
 
                 <div class="gray-container">
-                    <img class="import-wizard-image" ng-src="{{ staticUrl }}/osgeo_importer/img/time.png"/>
+                    <img class="import-wizard-image" ng-src="{{ staticUrl }}osgeo_importer/img/time.png"/>
                     <h4><strong>Does the dataset have time attributes?</strong></h4>
 
                     <div class="btn-group">
@@ -122,7 +122,7 @@
                 <form name="importOptionsForm" class="form-horizontal import-options-form">
 
                     <div class="gray-container">
-                        <img class="import-wizard-image" ng-src="{{ staticUrl }}/osgeo_importer/img/time.png"/>
+                        <img class="import-wizard-image" ng-src="{{ staticUrl }}osgeo_importer/img/time.png"/>
                         <h4><strong>Configure your time attributes:</strong></h4>
                         <div class="form-group">
                             <label for="start_date" class="col-sm-4 col-xs-4 col-md-4 control-label">Date field (start date):</label>
@@ -153,7 +153,7 @@
             <wz-step title="Version Control" wz-disabled="{{!geogigEnabled()}}">
 
                 <div class="gray-container">
-                    <img class="import-wizard-image" ng-src="{{ staticUrl }}/osgeo_importer/img/edit.png"/>
+                    <img class="import-wizard-image" ng-src="{{ staticUrl }}osgeo_importer/img/edit.png"/>
                     <h4><strong>Enable Version Control?</strong></h4>
                     <div class="btn-group">
                         <label class="btn btn-primary"  ng-model='layer.configuration_options.version_control' uib-btn-radio="true">Yes</label>
@@ -173,7 +173,7 @@
             <wz-step title="Permissions">
 
                 <div class="gray-container">
-                    <img class="import-wizard-image" ng-src="{{ staticUrl }}/osgeo_importer/img/edit.png"/>
+                    <img class="import-wizard-image" ng-src="{{ staticUrl }}osgeo_importer/img/edit.png"/>
                     <h4><strong>Who can view the layer?</strong></h4>
                     <div class="btn-group">
                         <label class="btn btn-primary"  ng-model='layer.configuration_options.public' uib-btn-radio="true">Everyone</label>

@@ -26,3 +26,6 @@
 	path = vendor/django-logtailer
 	url = https://github.com/boundlessgeo/django-logtailer.git
 	branch = ps/pki
+[submodule "vendor/geonode-elasticsearch"]
+	path = vendor/geonode-elasticsearch
+	url = https://github.com/boundlessgeo/geonode-elasticsearch

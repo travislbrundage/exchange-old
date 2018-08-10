@@ -27,6 +27,7 @@ from exchange.maploom.urls import urlpatterns as maploom_urls
 from fileservice.urls import urlpatterns as fileservice_urls
 from storyscapes.urls import urlpatterns as story_urls
 from thumbnails.urls import urlpatterns as thumbnail_urls
+from elasticsearch_app.urls import urlpatterns as search_urls
 from . import views
 
 js_info_dict = {
@@ -53,6 +54,7 @@ urlpatterns = patterns(
 
     url(r'^about/', views.about_page, name='about'),
     url(r'^capabilities/', views.capabilities, name='capabilities'),
+    url(r'^logout/', views.logout, name='exchange_logout'),
 )
 
 if 'exchange.pki' in settings.INSTALLED_APPS:
@@ -95,23 +97,8 @@ if 'nearsight' in settings.INSTALLED_APPS:
     from nearsight.urls import urlpatterns as nearsight_urls
     urlpatterns += nearsight_urls
 
-# Use out Elasticsearch implementation for search
-if settings.ES_SEARCH:
-    urlpatterns += [url(r'^api/(?P<resourcetype>base)/search/$',
-                        'exchange.search.views.elastic_search',
-                        name='elastic_search')]
-    urlpatterns += [url(r'^api/(?P<resourcetype>documents)/search/$',
-                        'exchange.search.views.elastic_search',
-                        name='elastic_search')]
-    urlpatterns += [url(r'^api/(?P<resourcetype>layers)/search/$',
-                        'exchange.search.views.elastic_search',
-                        name='elastic_search')]
-    urlpatterns += [url(r'^api/(?P<resourcetype>maps)/search/$',
-                        'exchange.search.views.elastic_search',
-                        name='elastic_search')]
-    urlpatterns += [url(r'^autocomplete',
-                        views.empty_page,
-                        name='autocomplete_override')]
+# Use our Elasticsearch implementation for search
+urlpatterns += [url('', include(search_urls)), ]
 
 if 'geonode_anywhere' in settings.INSTALLED_APPS:
     urlpatterns += [url(r"^anywhere/", include("geonode_anywhere.urls")), ]

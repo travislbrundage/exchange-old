@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context>
+    <!-- Default set of monitored resources. If one of these changes, the    -->
+    <!-- web application will be reloaded.                                   -->
+    <WatchedResource>WEB-INF/web.xml</WatchedResource>
+    <WatchedResource>${catalina.base}/conf/web.xml</WatchedResource>
+    <Resources cachingAllowed="true" cacheMaxSize="100000" />
+    <!-- Uncomment this to disable session persistence across Tomcat restarts -->
+    <!--
+    <Manager pathname="" />
+    -->
+
+    <Resource
+         name="jdbc/exchange_data" auth="Container" type="javax.sql.DataSource"
+         driverClassName="org.postgresql.Driver"
+         url="jdbc:postgresql://${db.exchange_data.host}:5432/${db.exchange_data.dbname}"
+         username="${db.exchange_data.username}" password="${db.exchange_data.password}"
+         maxTotal="100" maxIdle="10" maxWaitMillis="-1"
+     />
+</Context>
