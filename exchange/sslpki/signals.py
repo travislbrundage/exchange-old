@@ -28,6 +28,7 @@ from geonode.maps.models import MapLayer
 
 from ssl_pki.models import (
     hostnameport_pattern_for_url,
+    HostnamePortSslConfig,
 )
 from ssl_pki.utils import (
     has_proxy_prefix,
@@ -64,19 +65,20 @@ def sync_layer_legend_urls():
             continue
 
         orig_url = proxy_route_reverse(link.url)
-        ptn = hostnameport_pattern_for_url(orig_url)
+        ptn = hostnameport_pattern_for_url(orig_url, uses_proxy=True)
         if ptn is not None:
-            logger.debug(u'Original link URL matched hostname:port pattern: '
-                         u'{0} > {1}'.format(orig_url, ptn))
+            logger.debug(u'Original link URL matched hostname:port proxy '
+                         u'pattern: {0} > {1}'.format(orig_url, ptn))
             # Legend graphic URLs should be proxied through geonode
             new_url = proxy_route(orig_url)
         else:
-            logger.debug(u'Original link URL does not match any hostname:port:'
-                         u' {0}'.format(orig_url))
+            logger.debug(u'Original link URL does not match any hostname:port '
+                         u'proxy pattern: {0}'.format(orig_url))
             new_url = orig_url
 
         if new_url != link.url:
             link.url = new_url
+            logger.debug(u'Updating link URL: {0}'.format(new_url))
             link.save(update_fields=['url'])
 
 
@@ -107,10 +109,9 @@ def sync_map_layers():
 
 
 # noinspection PyUnusedLocal
-@receiver(patterns_changed, sender='ssl_pki.HostnamePortSslConfig',
+@receiver(patterns_changed, sender=HostnamePortSslConfig,
           dispatch_uid='ssl_pki_signals_patterns_changed')
-def add_update_mapping(sender, instance, created, raw,
-                       using, update_fields, **kwargs):
+def add_update_patterns(sender, **kwargs):
     """
     Respond to HostnamePortSslConfig changes (adds/updates/deletions)
     """
