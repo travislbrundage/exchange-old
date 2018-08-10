@@ -1,0 +1,29 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls admin_static admin_list %}
+
+{% block pagination %}
+	{{ block.super }}
+	<div class="paginator">
+		<p>Please note, new patterns are added to the bottom of the list, however 
+		they are matched from top to bottom. This matching applies for all 
+		<em>enabled</em> services only. This means that in a list of hostnames
+		(and optionally ports) that looks like the following:
+			<ol>
+				<li>my.first.domain - Enabled</li>
+				<li>my.second.domain - Enabled</li>
+				<li>*.domain - Enabled</li>
+			</ol>
+		Any requests for "my.first.domain" will map to the settings present in first 
+		entry, even though they also match the third entry in the list. However, in
+		a list like this:
+			<ol>
+				<li>my.first.domain - Disabled</li>
+				<li>my.second.domain - Enabled</li>
+				<li>*.domain - Enabled</li>
+			</ol>
+		Any requests for "my.first.domain" will map to the settings present in third 
+		entry. This means that a wildcard mapping like "*.*" should be used sparingly
+		and as low down on the list as possible.
+		</p>
+	</div>
+{% endblock %}

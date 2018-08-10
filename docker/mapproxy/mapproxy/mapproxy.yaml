@@ -1,0 +1,109 @@
+# -------------------------------
+# MapProxy example configuration.
+# -------------------------------
+#
+# This is a minimal MapProxy configuration.
+# See full_example.yaml and the documentation for more options.
+#
+
+# Starts the following services:
+# Demo:
+#     http://localhost:8080/demo
+# WMS:
+#     capabilities: http://localhost:8080/service?REQUEST=GetCapabilities
+# WMTS:
+#     capabilities: http://localhost:8080/wmts/1.0.0/WMTSCapabilities.xml
+#     first tile: http://localhost:8080/wmts/osm/webmercator/0/0/0.png
+# Tile service (compatible with OSM/etc.)
+#     first tile: http://localhost:8080/tiles/osm/webmercator/0/0/0.png
+# TMS:
+#     note: TMS is not compatible with OSM/Google Maps/etc.
+#     fist tile: http://localhost:8080/tms/1.0.0/osm/webmercator/0/0/0.png
+# KML:
+#     initial doc: http://localhost:8080/kml/osm/webmercator
+
+services:
+  demo:
+  tms:
+    use_grid_names: true
+    # origin for /tiles service
+    origin: 'nw'
+  kml:
+      use_grid_names: true
+  wmts:
+  wms:
+    md:
+      title: MapProxy WMS Proxy
+      abstract: This is a minimal MapProxy example.
+
+layers:
+  - name: osm
+    title: Omniscale OSM WMS - osm.omniscale.net
+    sources: [osm_cache]
+  - name: bcs_data:ne_50m_populated_places_simple
+    title: Natural Earth 50m Populated Places Simple
+    sources: ['dt_wms:bcs_data:ne_50m_populated_places_simple']
+  - name: bcs_data:ne_50m_graticules_30
+    title: Natural Earth 50m Graticules 30
+    sources: ['dt_wms:bcs_data:ne_50m_graticules_30']
+  - name: bcs_data:ne_50m_lakes
+    title: Natural Earth 50m Lakes
+    sources: ['dt_wms:bcs_data:ne_50m_lakes']
+  - name: bcs_data:ne_50m_rivers_lake_centerlines
+    title: Natural Earth 50m Rivers Lake Centerlines
+    sources: ['dt_wms:bcs_data:ne_50m_rivers_lake_centerlines']
+  - name: bcs_data:ne_50m_admin_0_countries
+    title: Natural Earth 50m Admin 0 Countries
+    sources: ['dt_wms:bcs_data:ne_50m_admin_0_countries']
+  - name: world_map
+    title: World Map of Countries
+    sources: [world_cache]
+
+caches:
+  osm_cache:
+    grids: [webmercator]
+    sources: [osm_wms]
+  dt_cache:
+    grids: [GLOBAL_GEODETIC]
+    sources: [dt_wms]
+  world_cache:
+    grids: [mbtiles_webmercator]
+    sources: []
+    cache:
+      type: mbtiles
+      filename: /world_map.mbtiles
+
+sources:
+  osm_wms:
+    type: wms
+    req:
+      # use of this source is only permitted for testing
+      url: http://osm.omniscale.net/proxy/service?
+      layers: osm
+  dt_wms:
+    type: wms
+    supported_srs: ['EPSG:4326']
+    wms_opts:
+          legendgraphic: true
+          featureinfo: true
+          featureinfo_types: ['text', 'html', 'xml']
+    req:
+      url: http://data-test.boundlessgeo.io/geoserver/wms?
+      transparent: true
+
+grids:
+    webmercator:
+      base: GLOBAL_WEBMERCATOR
+    mbtiles_webmercator:
+      base: GLOBAL_MERCATOR
+      srs: 'EPSG:3857'
+      origin: sw
+    dt_grid:
+      srs: 'EPSG:4269'
+      bbox: [-180, -90, 180, 90]
+      bbox_srs: 'EPSG:4326'
+      align_resolutions_with: GLOBAL_GEODETIC
+
+globals:
+  cache:
+    base_dir: /cache_data

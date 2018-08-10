@@ -19,7 +19,9 @@
 #########################################################################
 
 import os
-import copy
+import sys
+import copy  # noqa
+import tempfile
 import dj_database_url
 from ast import literal_eval as le
 from geonode.settings import *  # noqa
@@ -48,6 +50,7 @@ def isValid(v):
 
 ANYWHERE_ENABLED = str2bool(os.getenv('ANYWHERE_ENABLED', False))
 SITENAME = os.getenv('SITENAME', 'exchange')
+EXCHANGE_LOCAL_URL = os.getenv('EXCHANGE_LOCAL_URL', 'http://localhost')
 WSGI_APPLICATION = "exchange.wsgi.application"
 ROOT_URLCONF = 'exchange.urls'
 SOCIAL_BUTTONS = str2bool(os.getenv('SOCIAL_BUTTONS', 'False'))
@@ -73,8 +76,11 @@ CLASSIFICATION_BACKGROUND_COLOR = os.getenv(
 )
 CLASSIFICATION_LINK = os.getenv('CLASSIFICATION_LINK', None)
 
-CLASSIFICATION_LEVELS = os.getenv('CLASSIFICATION_LEVELS', ['UNCLASSIFIED', ])
-CAVEATS = os.getenv('CLASSIFICATION_LEVELS', ['FOUO', ])
+CLASSIFICATION_LEVELS = {
+    "sample 1": ["cav1", "cav2"],
+    "sample 2": ["cav1", "cav3"],
+    "sample 3": ["cav4", "cav5"]
+}
 
 # MapLoom Styling Control
 LOOM_STYLING_ENABLED = str2bool(os.getenv('LOOM_STYLING_ENABLED', 'True'))
@@ -198,6 +204,9 @@ INSTALLED_APPS = (
     'exchange.storyscapes',
     'composer',
     'social_django',
+    'ordered_model',
+    'exchange.pki',
+    'logtailer',
 ) + ADDITIONAL_APPS + INSTALLED_APPS
 
 MIGRATION_MODULES = {
@@ -320,6 +329,8 @@ MAP_BASELAYERS = [{
     "group": "background"
 }]
 
+PROXY_BASEMAP = str2bool(os.getenv('PROXY_BASEMAP', 'True'))
+
 POSTGIS_URL = os.getenv(
     'POSTGIS_URL',
     'postgis://exchange:boundless@localhost:5432/exchange_data'
@@ -340,7 +351,7 @@ if WGS84_MAP_CRS:
 # Set ES_SEARCH to True
 # Run "python manage.py clear_haystack" (if upgrading from haystack)
 # Run "python manage.py rebuild_index"
-ES_SEARCH = strtobool(os.getenv('ES_SEARCH', 'False'))
+ES_SEARCH = str2bool(os.getenv('ES_SEARCH', 'False'))
 
 if ES_SEARCH:
     INSTALLED_APPS = (
@@ -385,20 +396,35 @@ if AUDIT_ENABLED:
 # Logging settings
 # 'DEBUG', 'INFO', 'WARNING', 'ERROR', or 'CRITICAL'
 DJANGO_LOG_LEVEL = os.getenv('DJANGO_LOG_LEVEL', 'ERROR')
+DJANGO_IGNORED_WARNINGS = {
+    'RemovedInDjango18Warning',
+    'RemovedInDjango19Warning',
+    'RuntimeWarning: DateTimeField',
+}
+
+
+def filter_django_warnings(record):
+    for ignored in DJANGO_IGNORED_WARNINGS:
+        if record.args and ignored in record.args[0]:
+            return False
+    return True
+
 
 installed_apps_conf = {
     'handlers': ['console'],
     'level': DJANGO_LOG_LEVEL,
 }
 
+# noinspection PyDictCreation
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
             'format':
-                ('%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d'
-                 ' %(message)s'),
+                ('%(levelname)s %(asctime)s %(name)s '
+                 '(%(filename)s %(lineno)d) %(process)d '
+                 '%(thread)d %(message)s'),
         },
     },
     'handlers': {
@@ -406,15 +432,24 @@ LOGGING = {
             'level': DJANGO_LOG_LEVEL,
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
-        }
+            'stream': sys.stdout
+        },
+    },
+    'filters': {
+        'ignore_django_warnings': {
+            '()': 'django.utils.log.CallbackFilter',
+            'callback': filter_django_warnings,
+        },
     },
     'loggers': {
-        app: copy.deepcopy(installed_apps_conf) for app in INSTALLED_APPS
+        # app: copy.deepcopy(installed_apps_conf) for app in INSTALLED_APPS
     },
-    'root': {
-        'handlers': ['console'],
-        'level': DJANGO_LOG_LEVEL
-    },
+}
+
+LOGGING['root'] = {
+    'handlers': ['console'],
+    'level': DJANGO_LOG_LEVEL,
+    'filters': ['ignore_django_warnings', ],
 }
 
 LOGGING['loggers']['django.db.backends'] = {
@@ -422,6 +457,67 @@ LOGGING['loggers']['django.db.backends'] = {
     'propagate': False,
     'level': 'WARNING',  # Django SQL logging is too noisy at DEBUG
 }
+
+if 'logtailer' in INSTALLED_APPS:
+    # Config for client (in Django admin panel) log parsing
+
+    LOGTAILER_LEVEL = os.getenv('LOGTAILER_LEVEL', 'INFO')
+
+    # How many lines to load when starting to tail an existing log
+    LOGTAILER_HISTORY_LINES = os.getenv('LOGTAILER_HISTORY_LINES', 200)
+    # Length of time client logging can stay enabled
+    LOGTAILER_TIMEOUT = os.getenv('LOGTAILER_TIMEOUT', 600)  # in seconds
+    # File-based timer for client logging
+    LOGTAILER_LOGGING_TIMER = os.path.join(tempfile.gettempdir(),
+                                           "logtailer-timer")
+    # Dir where client's logtailer is restricted to reading only its log files
+    log_dir = os.getenv('LOGTAILER_LOG_DIR', '/var/log/exchange/logtailer')
+    if not os.path.exists(log_dir):
+        try:
+            os.makedirs(log_dir, 0o0755)
+        except OSError:
+            log_dir = tempfile.mkdtemp()
+    elif not (os.path.isdir(log_dir) and
+              os.access(log_dir, os.W_OK | os.X_OK)):
+        log_dir = tempfile.mkdtemp()
+    LOGTAILER_LOG_DIR = log_dir
+    # Client output log file
+    LOGTAILER_LOG_NAME = os.getenv('LOGTAILER_LOG_NAME', "exchange-app.log")
+    LOGTAILER_LOG_FILE = os.path.join(LOGTAILER_LOG_DIR, LOGTAILER_LOG_NAME)
+    # Only files with these extensions will be parsed from LOGTAILER_LOG_DIR
+    LOGTAILER_LOG_FILE_EXTENSIONS = ".*\.(log).*$"
+
+    LOGGING['formatters']['logtailer'] = {
+        'format':
+            ('=== %(levelname)s %(app)s %(asctime)s '
+             '%(name)s (%(filename)s %(lineno)d): %(message)s'),
+    }
+    LOGGING['handlers']['logtailer'] = {
+        # logging ON/OFF is internally controlled, so should always log via
+        # default INFO level (customer-appropriate to avoid flooding log)
+        'level': LOGTAILER_LEVEL,
+        'class': 'logtailer.logger.LogTailerHandler',
+        'formatter': 'logtailer',
+        'filename': LOGTAILER_LOG_FILE,
+        'when': 'midnight',
+        'interval': 1,
+        'backupCount': 3,
+        'encoding': 'utf-8',
+        'appcallback':
+            lambda: 'celery' if os.getenv('VIA_CELERY', 0) else 'exchange'
+    }
+    LOGGING['loggers']['exchange'] = {
+        'handlers': ['console', 'logtailer'],
+        'level': LOGTAILER_LEVEL,
+        'propagate': False,
+        'filters': ['ignore_django_warnings', ],
+    }
+    # LOGGING['loggers']['geonode'] = {
+    #     'handlers': ['logtailer'],
+    #     'level': LOGTAILER_LEVEL,
+    #     'propagate': True,
+    #     'filters': ['ignore_django_warnings', ],
+    # }
 
 # Authentication Settings
 
@@ -508,6 +604,29 @@ FILESERVICE_CONFIG = {
         'FILESERVICE_MEDIA_ROOT', os.path.join(MEDIA_ROOT, 'fileservice')),
     'types_allowed': ['.jpg', '.jpeg', '.png'],
     'streaming_supported': False
+}
+
+# Force max length validation on encrypted password fields (used by pki app)
+ENFORCE_MAX_LENGTH = 1
+
+# IMPORTANT: this directory should not be within application or www roots
+PKI_DIRECTORY = os.getenv('PKI_DIRECTORY', '/usr/local/exchange-pki')
+
+# Custom default background used during thumbnail generation.
+# As of v1.4.8 (ps/pki branch), this service must support the following:
+#   Type: WMS
+#     service = wms
+#     version = 1.3.0
+#     request = GetMap
+#     format = image/png
+#     transparent = true
+#     crs = EPSG:3857
+#     styles = ''
+# Only the url and layer name(s) should be specified.
+#   'layers' should be defined as per WMS URL param value spec.
+THUMBNAIL_BACKGROUND_LAYER = {
+    'url': 'https://demo.boundlessgeo.com/geoserver/wms',
+    'layers': 'ne:NE1_HR_LC_SR_W_DR',
 }
 
 try:
@@ -668,7 +787,12 @@ MAP_CLIENT_USE_CROSS_ORIGIN_CREDENTIALS = str2bool(os.getenv(
     'False'
 ))
 
-PROXY_URL = ''
+PROXY_URL = '/proxy/?url='
+
+ACCESS_TOKEN_NAME = os.getenv(
+    'ACCESS_TOKEN_NAME',
+    'x-token'
+)
 
 # Settings to change the WMS that is used for backgrounds on
 # Thumbnail generation.
@@ -681,10 +805,4 @@ THUMBNAIL_BACKGROUND_WMS = os.getenv(
 THUMBNAIL_BACKGROUND_WMS_LAYER = os.getenv(
     'THUMBNAIL_BACKGROUND_WMS_LAYER',
     'ne:NE1_HR_LC_SR_W_DR'
-)
-
-
-ACCESS_TOKEN_NAME = os.getenv(
-    'ACCESS_TOKEN_NAME',
-    'x-token'
 )
