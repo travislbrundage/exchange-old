@@ -10,7 +10,9 @@ from six import iteritems
 
 from geonode.base.models import TopicCategory
 try:
-    from exchange.pki.models import uses_proxy_route
+    if 'ssl_pki' not in settings.INSTALLED_APPS:
+        raise ImportError
+    from ssl_pki.models import uses_proxy_route
 except ImportError:
     uses_proxy_route = None
 

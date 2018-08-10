@@ -55,8 +55,8 @@ urlpatterns = patterns(
     url(r'^capabilities/', views.capabilities, name='capabilities'),
 )
 
-if 'exchange.pki' in settings.INSTALLED_APPS:
-    from exchange.pki.urls import urlpatterns as pki_urls
+if 'ssl_pki' in settings.INSTALLED_APPS:
+    from ssl_pki.urls import urlpatterns as pki_urls
     urlpatterns += pki_urls
 
 if settings.ENABLE_SOCIAL_LOGIN is True:

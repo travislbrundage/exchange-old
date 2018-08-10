@@ -17,9 +17,14 @@ from PIL import Image
 import io
 from urlparse import urlparse
 
-from exchange.pki.models import has_ssl_config
-from exchange.pki.ssl_session import https_client
-
+try:
+    if 'ssl_pki' not in settings.INSTALLED_APPS:
+        raise ImportError
+    from ssl_pki.models import has_ssl_config
+    from ssl_pki.ssl_session import https_client
+except ImportError:
+    has_ssl_config = None
+    https_client = None
 
 try:
     xrange
@@ -100,7 +105,8 @@ def make_thumb_request(remote, baseurl, params=None):
         if remote:
             # Check for SSL configs; use https_client
             if thumbnail_create_url.lower().startswith('https') \
-                    and has_ssl_config(thumbnail_create_url, via_query=True):
+                    and has_ssl_config is not None and \
+                    has_ssl_config(thumbnail_create_url, via_query=True):
                 # has_ssl_config needs to query db, as call may be from task
                 # worker, whose hostnameport_pattern_cache may be out of sync
                 logger.info('Fetching %s with https_client'
