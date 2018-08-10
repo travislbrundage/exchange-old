@@ -456,7 +456,10 @@ if SSL_PKI_ENABLED:
     PKI_DIRECTORY = os.getenv('PKI_DIRECTORY', '/usr/local/exchange-pki')
 
     # ssl_pki app expects a generic setting for EXCHANGE_LOCAL_URL
-    SITE_LOCAL_URL = EXCHANGE_LOCAL_URL
+    try:
+        SITE_LOCAL_URL = EXCHANGE_LOCAL_URL
+    except NameError:
+        SITE_LOCAL_URL = os.getenv('SITE_LOCAL_URL', 'http://localhost')
 
     # TODO: add back logtailer setup, if needed
 
