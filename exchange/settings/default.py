@@ -21,7 +21,6 @@
 import os
 import sys
 import copy  # noqa
-import tempfile
 import dj_database_url
 from ast import literal_eval as le
 from geonode.settings import *  # noqa
