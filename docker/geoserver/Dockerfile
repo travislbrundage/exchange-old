@@ -17,7 +17,7 @@ RUN apt-get update \
     && chmod -R 755 $CATALINA_HOME/webapps/geoserver \
     && chmod -R 755 /app/data/gs_data \
     && rm -f /app/data/gs_data/security/masterpw.info \
-    && sed -i 's/localhost:8080/nginx/' /app/data/gs_data/global.xml \
+    && sed -i 's/localhost:8080/nginx.boundless.test/' /app/data/gs_data/global.xml \
     && sed -i 's@http://localhost:8000/o/token/@http://nginx.boundless.test/o/token/@g' \
               /app/data/gs_data/security/filter/geonode-oauth2/config.xml \
     && sed -i 's@http://localhost:8000/o/authorize/@http://nginx.boundless.test/o/authorize/@g' \
