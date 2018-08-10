@@ -31,8 +31,6 @@ from django.http import HttpResponse
 from django.http.request import validate_host
 from wsgiref import util as wsgiref_util
 
-from geonode.services import enumerations
-
 try:
     from logtailer.utils import logging_timer_expired
 except ImportError:
@@ -106,17 +104,6 @@ def pki_request(request, resource_url=None):
         if http_accept in request.META:
             headers[accept] = request.META[http_accept]
 
-    service_type = request.META['PKI_SERVICE_TYPE'] \
-        if 'PKI_SERVICE_TYPE' in request.META else None
-    if service_type == enumerations.REST or \
-            '/rest' in unquote(resource_url).lower():
-        # TODO: [FIXME] Workaround for decompression error in arcrest,
-        #       in arcrest.web._base._chunk()
-        # Needed for both /proxy reroutes and arcrest pkg
-        logger.info("PKI view service type appears to ArcREST; "
-                    "setting Accept-Encoding to none")
-        headers['Accept-Encoding'] = ''
-
     # TODO: Passthru HTTP_REFERER?
 
     # Strip our bearer token header!
@@ -178,6 +165,8 @@ def pki_request(request, resource_url=None):
     else:
         content_type = 'text/plain'
 
+    req_transfer_encodings = ['gzip', 'deflate']
+
     # If we get a redirect, beyond # allowed in config, add a useful message.
     if req_res.status_code in (301, 302, 303, 307):
         response = HttpResponse(
@@ -205,6 +194,10 @@ def pki_request(request, resource_url=None):
         logger.info("PKI view 'requests' response content:\n{0}"
                     .format(txt_content))
 
+        if req_res.headers.get('content-encoding') in req_transfer_encodings:
+            # Change content length to reflect requests auto-decompression
+            req_res.headers['content-length'] = len(req_res.content)
+
         response = HttpResponse(
             content=req_res.content,
             status=req_res.status_code,
@@ -215,9 +208,18 @@ def pki_request(request, resource_url=None):
     # TODO: Should we be sniffing encoding/charset and passing back?
 
     # Passthru headers from remote service, but don't overwrite defined headers
+    def skip_content_encoding(hdr, val):
+        # requests automatically decodes gzip and deflate transfer encodings;
+        # ensure header is not passed through to client
+        # http://docs.python-requests.org/en/master/user/quickstart/
+        #   #binary-response-content
+        if hdr.lower() == 'content-encoding' and val in req_transfer_encodings:
+            return True
+        return False
     skip_headers = ['content-type']  # add any as lowercase
     for h, v in req_res.headers.items():
         if h.lower() not in skip_headers \
+                and not skip_content_encoding(h, v) \
                 and not wsgiref_util.is_hop_by_hop(h)\
                 and h not in response:
             response[h] = v
