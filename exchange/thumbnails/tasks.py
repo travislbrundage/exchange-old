@@ -31,6 +31,18 @@ try:
 except NameError:
     xrange = range
 
+THUMBNAIL_BACKGROUND_WMS = getattr(
+    settings,
+    'THUMBNAIL_BACKGROUND_WMS',
+    'https://demo.boundlessgeo.com/geoserver/wms?'
+)
+
+THUMBNAIL_BACKGROUND_WMS_LAYER = getattr(
+    settings,
+    'THUMBNAIL_BACKGROUND_WMS_LAYER',
+    'ne:NE1_HR_LC_SR_W_DR'
+)
+
 logger = logging.getLogger(__name__)
 
 # setup requests client with max retries
@@ -223,9 +235,8 @@ def get_wms_thumbnail(instance=None, layers=None, bbox=None,
         if bbox is None or height is None:
             return None
         remote = True
-        layers = settings.THUMBNAIL_BACKGROUND_LAYER['layers']\
-            .strip().replace(' ', '')
-        baseurl = settings.THUMBNAIL_BACKGROUND_LAYER['url'].strip() + '?'
+        layers = THUMBNAIL_BACKGROUND_WMS_LAYER
+        baseurl = THUMBNAIL_BACKGROUND_WMS
 
     elif (hasattr(instance, 'storeType') and
             instance.storeType == 'remoteStore'):

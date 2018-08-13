@@ -16,7 +16,7 @@ help:
 
 html:
 	@docker run --rm -v $(current_dir):/code \
-	                 -w /code quay.io/boundlessgeo/bex-py27-stretch bash \
+	                 -w /code quay.io/boundlessgeo/bex-py27-stretch:slim bash \
 	                 -e -c 'python setup.py build_sphinx'
 
 lint:
@@ -46,7 +46,7 @@ test-pki: migration-check
 
 maploom:
 	@docker run --rm -v $(current_dir):/code \
-	                 -w /code quay.io/boundlessgeo/bex-nodejs-bower-grunt bash \
+	                 -w /code quay.io/boundlessgeo/bex-nodejs-bower-grunt:v0.10.x bash \
 	                 -e -c '. docker/devops/helper.sh && build-maploom'
 
 migration-check:

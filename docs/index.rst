@@ -13,6 +13,7 @@ User Guide
 .. toctree::
    :maxdepth: 2
 
+   whatsnew
    accounts/index
    discovery/index
    understandmetadata/index
@@ -23,6 +24,7 @@ User Guide
    metadata/index
    editing/index
    styles/index
+   createlayers/index
    analysis/index
    admin/index
    support/index

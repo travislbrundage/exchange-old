@@ -28,10 +28,17 @@ node {
         """
       }
 
+      // TODO: Move changes to core config
+      stage('M-BEx Edits'){
+        sh """
+          cat managed-services/exchange-entrypoint.sh > docker/exchange/entrypoint.sh
+        """
+      }
+
       stage('Setup'){
         sh """
           docker pull 'quay.io/boundlessgeo/sonar-maven-py3-alpine'
-          docker pull 'quay.io/boundlessgeo/bex-nodejs-bower-grunt'
+          docker pull 'quay.io/boundlessgeo/bex-nodejs-bower-grunt:v0.10.x'
           docker-compose down
           docker system prune -f
         """
@@ -60,32 +67,32 @@ node {
         )
       }
 
-      stage('Build'){
-        parallel (
-          "maploom" : {
-            bashDocker(
-              'quay.io/boundlessgeo/bex-nodejs-bower-grunt',
-              'rm -fr vendor/maploom/node_modules vendor/maploom/package-lock.json && . docker/devops/helper.sh && build-maploom'
-            )
-          },
-          "bex" : {
-            sh """
-              docker rm -f \$(docker ps -aq) || echo "no containers to remove"
-              docker-compose up --build --force-recreate -d
-            """
-            timeout(time: 10, unit: 'MINUTES')  {
-              waitUntil {
-                script {
-                  def r = sh script: 'wget -q http://localhost -O /dev/null', returnStatus: true
-                  return (r == 0);
-                }
-              }
-            }
-            sh """
-              docker-compose logs
-            """
-          }
+      stage('Build Maploom'){
+        bashDocker(
+          'quay.io/boundlessgeo/bex-nodejs-bower-grunt:v0.10.x',
+          'rm -fr vendor/maploom/node_modules vendor/maploom/package-lock.json && . docker/devops/helper.sh && build-maploom'
         )
+      }
+
+      stage('Build Images'){
+        sh """
+          docker rm -f \$(docker ps -aq) || echo "no containers to remove"
+          docker-compose up --build --force-recreate -d
+        """
+      }
+
+      stage('Start Containers'){
+        timeout(time: 10, unit: 'MINUTES')  {
+          waitUntil {
+            script {
+              def r = sh script: 'wget -q http://localhost -O /dev/null', returnStatus: true
+              return (r == 0);
+            }
+          }
+        }
+        sh """
+          docker-compose logs
+        """
       }
 
       /*

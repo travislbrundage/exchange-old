@@ -104,6 +104,7 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "text"
             }
         }
+
         self.assertDictEqual(profile_mappings, profile_properties)
 
         group_mappings = mappings[
@@ -121,33 +122,36 @@ class GeonodeElasticsearchTest(ExchangeTest):
             "json": {
                 "type": "text"
             },
+            "slug": {
+                "type": "text"
+            },
             "title": {
-                "type": "text",
                 "fields": {
                     "english": {
-                        "type": "text",
-                        "analyzer": "english"
+                        "analyzer": "english",
+                        "type": "text"
                     },
                     "pattern": {
-                        "type": "text",
-                        "analyzer": "pattern_analyzer"
+                        "analyzer": "pattern_analyzer",
+                        "type": "text"
                     }
-                }
+                },
+                "type": "text"
             },
             "title_sortable": {
                 "type": "keyword"
             },
             "type": {
-                "type": "keyword",
                 "fields": {
                     "english": {
-                        "type": "text",
-                        "analyzer": "english"
+                        "analyzer": "english",
+                        "type": "text"
                     },
                     "text": {
                         "type": "text"
                     }
-                }
+                },
+                "type": "keyword"
             }
         }
         self.assertDictEqual(group_mappings, group_properties)
@@ -156,17 +160,17 @@ class GeonodeElasticsearchTest(ExchangeTest):
             'document-index']['mappings']['doc']['properties']
         document_properties = {
             "abstract": {
-                "type": "text",
                 "fields": {
                     "english": {
-                        "type": "text",
-                        "analyzer": "english"
+                        "analyzer": "english",
+                        "type": "text"
                     },
                     "pattern": {
-                        "type": "text",
-                        "analyzer": "pattern_analyzer"
+                        "analyzer": "pattern_analyzer",
+                        "type": "text"
                     }
-                }
+                },
+                "type": "text"
             },
             "bbox_bottom": {
                 "type": "float"
@@ -181,16 +185,16 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "float"
             },
             "category": {
-                "type": "keyword",
                 "fields": {
                     "english": {
-                        "type": "text",
-                        "analyzer": "english"
+                        "analyzer": "english",
+                        "type": "text"
                     },
                     "text": {
                         "type": "text"
                     }
-                }
+                },
+                "type": "keyword"
             },
             "category__gn_description": {
                 "type": "text"
@@ -211,16 +215,16 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "integer"
             },
             "keywords": {
-                "type": "keyword",
                 "fields": {
                     "english": {
-                        "type": "text",
-                        "analyzer": "english"
+                        "analyzer": "english",
+                        "type": "text"
                     },
                     "text": {
                         "type": "text"
                     }
-                }
+                },
+                "type": "keyword"
             },
             "num_comments": {
                 "type": "integer"
@@ -229,12 +233,12 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "integer"
             },
             "owner__username": {
-                "type": "keyword",
                 "fields": {
                     "text": {
                         "type": "text"
                     }
-                }
+                },
+                "type": "keyword"
             },
             "popular_count": {
                 "type": "integer"
@@ -243,16 +247,16 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "integer"
             },
             "regions": {
-                "type": "keyword",
                 "fields": {
                     "english": {
-                        "type": "text",
-                        "analyzer": "english"
+                        "analyzer": "english",
+                        "type": "text"
                     },
                     "text": {
                         "type": "text"
                     }
-                }
+                },
+                "type": "keyword"
             },
             "share_count": {
                 "type": "integer"
@@ -273,32 +277,32 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "keyword"
             },
             "title": {
-                "type": "text",
                 "fields": {
                     "english": {
-                        "type": "text",
-                        "analyzer": "english"
+                        "analyzer": "english",
+                        "type": "text"
                     },
                     "pattern": {
-                        "type": "text",
-                        "analyzer": "pattern_analyzer"
+                        "analyzer": "pattern_analyzer",
+                        "type": "text"
                     }
-                }
+                },
+                "type": "text"
             },
             "title_sortable": {
                 "type": "keyword"
             },
             "type": {
-                "type": "keyword",
                 "fields": {
                     "english": {
-                        "type": "text",
-                        "analyzer": "english"
+                        "analyzer": "english",
+                        "type": "text"
                     },
                     "text": {
                         "type": "text"
                     }
-                }
+                },
+                "type": "keyword"
             },
             "uuid": {
                 "type": "keyword"
@@ -309,123 +313,70 @@ class GeonodeElasticsearchTest(ExchangeTest):
         layer_mappings = mappings[
             'layer-index']['mappings']['doc']['properties']
         layer_properties = {
+            "rating": {
+                "type": "integer"
+            },
+            "owner__last_name": {
+                "type": "text"
+            },
+            "has_time": {
+                "type": "boolean"
+            },
+            "bbox_top": {
+                "type": "float"
+            },
+            "category__gn_description": {
+                "type": "text"
+            },
+            "temporal_extent_end": {
+                "type": "date"
+            },
             "abstract": {
-                "type": "text",
                 "fields": {
-                    "english": {
-                        "type": "text",
-                        "analyzer": "english"
-                    },
                     "pattern": {
                         "type": "text",
                         "analyzer": "pattern_analyzer"
+                    },
+                    "english": {
+                        "type": "text",
+                        "analyzer": "english"
                     }
-                }
+                },
+                "type": "text"
+            },
+            "srid": {
+                "type": "keyword"
             },
             "bbox_bottom": {
-                "type": "float"
-            },
-            "bbox_left": {
                 "type": "float"
             },
             "bbox_right": {
                 "type": "float"
             },
-            "bbox_top": {
-                "type": "float"
-            },
-            "category": {
-                "type": "keyword",
+            "keywords": {
                 "fields": {
+                    "text": {
+                        "type": "text"
+                    },
                     "english": {
                         "type": "text",
                         "analyzer": "english"
-                    },
-                    "text": {
-                        "type": "text"
                     }
-                }
-            },
-            "category__gn_description": {
-                "type": "text"
-            },
-            "csw_type": {
-                "type": "keyword"
-            },
-            "csw_wkt_geometry": {
-                "type": "keyword"
-            },
-            "date": {
-                "type": "date"
-            },
-            "detail_url": {
+                },
                 "type": "keyword"
             },
             "featured": {
                 "type": "boolean"
             },
-            "geogig_link": {
+            "thumbnail_url": {
                 "type": "keyword"
-            },
-            "has_time": {
-                "type": "boolean"
-            },
-            "id": {
-                "type": "integer"
-            },
-            "is_published": {
-                "type": "boolean"
-            },
-            "keywords": {
-                "type": "keyword",
-                "fields": {
-                    "english": {
-                        "type": "text",
-                        "analyzer": "english"
-                    },
-                    "text": {
-                        "type": "text"
-                    }
-                }
-            },
-            "num_comments": {
-                "type": "integer"
-            },
-            "num_ratings": {
-                "type": "integer"
-            },
-            "owner__first_name": {
-                "type": "text"
-            },
-            "owner__last_name": {
-                "type": "text"
-            },
-            "owner__username": {
-                "type": "keyword",
-                "fields": {
-                    "text": {
-                        "type": "text"
-                    }
-                }
-            },
-            "popular_count": {
-                "type": "integer"
-            },
-            "rating": {
-                "type": "integer"
             },
             "references": {
                 "properties": {
-                    "name": {
-                        "type": "keyword",
-                        "fields": {
-                            "text": {
-                                "type": "text"
-                            }
-                        }
+                    "url": {
+                        "type": "text"
                     },
                     "scheme": {
-                        "type": "keyword",
                         "fields": {
                             "pattern": {
                                 "type": "text",
@@ -434,92 +385,145 @@ class GeonodeElasticsearchTest(ExchangeTest):
                             "text": {
                                 "type": "text"
                             }
-                        }
+                        },
+                        "type": "keyword"
                     },
-                    "url": {
-                        "type": "text"
+                    "name": {
+                        "fields": {
+                            "text": {
+                                "type": "text"
+                            }
+                        },
+                        "type": "keyword"
                     }
                 }
             },
-            "regions": {
-                "type": "keyword",
+            "type": {
                 "fields": {
+                    "text": {
+                        "type": "text"
+                    },
                     "english": {
                         "type": "text",
                         "analyzer": "english"
-                    },
-                    "text": {
-                        "type": "text"
                     }
-                }
-            },
-            "share_count": {
-                "type": "integer"
-            },
-            "source_host": {
-                "type": "keyword",
-                "fields": {
-                    "text": {
-                        "type": "text"
-                    }
-                }
-            },
-            "srid": {
+                },
                 "type": "keyword"
             },
-            "subtype": {
-                "type": "keyword",
+            "date": {
+                "type": "date"
+            },
+            "owner__first_name": {
+                "type": "text"
+            },
+            "detail_url": {
+                "type": "keyword"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "category": {
                 "fields": {
                     "text": {
                         "type": "text"
+                    },
+                    "english": {
+                        "type": "text",
+                        "analyzer": "english"
                     }
-                }
+                },
+                "type": "keyword"
             },
-            "supplemental_information": {
-                "type": "text"
+            "num_ratings": {
+                "type": "integer"
             },
-            "temporal_extent_end": {
-                "type": "date"
-            },
-            "temporal_extent_start": {
-                "type": "date"
-            },
-            "thumbnail_url": {
+            "uuid": {
                 "type": "keyword"
             },
             "title": {
-                "type": "text",
                 "fields": {
-                    "english": {
-                        "type": "text",
-                        "analyzer": "english"
-                    },
                     "pattern": {
                         "type": "text",
                         "analyzer": "pattern_analyzer"
+                    },
+                    "english": {
+                        "type": "text",
+                        "analyzer": "english"
                     }
-                }
+                },
+                "type": "text"
+            },
+            "num_comments": {
+                "type": "integer"
             },
             "title_sortable": {
                 "type": "keyword"
             },
-            "type": {
-                "type": "keyword",
+            "supplemental_information": {
+                "type": "text"
+            },
+            "bbox_left": {
+                "type": "float"
+            },
+            "temporal_extent_start": {
+                "type": "date"
+            },
+            "regions": {
                 "fields": {
+                    "text": {
+                        "type": "text"
+                    },
                     "english": {
                         "type": "text",
                         "analyzer": "english"
-                    },
+                    }
+                },
+                "type": "keyword"
+            },
+            "subtype": {
+                "fields": {
                     "text": {
                         "type": "text"
                     }
-                }
+                },
+                "type": "keyword"
+            },
+            "source_host": {
+                "fields": {
+                    "text": {
+                        "type": "text"
+                    }
+                },
+                "type": "keyword"
+            },
+            "csw_type": {
+                "type": "keyword"
             },
             "typename": {
                 "type": "keyword"
             },
-            "uuid": {
+            "csw_wkt_geometry": {
                 "type": "keyword"
+            },
+            "share_count": {
+                "type": "integer"
+            },
+            "owner__username": {
+                "fields": {
+                    "text": {
+                        "type": "text"
+                    }
+                },
+                "type": "keyword"
+            },
+            "popular_count": {
+                "type": "integer"
+            },
+            "geogig_link": {
+                "type": "keyword"
+            },
+            "is_published": {
+                "type": "boolean"
             }
         }
         self.assertDictEqual(layer_mappings, layer_properties)
@@ -528,17 +532,17 @@ class GeonodeElasticsearchTest(ExchangeTest):
             'map-index']['mappings']['doc']['properties']
         map_properties = {
             "abstract": {
-                "type": "text",
                 "fields": {
                     "english": {
-                        "type": "text",
-                        "analyzer": "english"
+                        "analyzer": "english",
+                        "type": "text"
                     },
                     "pattern": {
-                        "type": "text",
-                        "analyzer": "pattern_analyzer"
+                        "analyzer": "pattern_analyzer",
+                        "type": "text"
                     }
-                }
+                },
+                "type": "text"
             },
             "bbox_bottom": {
                 "type": "float"
@@ -553,16 +557,16 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "float"
             },
             "category": {
-                "type": "keyword",
                 "fields": {
                     "english": {
-                        "type": "text",
-                        "analyzer": "english"
+                        "analyzer": "english",
+                        "type": "text"
                     },
                     "text": {
                         "type": "text"
                     }
-                }
+                },
+                "type": "keyword"
             },
             "category__gn_description": {
                 "type": "text"
@@ -583,16 +587,16 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "integer"
             },
             "keywords": {
-                "type": "keyword",
                 "fields": {
                     "english": {
-                        "type": "text",
-                        "analyzer": "english"
+                        "analyzer": "english",
+                        "type": "text"
                     },
                     "text": {
                         "type": "text"
                     }
-                }
+                },
+                "type": "keyword"
             },
             "num_comments": {
                 "type": "integer"
@@ -601,12 +605,12 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "integer"
             },
             "owner__username": {
-                "type": "keyword",
                 "fields": {
                     "text": {
                         "type": "text"
                     }
-                }
+                },
+                "type": "keyword"
             },
             "popular_count": {
                 "type": "integer"
@@ -615,16 +619,16 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "integer"
             },
             "regions": {
-                "type": "keyword",
                 "fields": {
                     "english": {
-                        "type": "text",
-                        "analyzer": "english"
+                        "analyzer": "english",
+                        "type": "text"
                     },
                     "text": {
                         "type": "text"
                     }
-                }
+                },
+                "type": "keyword"
             },
             "share_count": {
                 "type": "integer"
@@ -645,32 +649,32 @@ class GeonodeElasticsearchTest(ExchangeTest):
                 "type": "keyword"
             },
             "title": {
-                "type": "text",
                 "fields": {
                     "english": {
-                        "type": "text",
-                        "analyzer": "english"
+                        "analyzer": "english",
+                        "type": "text"
                     },
                     "pattern": {
-                        "type": "text",
-                        "analyzer": "pattern_analyzer"
+                        "analyzer": "pattern_analyzer",
+                        "type": "text"
                     }
-                }
+                },
+                "type": "text"
             },
             "title_sortable": {
                 "type": "keyword"
             },
             "type": {
-                "type": "keyword",
                 "fields": {
                     "english": {
-                        "type": "text",
-                        "analyzer": "english"
+                        "analyzer": "english",
+                        "type": "text"
                     },
                     "text": {
                         "type": "text"
                     }
-                }
+                },
+                "type": "keyword"
             },
             "uuid": {
                 "type": "keyword"

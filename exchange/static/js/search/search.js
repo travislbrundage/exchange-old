@@ -98,6 +98,14 @@
       $('body').find("[data-filter='order_by'][data-value="+sort+"]").addClass('selected');
     }
 
+    if ($location.search().hasOwnProperty('type__in')){
+      var type = $location.search()['type__in'];
+      var type_filter = $('body').find("[data-filter='type__in'][data-value="+type+"]");
+      var element = $(type_filter[0]);
+      element.parents('ul').find('a').removeClass('selected');
+      element.addClass('selected');      
+    }
+
   });
 
   /*

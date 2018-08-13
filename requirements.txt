@@ -4,14 +4,14 @@
 -e ./vendor/django-osgeo-importer
 -e ./vendor/arcrest/src
 -e ./vendor/django-ssl-pki
-git+https://github.com/MapStory/composer.git@93300659c4f1a02c4eb2f17713d38779c47cc4e1#composer
-git+https://github.com/boundlessgeo/sphinx@ad78538babd53a7a860fe297fffaed7abc11d0f5#egg=Sphinx
-git+https://github.com/venicegeo/nearsight@d3cf9febec079742890ee7236d6720945a708533#egg=nearsight
-geonode-elasticsearch-app==0.2.3
+-e ./vendor/geonode-elasticsearch
+git+https://github.com/MapStory/composer.git@master#composer
+git+https://github.com/boundlessgeo/sphinx@bex#egg=Sphinx
+git+https://github.com/venicegeo/nearsight@master#egg=nearsight
 django-jsonfield==1.0.1
 django-jsonfield-compat==0.4.4
 numpy==1.13.3
-django-geonode-client==1.0.8
+django-geonode-client==1.0.9
 dj-database-url==0.4.2
 celery[redis]==3.1.18
 django-storages==1.6.5
@@ -35,6 +35,7 @@ social-auth-app-django==1.2.0
 mock==2.0.0
 Django==1.8.18
 six==1.10.0
+cryptography==2.3
 
 # For pki app
 # should be with [secure] for pyOpenSSL, cryptography, etc. for modern SSL
@@ -45,6 +46,6 @@ requests==2.18.4
 # more robust SSL in urllib3 with pyOpenSSL
 # pyOpenSSL==17.5.0
 # PKI component validations and db field encryption
-cryptography==2.1.4
+# cryptography==2.1.4
 # for user-ordering of wildcard hostname:port mappings
 django-ordered-model==1.4.3
