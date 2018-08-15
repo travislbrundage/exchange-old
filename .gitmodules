@@ -12,7 +12,7 @@
 [submodule "vendor/django-osgeo-importer"]
 	path = vendor/django-osgeo-importer
 	#url = https://github.com/Geonode/django-osgeo-importer
-	url = https://github.com/arhote/django-osgeo-importer.git
+	url = https://github.com/boundlessgeo/django-osgeo-importer.git
 	#branch = angular-1.6
 	branch = fgdb-test
 [submodule "vendor/gsconfig"]
