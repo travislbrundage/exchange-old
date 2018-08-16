@@ -82,6 +82,9 @@ class SslConfig(models.Model):
         blank=False,
     )
 
+    class Meta:
+        managed = False
+
 
 class HostnamePortSslConfig(models.Model):
     enabled = models.BooleanField(
@@ -103,3 +106,6 @@ class HostnamePortSslConfig(models.Model):
         default=True,
         blank=False,
     )
+
+    class Meta:
+        managed = False
