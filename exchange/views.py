@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.shortcuts import render, render_to_response, redirect
 from django.template import RequestContext
+from django.views.generic.base import TemplateView
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from exchange.version import get_version
 from geonode import get_version as get_version_geonode
@@ -342,3 +343,7 @@ def handler500(request):
                                   context_instance=RequestContext(request))
     response.status_code = 500
     return response
+
+
+class AuthErrorPage(TemplateView):
+    template_name = 'account/auth-failed.html'

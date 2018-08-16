@@ -52,6 +52,7 @@ urlpatterns = patterns(
     url(r'^services/(?P<pk>\d+)/publish$',
         views.publish_service, name='publish_service'),
 
+    url(r'^auth-failed/', views.AuthErrorPage.as_view(), name='auth_failed'),
     url(r'^about/', views.about_page, name='about'),
     url(r'^capabilities/', views.capabilities, name='capabilities'),
     url(r'^logout/', views.logout, name='exchange_logout'),

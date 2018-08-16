@@ -164,6 +164,7 @@ TEMPLATES = [
 # middleware
 MIDDLEWARE_CLASSES = (
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'social_django.middleware.SocialAuthExceptionMiddleware'
 ) + MIDDLEWARE_CLASSES
 
 ADDITIONAL_APPS = os.getenv(
@@ -230,7 +231,7 @@ if isinstance(ADDITIONAL_AUTH_EXEMPT_URLS, str):
     ADDITIONAL_AUTH_EXEMPT_URLS = tuple(map(
         str.strip, ADDITIONAL_AUTH_EXEMPT_URLS.split(',')))
 
-AUTH_EXEMPT_URLS = ('/capabilities', '/register-by-token/*',
+AUTH_EXEMPT_URLS = ('/capabilities', '/auth-failed', '/register-by-token/*',
                     '/complete/*', '/login/*',
                     '/api/o/*', '/api/roles', '/api/adminRole',
                     '/api/users', '/o/token/*', '/o/authorize/*',
@@ -667,6 +668,7 @@ MAP_CLIENT_USE_CROSS_ORIGIN_CREDENTIALS = str2bool(os.getenv(
     'MAP_CLIENT_USE_CROSS_ORIGIN_CREDENTIALS',
     'False'
 ))
+SOCIAL_AUTH_LOGIN_ERROR_URL = '/auth-failed'
 
 PROXY_URL = ''
 
