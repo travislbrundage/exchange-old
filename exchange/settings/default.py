@@ -321,6 +321,26 @@ MAP_BASELAYERS = [{
     "group": "background"
 }]
 
+MAPBOX_BASEMAPS = os.getenv(
+    'MAPBOX_BASEMAP_NAMES',
+    ""
+)
+
+if MAPBOX_BASEMAPS:
+    MAPBOX_BASEMAPS = list(map(str.strip, MAPBOX_BASEMAPS.split(',')))
+    for layer in MAPBOX_BASEMAPS:
+        MAP_BASELAYERS.append(
+            {
+                "source": {
+                    "ptype": "gxp_mapboxsource"
+                },
+                "name": layer,
+                "visibility": False,
+                "fixed": True,
+                "group": "background"
+            }
+        )
+
 POSTGIS_URL = os.getenv(
     'POSTGIS_URL',
     'postgis://exchange:boundless@localhost:5432/exchange_data'
@@ -690,3 +710,5 @@ ACCESS_TOKEN_NAME = os.getenv(
     'ACCESS_TOKEN_NAME',
     'x-token'
 )
+
+IMPORT_TASK_SOFT_TIME_LIMIT = le(os.getenv('IMPORTER_TIMEOUT', '90'))
