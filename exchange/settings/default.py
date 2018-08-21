@@ -564,11 +564,6 @@ FILESERVICE_CONFIG = {
     'streaming_supported': False
 }
 
-try:
-    from local_settings import *  # noqa
-except ImportError:
-    pass
-
 # Use https:// scheme in Gravatar URLs
 AVATAR_GRAVATAR_SSL = True
 
@@ -750,3 +745,8 @@ THUMBNAIL_BACKGROUND_WMS_LAYER = os.getenv(
     'THUMBNAIL_BACKGROUND_WMS_LAYER',
     'ne:NE1_HR_LC_SR_W_DR'
 )
+
+try:
+    from local_settings import *  # noqa
+except ImportError:
+    pass
