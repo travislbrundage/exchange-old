@@ -97,15 +97,22 @@ class HostnamePortSslConfig(models.Model):
         primary_key=True,
         unique=True,
     )
-    ssl_config = models.ForeignKey(
-        SslConfig,
-        related_name='+',
+    # ssl_config = models.ForeignKey(
+    #     SslConfig,
+    #     related_name='+',
+    #     null=True,
+    # )
+    ssl_config_id = models.IntegerField(
         null=True,
     )
     proxy = models.BooleanField(
         default=True,
         blank=False,
     )
+    order = models.PositiveIntegerField(
+        editable=False,
+    )
 
     class Meta:
         managed = False
+        ordering = ('order',)
