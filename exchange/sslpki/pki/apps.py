@@ -22,6 +22,6 @@ from django.apps import AppConfig
 
 
 class PkiAppConfig(AppConfig):
-    name = 'exchange.pki'
+    name = 'exchange.sslpki.pki'
     label = 'pki'
     verbose_name = 'SSL/PKI'

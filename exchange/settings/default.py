@@ -462,7 +462,8 @@ if SSL_PKI_ENABLED:
     INSTALLED_APPS = INSTALLED_APPS + (
         'ordered_model',
         'ssl_pki',
-        'exchange.sslpki',
+        'exchange.sslpki',  # for connecting ssl_pki signals to geonode models
+        'exchange.sslpki.pki',  # mock old exchange.pki app, for data migration
     )
 
     # Force max length validation on encrypted password fields
