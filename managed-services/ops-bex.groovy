@@ -147,15 +147,15 @@ node {
       // Tag images appropriately
       sh """
         docker tag bex/exchange:latest quay.io/boundlessgeo/ops-bex-exchange:${BEX_VERSION}
-        docker tag bex/geoserver:latest quay.io/boundlessgeo/ops-bex-geoserver:${BEX_VERSION}
-        docker tag rabbitmq:3.6-management-alpine quay.io/boundlessgeo/ops-bex-taskqueue:${BEX_VERSION}
+        #docker tag bex/geoserver:latest quay.io/boundlessgeo/ops-bex-geoserver:${BEX_VERSION}
+        #docker tag rabbitmq:3.6-management-alpine quay.io/boundlessgeo/ops-bex-taskqueue:${BEX_VERSION}
       """
 
       // Push images to Quay
       sh """
         docker push quay.io/boundlessgeo/ops-bex-exchange:${BEX_VERSION}
-        docker push quay.io/boundlessgeo/ops-bex-geoserver:${BEX_VERSION}
-        docker push quay.io/boundlessgeo/ops-bex-taskqueue:${BEX_VERSION}
+        #docker push quay.io/boundlessgeo/ops-bex-geoserver:${BEX_VERSION}
+        #docker push quay.io/boundlessgeo/ops-bex-taskqueue:${BEX_VERSION}
       """
     }
 
