@@ -18,32 +18,17 @@
 #
 #########################################################################
 
-from __future__ import unicode_literals
-
-from django.db import migrations
-
-from ..settings import SSL_DEFAULT_CONFIG
+from django.core.management.base import BaseCommand
+from django.core.management import call_command
 
 
-def load_default_config(apps, schema_editor):
-    sslconfig = apps.get_model('pki', 'SslConfig')
-    db_alias = schema_editor.connection.alias
-    ssl_config = sslconfig(**SSL_DEFAULT_CONFIG)
-    ssl_config.save(using=db_alias)
+class Command(BaseCommand):
+    help = 'Migrate (or re-migrate) data forward to ssl_pki app from any ' \
+           'existing exchange.pki tables.'
 
+    def handle(self, *args, **options):
 
-def delete_default_config(apps, schema_editor):
-    sslconfig = apps.get_model('pki', 'SslConfig')
-    db_alias = schema_editor.connection.alias
-    sslconfig.objects.using(db_alias).get(pk=1).delete()
-
-
-class Migration(migrations.Migration):
-
-    dependencies = [
-        ('pki', '0001_initial'),
-    ]
-
-    operations = [
-        migrations.RunPython(load_default_config, delete_default_config),
-    ]
+        app_label = 'sslpki'
+        call_command('migrate', app_label=app_label, migration_name='zero',
+                     interactive=False)
+        call_command('migrate', app_label=app_label, interactive=False)

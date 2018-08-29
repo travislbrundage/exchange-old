@@ -3,15 +3,15 @@ from __future__ import unicode_literals
 
 from django.db import migrations
 
+from ..pki.migrate_data import migrate_pki_data
+
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pki', '0005_ssllogentry'),
+        ('ssl_pki', '0002_default_config'),
     ]
 
     operations = [
-        migrations.DeleteModel(
-            name='SslLogEntry',
-        ),
+        migrations.RunPython(migrate_pki_data, migrations.RunPython.noop),
     ]

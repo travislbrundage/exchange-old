@@ -21,7 +21,6 @@
 import os
 import sys
 import copy  # noqa
-import tempfile
 import dj_database_url
 from ast import literal_eval as le
 from geonode.settings import *  # noqa
@@ -204,9 +203,6 @@ INSTALLED_APPS = (
     'exchange.storyscapes',
     'composer',
     'social_django',
-    'ordered_model',
-    'exchange.pki',
-    'logtailer',
 ) + ADDITIONAL_APPS + INSTALLED_APPS
 
 MIGRATION_MODULES = {
@@ -458,68 +454,31 @@ LOGGING['loggers']['django.db.backends'] = {
     'level': 'WARNING',  # Django SQL logging is too noisy at DEBUG
 }
 
-if 'logtailer' in INSTALLED_APPS:
-    # Config for client (in Django admin panel) log parsing
-
-    LOGTAILER_LEVEL = os.getenv('LOGTAILER_LEVEL', 'INFO')
-
-    # How many lines to load when starting to tail an existing log
-    LOGTAILER_HISTORY_LINES = os.getenv('LOGTAILER_HISTORY_LINES', 200)
-    # Length of time client logging can stay enabled
-    LOGTAILER_TIMEOUT = os.getenv('LOGTAILER_TIMEOUT', 600)  # in seconds
-    # File-based timer for client logging
-    LOGTAILER_LOGGING_TIMER = os.path.join(tempfile.gettempdir(),
-                                           "logtailer-timer")
-    # Dir where client's logtailer is restricted to reading only its log files
-    log_dir = os.getenv('LOGTAILER_LOG_DIR', '/var/log/exchange/logtailer')
-    if not os.path.exists(log_dir):
-        try:
-            os.makedirs(log_dir, 0o0755)
-        except OSError:
-            log_dir = tempfile.mkdtemp()
-    elif not (os.path.isdir(log_dir) and
-              os.access(log_dir, os.W_OK | os.X_OK)):
-        log_dir = tempfile.mkdtemp()
-    LOGTAILER_LOG_DIR = log_dir
-    # Client output log file
-    LOGTAILER_LOG_NAME = os.getenv('LOGTAILER_LOG_NAME', "exchange-app.log")
-    LOGTAILER_LOG_FILE = os.path.join(LOGTAILER_LOG_DIR, LOGTAILER_LOG_NAME)
-    # Only files with these extensions will be parsed from LOGTAILER_LOG_DIR
-    LOGTAILER_LOG_FILE_EXTENSIONS = ".*\.(log).*$"
-
-    LOGGING['formatters']['logtailer'] = {
-        'format':
-            ('=== %(levelname)s %(app)s %(asctime)s '
-             '%(name)s (%(filename)s %(lineno)d): %(message)s'),
-    }
-    LOGGING['handlers']['logtailer'] = {
-        # logging ON/OFF is internally controlled, so should always log via
-        # default INFO level (customer-appropriate to avoid flooding log)
-        'level': LOGTAILER_LEVEL,
-        'class': 'logtailer.logger.LogTailerHandler',
-        'formatter': 'logtailer',
-        'filename': LOGTAILER_LOG_FILE,
-        'when': 'midnight',
-        'interval': 1,
-        'backupCount': 3,
-        'encoding': 'utf-8',
-        'appcallback':
-            lambda: 'celery' if os.getenv('VIA_CELERY', 0) else 'exchange'
-    }
-    LOGGING['loggers']['exchange'] = {
-        'handlers': ['console', 'logtailer'],
-        'level': LOGTAILER_LEVEL,
-        'propagate': False,
-        'filters': ['ignore_django_warnings', ],
-    }
-    # LOGGING['loggers']['geonode'] = {
-    #     'handlers': ['logtailer'],
-    #     'level': LOGTAILER_LEVEL,
-    #     'propagate': True,
-    #     'filters': ['ignore_django_warnings', ],
-    # }
-
 # Authentication Settings
+
+# ssl_pki
+SSL_PKI_ENABLED = str2bool(os.getenv('SSL_PKI_ENABLED', 'True'))
+if SSL_PKI_ENABLED:
+    INSTALLED_APPS = INSTALLED_APPS + (
+        'ordered_model',
+        'ssl_pki',
+        'exchange.sslpki',  # for connecting ssl_pki signals to geonode models
+        'exchange.sslpki.pki',  # mock old exchange.pki app, for data migration
+    )
+
+    # Force max length validation on encrypted password fields
+    ENFORCE_MAX_LENGTH = 1
+
+    # IMPORTANT: this directory should not be within application or www roots
+    PKI_DIRECTORY = os.getenv('PKI_DIRECTORY', '/usr/local/exchange-pki')
+
+    # ssl_pki app expects a generic setting for EXCHANGE_LOCAL_URL
+    try:
+        SITE_LOCAL_URL = EXCHANGE_LOCAL_URL
+    except NameError:
+        SITE_LOCAL_URL = os.getenv('SITE_LOCAL_URL', 'http://localhost')
+
+    # TODO: add back logtailer setup, if needed
 
 # ldap
 AUTH_LDAP_SERVER_URI = os.getenv('AUTH_LDAP_SERVER_URI', None)
@@ -605,17 +564,6 @@ FILESERVICE_CONFIG = {
     'types_allowed': ['.jpg', '.jpeg', '.png'],
     'streaming_supported': False
 }
-
-# Force max length validation on encrypted password fields (used by pki app)
-ENFORCE_MAX_LENGTH = 1
-
-# IMPORTANT: this directory should not be within application or www roots
-PKI_DIRECTORY = os.getenv('PKI_DIRECTORY', '/usr/local/exchange-pki')
-
-try:
-    from local_settings import *  # noqa
-except ImportError:
-    pass
 
 # Use https:// scheme in Gravatar URLs
 AVATAR_GRAVATAR_SSL = True
@@ -798,3 +746,8 @@ THUMBNAIL_BACKGROUND_WMS_LAYER = os.getenv(
     'THUMBNAIL_BACKGROUND_WMS_LAYER',
     'ne:NE1_HR_LC_SR_W_DR'
 )
+
+try:
+    from local_settings import *  # noqa
+except ImportError:
+    pass

@@ -28,7 +28,7 @@ fi
 if [ "$plugins" ]; then
   export ADDITIONAL_APPS=$(IFS=,; echo "${plugins[*]}")
 fi
-until $manage migrate account --noinput; do
+until ES_SEARCH=False $manage migrate account --noinput; do
   >&2 echo "db is unavailable - sleeping"
   sleep 5
 done
@@ -39,9 +39,9 @@ $manage loaddata base_resources
 $manage loaddata /code/docker/exchange/docker_oauth_apps.json
 $manage loaddata /code/docker/exchange/anywhere.json
 $manage rebuild_index
-if [[ $DEV == True ]]; then
-  $manage importservice http://data-test.boundlessgeo.io/geoserver/wms bcs-hosted-data WMS I
-fi
+#if [[ $DEV == True ]]; then
+#  $manage importservice http://data-test.boundlessgeo.io/geoserver/wms bcs-hosted-data WMS I
+#fi
 $manage makemigrations --dry-run --verbosity 3
 pip freeze
 echo "Dev is set to $DEV"

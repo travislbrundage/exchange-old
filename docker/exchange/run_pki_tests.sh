@@ -9,8 +9,8 @@ pip show pip 2>&1 | grep -q 'should consider upgrading' \
 pip show pytest > /dev/null || pip install pytest
 
 pushd /code > /dev/null
-  # override some settings in Exchange, like default DEBUG logging
-  export DJANGO_SETTINGS_MODULE='exchange.pki.tests.docker_test_settings'
+  # For overriding some settings in Exchange, like default DEBUG logging
+  export DJANGO_SETTINGS_MODULE='exchange.settings'
   pytest --disable-warnings \
     --color=auto \
     --exitfirst \

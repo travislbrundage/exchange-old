@@ -57,12 +57,9 @@ urlpatterns = patterns(
     url(r'^logout/', views.logout, name='exchange_logout'),
 )
 
-if 'exchange.pki' in settings.INSTALLED_APPS:
-    from exchange.pki.urls import urlpatterns as pki_urls
+if 'ssl_pki' in settings.INSTALLED_APPS:
+    from ssl_pki.urls import urlpatterns as pki_urls
     urlpatterns += pki_urls
-
-if 'logtailer' in settings.INSTALLED_APPS:
-    urlpatterns += [url(r'^logs/', include('logtailer.urls'))]
 
 if settings.ENABLE_SOCIAL_LOGIN is True:
     urlpatterns += [

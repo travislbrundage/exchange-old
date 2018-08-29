@@ -18,4 +18,14 @@
 #
 #########################################################################
 
-default_app_config = 'exchange.pki.apps.PkiAppConfig'
+from django.apps import AppConfig
+
+
+class SslPkiAppSupportConfig(AppConfig):
+    name = 'exchange.sslpki'
+    label = 'sslpki'
+    verbose_name = 'SSL/PKI Support'
+
+    def ready(self):
+        # noinspection PyUnresolvedReferences
+        from . import signals  # noqa

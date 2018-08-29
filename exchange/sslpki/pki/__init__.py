@@ -18,9 +18,4 @@
 #
 #########################################################################
 
-from django.conf.urls import patterns, url
-from .views import pki_request
-
-urlpatterns = patterns(
-    '',
-    url(r'^pki/(?P<resource_url>.*)$', pki_request, name="pki_request"),)
+default_app_config = 'exchange.sslpki.pki.apps.PkiAppConfig'
