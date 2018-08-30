@@ -1,11 +1,10 @@
 [submodule "vendor/geonode"]
 	path = vendor/geonode
 	url = https://github.com/boundlessgeo/geonode.git
-	branch = ps/pki
+	branch = exchange/1.4.x
 [submodule "vendor/maploom"]
 	path = vendor/maploom
 	url = https://github.com/boundlessgeo/MapLoom.git
-	branch = ps/pki
 [submodule "vendor/sphinx-theme"]
 	path = vendor/sphinx-theme
 	url = https://github.com/boundlessgeo/sphinx-theme
