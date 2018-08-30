@@ -40,6 +40,10 @@ test: migration-check
 	@echo "Note: test requires the exchange container to be running and healthy"
 	@docker-compose exec exchange /code/docker/exchange/run_tests.sh
 
+test-pki: migration-check
+	@echo "Note: test requires the exchange container to be running and healthy"
+	@docker-compose exec exchange /code/docker/exchange/run_pki_tests.sh
+
 maploom:
 	@docker run --rm -v $(current_dir):/code \
 	                 -w /code quay.io/boundlessgeo/bex-nodejs-bower-grunt:v0.10.x bash \

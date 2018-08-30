@@ -58,6 +58,10 @@ urlpatterns = patterns(
     url(r'^logout/', views.logout, name='exchange_logout'),
 )
 
+if 'ssl_pki' in settings.INSTALLED_APPS:
+    from ssl_pki.urls import urlpatterns as pki_urls
+    urlpatterns += pki_urls
+
 if settings.ENABLE_SOCIAL_LOGIN is True:
     urlpatterns += [
         url('', include('social_django.urls', namespace='social'))

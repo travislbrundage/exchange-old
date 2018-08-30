@@ -17,18 +17,18 @@ RUN apt-get update \
     && chmod -R 755 $CATALINA_HOME/webapps/geoserver \
     && chmod -R 755 /app/data/gs_data \
     && rm -f /app/data/gs_data/security/masterpw.info \
-    && sed -i 's/localhost:8080/nginx/' /app/data/gs_data/global.xml \
-    && sed -i 's@http://localhost:8000/o/token/@http://nginx/o/token/@g' \
+    && sed -i 's/localhost:8080/nginx.boundless.test/' /app/data/gs_data/global.xml \
+    && sed -i 's@http://localhost:8000/o/token/@http://nginx.boundless.test/o/token/@g' \
               /app/data/gs_data/security/filter/geonode-oauth2/config.xml \
-    && sed -i 's@http://localhost:8000/o/authorize/@http://localhost/o/authorize/@g' \
+    && sed -i 's@http://localhost:8000/o/authorize/@http://nginx.boundless.test/o/authorize/@g' \
               /app/data/gs_data/security/filter/geonode-oauth2/config.xml \
-    && sed -i 's@http://localhost:8080/geoserver@http://localhost/geoserver@g' \
+    && sed -i 's@http://localhost:8080/geoserver@http://nginx.boundless.test/geoserver@g' \
               /app/data/gs_data/security/filter/geonode-oauth2/config.xml \
-    && sed -i 's@http://localhost:8000/api/o/v4/tokeninfo/@http://nginx/api/o/v4/tokeninfo/@g' \
+    && sed -i 's@http://localhost:8000/api/o/v4/tokeninfo/@http://nginx.boundless.test/api/o/v4/tokeninfo/@g' \
               /app/data/gs_data/security/filter/geonode-oauth2/config.xml \
-    && sed -i 's@http://localhost:8000/account/logout/@http://nginx/account/logout/@g' \
+    && sed -i 's@http://localhost:8000/account/logout/@http://nginx.boundless.test/account/logout/@g' \
               /app/data/gs_data/security/filter/geonode-oauth2/config.xml \
-    && sed -i 's@http://localhost:8000@http://nginx@g' \
+    && sed -i 's@http://localhost:8000@http://nginx.boundless.test@g' \
               /app/data/gs_data/security/role/geonode-oauth2/config.xml \
     && apt-get clean -y \
     && rm -rf /root/.cache /var/lib/apt/lists/* /tmp/* /var/tmp/*
